@@ -49,7 +49,7 @@ User:
 	User(str name):
 		this.name = name
 
-	Hello():
+	void Hello():
 		print("{name} says hi.\n")
 	
 	int NameLength():

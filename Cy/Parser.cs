@@ -59,7 +59,7 @@ namespace Cy {
 			cursor.Consume(Token.Kind.COLON, "Expect ':' before " + kind + " body.");
 			cursor.Consume(Token.Kind.NEWLINE, "Expect 'newline' before " + kind + " body.");
 			List<Stmt> body = Block();
-			return new Stmt.Function(name, parameters, body);
+			return new Stmt.Function(type, name, parameters, body);
 		}
 
 

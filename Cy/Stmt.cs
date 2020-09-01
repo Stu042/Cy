@@ -56,9 +56,11 @@ namespace Cy {
 		/// Function definition.
 		/// </summary>
 		public class Function : Stmt {
+			public Type returnType;
 			public List<Token> input;
 			public List<Stmt> body;
-			public Function(Token token, List<Token> input, List<Stmt> body) {
+			public Function(Type returnType, Token token, List<Token> input, List<Stmt> body) {
+				this.returnType = returnType;
 				this.token = token;
 				this.input = input;
 				this.body = body;

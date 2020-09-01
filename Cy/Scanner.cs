@@ -79,9 +79,8 @@ namespace Cy {
 
 
 			/// <summary>
-			/// Get the string for this line
+			/// Get the string for this line.
 			/// </summary>
-			/// <returns></returns>
 			public string GetLineStr(int line) {
 				int s = start;
 				int l = s;
@@ -107,10 +106,11 @@ namespace Cy {
 
 
 		string filename;
-		List<Token> tokens = new List<Token>();
-		int line = 1;
-		int currentIndent = 0;
-		private Cursor cursor = new Cursor();
+		List<Token> tokens;
+		int line;
+		int currentIndent;
+		private Cursor cursor;
+		bool inLineWrap;
 
 		static readonly Dictionary<string, Token.Kind> keywords = new Dictionary<string, Token.Kind> {
 			{ "else", Token.Kind.ELSE },
@@ -143,28 +143,17 @@ namespace Cy {
 		};
 
 
-		/// <summary>
-		/// Read all files and create a list of tokens.
-		/// </summary>
-		/// <param name="files">All file names/paths to be read.</param>
-		/// <returns>List of Tokens.</returns>
-		public List<Token> ScanAllFiles(string[] files) {
-			foreach (var file in files) {
-				string alltext = File.ReadAllText(file);
-				ScanTokens(file, alltext);
-				currentIndent = 0;
-				AddToken(Token.Kind.NEWLINE);	// append a new
-			}
-			AddToken(Token.Kind.EOF);
-			Tidy();
-			return tokens;
-		}
 
 
 		public List<Token> ScanTokens(string filename, string alltext) {
 			this.filename = filename;
+			tokens = new List<Token>();
+			line = 1;
+			currentIndent = 0;
+			cursor = new Cursor();
 			cursor.NewFile(alltext);
-			while (!cursor.IsAtEnd()) { // We are at the beginning of the next lexeme.
+			inLineWrap = false;
+			while (!cursor.IsAtEnd()) {
 				cursor.Start();
 				ScanToken();
 			}
@@ -191,8 +180,7 @@ namespace Cy {
 
 
 
-		bool inLineWrap = false;
-
+		
 		void ScanToken() {
 			char c = cursor.Advance();
 			switch (c) {

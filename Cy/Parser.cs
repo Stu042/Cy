@@ -43,7 +43,6 @@ namespace Cy {
 		/// Declare a function/method.
 		/// </summary>
 		Stmt.Function FunDeclaration(string kind) {
-			// TODO Add type here (expression or statement... Stmt me thinks).
 			Stmt.Type type = new Stmt.Type(cursor.Previous());
 			Token name = cursor.Consume(Token.Kind.IDENTIFIER, "Expect " + kind + " name.");
 			cursor.Consume(Token.Kind.LEFT_PAREN, "Expect '(' after " + kind + " name.");
@@ -90,7 +89,7 @@ namespace Cy {
 			Expr value = null;
 			if (!cursor.Check(Token.Kind.NEWLINE))
 				value = Expression();
-			cursor.Consume(Token.Kind.NEWLINE, "Expect 'newline' after return value.");
+			cursor.Consume(Token.Kind.NEWLINE, "Expect 'newline' after return value.");	// new line is not reqd (could be eof)
 			return new Stmt.Return(keyword, value);
 		}
 
@@ -108,8 +107,11 @@ namespace Cy {
 		List<Stmt> Block() {
 			List<Stmt> statements = new List<Stmt>();
 			int startIndent = cursor.Peek().indent;
-			while (startIndent <= cursor.Peek().indent && !cursor.IsAtEnd())
-				statements.Add(Declaration());
+			while (startIndent <= cursor.Peek().indent && !cursor.IsAtEnd()) {
+				Stmt stmt = Declaration();
+				if (stmt != null)
+					statements.Add(stmt);
+			}
 			return statements;
 		}
 
@@ -191,8 +193,9 @@ namespace Cy {
 				return new Expr.Literal(cursor.Previous(), true);
 			if (cursor.Match(Token.Kind.NIL))
 				return new Expr.Literal(cursor.Previous(), null);
-			if (cursor.Match(Token.Kind.INT_LITERAL, Token.Kind.FLOAT_LITERAL, Token.Kind.STR_LITERAL)) {
-				return new Expr.Literal(cursor.Previous(), cursor.Previous().literal);
+			if (cursor.Peek().IsLiteral()) {
+				Token tok = cursor.Advance();
+				return new Expr.Literal(tok, tok.literal);
 			}
 			/*
 			if (cursor.Match(Token.Kind.LEFT_PAREN)) {
@@ -202,7 +205,6 @@ namespace Cy {
 			}
 			*/
 			throw new ParseError(cursor.Peek(), "Expect expression.");
-			return null;
 		}
 
 
@@ -287,7 +289,11 @@ namespace Cy {
 			/// Matches any type, including IDENTIFIER for a user defined type...
 			/// </summary>
 			public bool MatchAnyType() {
-				return Match(Token.Kind.INT, Token.Kind.INT8, Token.Kind.INT16, Token.Kind.INT32, Token.Kind.INT64, Token.Kind.INT128, Token.Kind.FLOAT, Token.Kind.FLOAT16, Token.Kind.FLOAT32, Token.Kind.FLOAT64, Token.Kind.FLOAT128, Token.Kind.IDENTIFIER);
+				if (tokens[current].IsAnyType()) {
+					Advance();
+					return true;
+				}
+				return false;
 			}
 
 			/// <summary>
@@ -367,12 +373,6 @@ namespace Cy {
 				return tokens[current - 1];
 			}
 
-			/*public Token[] ToArray(int startOffset = 0, int endOffset = 0) {
-				int len = (current + startOffset) - (start - endOffset);
-				Token[] res = new Token[len];
-				Array.Copy(tokens.ToArray(), start, res, 0, len);
-				return res;
-			}*/
 		}   // Cursor
 
 

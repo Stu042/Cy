@@ -55,6 +55,73 @@ namespace Cy {
 			this.filename = filename;
 		}
 
+		public bool IsLiteral() {
+			switch (type) {
+				case Kind.STR_LITERAL:
+				case Kind.INT_LITERAL:
+				case Kind.FLOAT_LITERAL:
+					return true;
+				default:
+					return false;
+			}
+		}
+		public bool IsAnyType() {
+			switch (type) {
+				case Kind.INT:
+				case Kind.INT8:
+				case Kind.INT16:
+				case Kind.INT32:
+				case Kind.INT64:
+				case Kind.INT128:
+				case Kind.FLOAT:
+				case Kind.FLOAT16:
+				case Kind.FLOAT32:
+				case Kind.FLOAT64:
+				case Kind.FLOAT128:
+				case Kind.IDENTIFIER:
+				case Kind.STR:
+					return true;
+				default:
+					return false;
+			}
+		}
+		public bool IsBasicType() {
+			switch (type) {
+				case Kind.INT:
+				case Kind.INT8:
+				case Kind.INT16:
+				case Kind.INT32:
+				case Kind.INT64:
+				case Kind.INT128:
+				case Kind.FLOAT:
+				case Kind.FLOAT16:
+				case Kind.FLOAT32:
+				case Kind.FLOAT64:
+				case Kind.FLOAT128:
+				case Kind.STR:
+					return true;
+				default:
+					return false;
+			}
+		}
+		public bool IsNumericType() {
+			switch (type) {
+				case Kind.INT:
+				case Kind.INT8:
+				case Kind.INT16:
+				case Kind.INT32:
+				case Kind.INT64:
+				case Kind.INT128:
+				case Kind.FLOAT:
+				case Kind.FLOAT16:
+				case Kind.FLOAT32:
+				case Kind.FLOAT64:
+				case Kind.FLOAT128:
+					return true;
+				default:
+					return false;
+			}
+		}
 
 		public override string ToString() {
 			if (type == Kind.NEWLINE)

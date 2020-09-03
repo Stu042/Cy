@@ -7,6 +7,26 @@ using System.IO;
 
 
 namespace Cy {
+
+
+	public class ExprValue {
+		public string llvmtype; // type for llvm, i.e. i32, fp64, etc
+		public string llvmref;  // this will be %1 etc, or actual number if a literal
+		public bool isLiteral;  // is this an actual value
+		public object value;    // if literal this is the value
+		public ExprValue(string llvmtype, string llvmref, bool isLiteral, object value = null) {
+			this.llvmtype = llvmtype;
+			this.llvmref = llvmref;
+			this.isLiteral = isLiteral;
+			this.value = value;
+		}
+		public override string ToString() {
+			return $"{llvmtype} {llvmref}";
+		}
+	}
+
+
+
 	class Compiler : Expr.IVisitor, Stmt.IVisitor {
 		string outputFilename;
 		StringBuilder code = new StringBuilder();
@@ -95,25 +115,6 @@ namespace Cy {
 
 
 
-		class ExprValue {
-			public string llvmtype; // type for llvm, i.e. i32, fp64, etc
-			public string llvmref;  // this will be %1 etc, or actual number if a literal
-			public bool isLiteral;  // is this an actual value
-			public object value;    // if literal this is the value
-			public Token.Kind type;	// token.kind
-			public ExprValue(string llvmtype, string llvmref, Token.Kind type, bool isLiteral, object value=null) {
-				this.llvmtype = llvmtype;
-				this.llvmref = llvmref;
-				this.type = type;
-				this.isLiteral = isLiteral;
-				this.value = value;
-			}
-			public override string ToString() {
-				return $"{llvmtype} {llvmref}";
-			}
-		}
-
-
 
 
 
@@ -122,40 +123,19 @@ namespace Cy {
 			return options;
 		}
 
+
 		public object VisitBinaryExpr(Expr.Binary expr, object options) {
 			ExprValue leftVal = (ExprValue)expr.left.Accept(this, options);
 			ExprValue rightVal = (ExprValue)expr.right.Accept(this, options);
 			switch (expr.token.type) {
 				case Token.Kind.PLUS:
 					if (leftVal.isLiteral && rightVal.isLiteral) {
-						if (leftVal.type == Token.Kind.INT_LITERAL) {
-							if (rightVal.type == Token.Kind.INT_LITERAL) {  // int + int
-								long preval = (long)leftVal.value + (long)rightVal.value;
-								string val = preval.ToString();
-								return new ExprValue("i32", val, Token.Kind.INT_LITERAL, true, preval);
-							} else {                                                // int + double
-								double preval = (long)leftVal.value + (double)rightVal.value;
-								string val = BitConverter.DoubleToInt64Bits(preval).ToString("X");
-								return new ExprValue("double", val, Token.Kind.FLOAT_LITERAL, true, preval);
-							}
-						} else {	// left is double literal
-							if (rightVal.type == Token.Kind.INT_LITERAL) {  // double + int
-								double preval = (double)leftVal.value + (long)rightVal.value;
-								string val = BitConverter.DoubleToInt64Bits(preval).ToString("X");
-								return new ExprValue("double", val, Token.Kind.FLOAT_LITERAL, true, preval);
-							} else {                                                // double + double
-								double preval = (double)leftVal.value + (double)rightVal.value;
-								string val = BitConverter.DoubleToInt64Bits(preval).ToString("X");
-								return new ExprValue("double", val, Token.Kind.FLOAT_LITERAL, true, preval);
-							}
-						}
+						return Type.Literal.Add(leftVal, rightVal);
 					}
 					break;
 				case Token.Kind.STAR:
 					if (leftVal.isLiteral && rightVal.isLiteral) {
-						int preval = int.Parse(leftVal.llvmref) * int.Parse(rightVal.llvmref);
-						string val = preval.ToString();
-						return new ExprValue("i32", val, Token.Kind.INT_LITERAL, true, preval);
+						return Type.Literal.Mult(leftVal, rightVal);
 					}
 					break;
 			}
@@ -170,9 +150,11 @@ namespace Cy {
 			return options;
 		}
 
+
 		public object VisitExpressionStmt(Stmt.Expression stmt, object options) {
 			return options;
 		}
+
 
 		public object VisitFunctionStmt(Stmt.Function stmt, object options) {
 			string funcName = stmt.token.lexeme;
@@ -189,10 +171,10 @@ namespace Cy {
 
 		public object VisitLiteralExpr(Expr.Literal expr, object options) {
 			if (expr.token.type == Token.Kind.INT_LITERAL)
-				return new ExprValue("i32", expr.value.ToString(), Token.Kind.INT_LITERAL, true, expr.value);
+				return new ExprValue("i32", expr.value.ToString(), true, expr.value);
 			else if (expr.token.type == Token.Kind.FLOAT_LITERAL)
-				return new ExprValue("fp32", expr.value.ToString(), Token.Kind.FLOAT_LITERAL, true, expr.value);
-			return new ExprValue("i32", expr.value.ToString(), expr.token.type, true, expr.value);
+				return new ExprValue("fp32", expr.value.ToString(), true, expr.value);
+			return new ExprValue("i32", expr.value.ToString(), true, expr.value);
 		}
 
 

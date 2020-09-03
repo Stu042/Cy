@@ -129,16 +129,16 @@ namespace Cy {
 
 		static readonly Dictionary<string, Token.Kind> baseTypes = new Dictionary<string, Token.Kind> {
 			{ "int", Token.Kind.INT },
-			{ "i8", Token.Kind.INT8 },
-			{ "i16", Token.Kind.INT16 },
-			{ "i32", Token.Kind.INT32 },
-			{ "i64", Token.Kind.INT64 },
-			{ "i128", Token.Kind.INT128 },
+			{ "int8", Token.Kind.INT8 },
+			{ "int16", Token.Kind.INT16 },
+			{ "int32", Token.Kind.INT32 },
+			{ "int64", Token.Kind.INT64 },
+			{ "int128", Token.Kind.INT128 },
 			{ "float", Token.Kind.FLOAT },
-			{ "f16", Token.Kind.FLOAT16 },
-			{ "f32", Token.Kind.FLOAT32 },
-			{ "f64", Token.Kind.FLOAT64 },
-			{ "f128", Token.Kind.FLOAT128 },
+			{ "float16", Token.Kind.FLOAT16 },
+			{ "float32", Token.Kind.FLOAT32 },
+			{ "float64", Token.Kind.FLOAT64 },
+			{ "float128", Token.Kind.FLOAT128 },
 			{ "str", Token.Kind.STR }
 		};
 
@@ -316,7 +316,7 @@ namespace Cy {
 					cursor.Advance();
 				AddToken(Token.Kind.FLOAT_LITERAL, double.Parse(cursor.ToString()));
 			} else {
-				AddToken(Token.Kind.INT_LITERAL, long.Parse(cursor.ToString()));
+				AddToken(Token.Kind.INT_LITERAL, int.Parse(cursor.ToString()));
 			}
 		}
 

@@ -101,7 +101,7 @@ namespace Cy {
 
 
 		public class Type : Stmt {
-			public enum Kind { UNKNOWN, INT, FLOAT, STR, USERDEFINED };
+			public enum Kind { UNKNOWN, INT, FLOAT, STR, USERDEFINED }; // USERDEFINED will typically be classes but who knows what the future will bring
 			public Kind kind;
 			public int size;
 			public string llvm;

@@ -6,8 +6,6 @@ Examples of Cy source can be found in the directory, TestFiles.cy. These will be
 
 The frontend compiler creates llvm ir which can be used with llvm to run immediately or compile to native code, this allows for use with varied architectures and able to utilise optimisation by llvm.
 
-
-
 ## Example Code
 
 ```cy
@@ -49,7 +47,7 @@ User:
 	User(str name):
 		this.name = name
 
-	Hello():
+	void Hello():
 		print("{name} says hi.\n")
 	
 	int NameLength():

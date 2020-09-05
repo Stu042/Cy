@@ -88,10 +88,10 @@ namespace Cy {
 
 
 		public class Var : Stmt {
-			public Expr initializer;
-			public Var(Token token, Expr initializer) {
+			public Expr initialiser;
+			public Var(Token token, Expr initialiser) {
 				this.token = token;
-				this.initializer = initializer;
+				this.initialiser = initialiser;
 			}
 			public override object Accept(IVisitor visitor, object options) {
 				return visitor.VisitVarStmt(this, options);
@@ -101,64 +101,41 @@ namespace Cy {
 
 
 		public class Type : Stmt {
-			public enum Kind { UNKNOWN, INT, FLOAT, STR, USERDEFINED }; // USERDEFINED will typically be classes but who knows what the future will bring
-			public Kind kind;
-			public int size;
-			public string llvm;
+			public CyType info;
 			public Type(Token token) {
 				this.token = token;
 				switch(token.type) {
 					case Token.Kind.INT:
 					case Token.Kind.INT32:
-						kind = Kind.INT;
-						size = 32;
-						llvm = "i32";
+						info = new CyType(CyType.Kind.INT, 32);
 						break;
 					case Token.Kind.INT8:
-						kind = Kind.INT;
-						size = 8;
-						llvm = "i8";
+						info = new CyType(CyType.Kind.INT, 8);
 						break;
 					case Token.Kind.INT16:
-						kind = Kind.INT;
-						size = 16;
-						llvm = "i16";
+						info = new CyType(CyType.Kind.INT, 16);
 						break;
 					case Token.Kind.INT64:
-						kind = Kind.INT;
-						size = 64;
-						llvm = "i64";
+						info = new CyType(CyType.Kind.INT, 64);
 						break;
 					case Token.Kind.INT128:
-						kind = Kind.INT;
-						size = 128;
-						llvm = "i128";
+						info = new CyType(CyType.Kind.INT, 128);
 						break;
 					case Token.Kind.FLOAT64:
 					case Token.Kind.FLOAT:
-						kind = Kind.FLOAT;
-						size = 64;
-						llvm = "fp64";
+						info = new CyType(CyType.Kind.FLOAT, 64);
 						break;
 					case Token.Kind.FLOAT16:
-						kind = Kind.FLOAT;
-						size = 16;
-						llvm = "fp16";
+						info = new CyType(CyType.Kind.FLOAT, 16);
 						break;
 					case Token.Kind.FLOAT32:
-						kind = Kind.FLOAT;
-						size = 32;
-						llvm = "fp32";
+						info = new CyType(CyType.Kind.FLOAT, 32);
 						break;
 					case Token.Kind.FLOAT128:
-						kind = Kind.FLOAT;
-						size = 128;
-						llvm = "fp128";
+						info = new CyType(CyType.Kind.FLOAT, 128);
 						break;
 					default:
-						kind = Kind.USERDEFINED;
-						size = 32;
-						llvm = "*i8";
+						info = new CyType(CyType.Kind.USERDEFINED, 32);
 						break;
 				}
 			}

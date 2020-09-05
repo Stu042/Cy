@@ -75,6 +75,7 @@ namespace Cy {
 
 
 
+		// todo add pre -- and ++
 		/// <summary>
 		/// Minus and not (!)
 		/// </summary>

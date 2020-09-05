@@ -23,10 +23,10 @@ int Main(str[] argv):
 
 ```cy
 // Recursion will be possible and sized types are shown here
-i32 Main():
+int32 Main():
 	return Factorial(42)
 
-i32 Factorial(i32 num):
+int32 Factorial(int32 num):
 	if (num > 1)
 		return num * Factorial(num - 1)
 	return num
@@ -51,5 +51,5 @@ User:
 		print("{name} says hi.\n")
 	
 	int NameLength():
-		return name.count	// str is an array of i8, arrays have the member variable, count
+		return name.count	// str is an array of int8, arrays have the member variable, count
 ```

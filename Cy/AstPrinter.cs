@@ -77,9 +77,9 @@ namespace Cy {
 		}
 
 		public object VisitVarStmt(Stmt.Var stmt, object options) {
-			if (stmt.initializer == null)
+			if (stmt.initialiser == null)
 				return Parenthesize2("var", stmt.token);
-			return Parenthesize2("var", stmt.token, "=", stmt.initializer);
+			return Parenthesize2("var", stmt.token, "=", stmt.initialiser);
 		}
 
 

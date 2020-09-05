@@ -79,6 +79,7 @@
     <None Include="TestFiles.cy\test1.cy" />
     <None Include="TestFiles.cy\test2.cy" />
     <None Include="TestFiles.cy\test2a.cy" />
+    <None Include="TestFiles.cy\test3a.cy" />
     <None Include="TestFiles.cy\test3.cy" />
     <None Include="TestFiles.cy\test4.cy" />
     <None Include="TestFiles.cy\test5.cy" />

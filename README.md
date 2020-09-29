@@ -53,3 +53,7 @@ User:
 	int NameLength():
 		return name.count	// str is an array of int8, arrays have the member variable, count
 ```
+
+### Resources
+
+The code in this project has been heavily influenced by https://github.com/munificent/craftinginterpreters

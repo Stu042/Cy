@@ -32,7 +32,8 @@ namespace Cy {
 						return VarDeclaration();
 				}
 				return Statement();
-			} catch (ParseError) {
+			} catch (ParseError e) {
+				Console.WriteLine($"Parse error: {e.Message}");
 				Synchronize();
 				return null;
 			}
@@ -43,15 +44,17 @@ namespace Cy {
 		/// Declare a function/method.
 		/// </summary>
 		Stmt.Function FunDeclaration(string kind) {
-			Stmt.Type type = new Stmt.Type(cursor.Previous());
+			Stmt.StmtType type = new Stmt.StmtType(cursor.Previous());
 			Token name = cursor.Consume(Token.Kind.IDENTIFIER, "Expect " + kind + " name.");
 			cursor.Consume(Token.Kind.LEFT_PAREN, "Expect '(' after " + kind + " name.");
-			List<Token> parameters = new List<Token>();
+			List<Stmt.InputVar> parameters = new List<Stmt.InputVar>();
 			if (!cursor.Check(Token.Kind.RIGHT_PAREN)) {
 				do {
 					if (parameters.Count >= 255)
 						Error(cursor.Peek(), "Cannot have more than 255 parameters.");
-					parameters.Add(cursor.Consume(Token.Kind.IDENTIFIER, "Expect parameter name."));
+					Token typeTok = cursor.Consume(Token.Kind.IDENTIFIER, "Expect parameter type.");
+					Token id = cursor.Consume(Token.Kind.IDENTIFIER, "Expect parameter name.");
+					parameters.Add(new Stmt.InputVar(new Stmt.StmtType(typeTok), id));
 				} while (cursor.Match(Token.Kind.COMMA));
 			}
 			cursor.Consume(Token.Kind.RIGHT_PAREN, "Expect ')' after parameters.");
@@ -119,13 +122,14 @@ namespace Cy {
 		/// <summary>
 		/// Create a variable which optionally has an assigned expression.
 		/// </summary>
-		Stmt VarDeclaration() {
+		Stmt VarDeclaration() {         // called after type, cur token is var name
+			Token type = cursor.Previous();
 			Token name = cursor.Consume(Token.Kind.IDENTIFIER, "Expect variable name.");
 			Expr initializer = null;
 			if (cursor.Match(Token.Kind.EQUAL))
 				initializer = Expression();
 			cursor.Consume(Token.Kind.NEWLINE, "Expect 'newline' after variable declaration.");
-			return new Stmt.Var(name, initializer);
+			return new Stmt.Var(type, name, initializer);
 		}
 
 
@@ -193,10 +197,13 @@ namespace Cy {
 				return new Expr.Literal(cursor.Previous(), true);
 			if (cursor.Match(Token.Kind.NIL))
 				return new Expr.Literal(cursor.Previous(), null);
+			if (cursor.Match(Token.Kind.IDENTIFIER))
+				return new Expr.Variable(cursor.Previous());
 			if (cursor.Peek().IsLiteral()) {
 				Token tok = cursor.Advance();
 				return new Expr.Literal(tok, tok.literal);
 			}
+			
 			/*
 			if (cursor.Match(Token.Kind.LEFT_PAREN)) {
 				Expr expr = Expression();

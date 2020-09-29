@@ -15,8 +15,9 @@ namespace Cy {
 			FLOAT, FLOAT16, FLOAT32, FLOAT64, FLOAT128,
 			STR,
 
+			IDENTIFIER,
 			// Literals.
-			IDENTIFIER, STR_LITERAL, INT_LITERAL, FLOAT_LITERAL,
+			STR_LITERAL, INT_LITERAL, FLOAT_LITERAL,
 
 			// Keywords.
 			AND, CLASS, ELSE, FALSE, FUN, FOR, IF, NIL, OR, PRINT, RETURN, SUPER, THIS, TRUE, WHILE,
@@ -32,7 +33,7 @@ namespace Cy {
 		public int indent;		// indent of the line
 		public int line;        // line number
 		public int offset;      // index from start of line
-		public string filename;      // index from start of line
+		public string filename; // index from start of line
 
 
 		public Token(Kind type) {
@@ -67,6 +68,9 @@ namespace Cy {
 		}
 		public bool IsAnyType() {
 			switch (type) {
+				case Kind.STR_LITERAL:
+				case Kind.INT_LITERAL:
+				case Kind.FLOAT_LITERAL:
 				case Kind.INT:
 				case Kind.INT8:
 				case Kind.INT16:

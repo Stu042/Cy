@@ -1,10 +1,10 @@
-Data:
+﻿Data:
 	int a
 	int b
 
-	Data(int aa, int bb):
-		a = aa
-		b = bb
+	Data(int a, int b):
+		this.a = a
+		this.b = b
 
 
 int Main():

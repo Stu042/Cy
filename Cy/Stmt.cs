@@ -14,9 +14,10 @@ namespace Cy {
 			object VisitBlockStmt(Block stmt, object options);
 			object VisitExpressionStmt(Expression stmt, object options);
 			object VisitFunctionStmt(Function stmt, object options);
+			object VisitInputVarStmt(InputVar invar, object options);
 			object VisitReturnStmt(Return stmt, object options);
 			object VisitVarStmt(Var stmt, object options);
-			object VisitTypeStmt(Type stmt, object options);
+			object VisitTypeStmt(StmtType stmt, object options);
 			
 		}
 
@@ -37,9 +38,7 @@ namespace Cy {
 		}
 
 
-		/// <summary>
-		/// For those times we need an expression at the start of a line.
-		/// </summary>
+		/// <summary>For those times we need an expression at the start of a line.</summary>
 		public class Expression : Stmt {
 			public Expr expression;
 			public Expression(Expr expression) {
@@ -52,14 +51,24 @@ namespace Cy {
 		}
 
 
-		/// <summary>
-		/// Function definition.
-		/// </summary>
+		/// <summary>variables defined as part of a function (input)<summary>
+		public class InputVar : Stmt {
+			public StmtType type;
+			public InputVar(StmtType type, Token token) {
+				this.type = type;
+				this.token = token;
+			}
+			public override object Accept(IVisitor visitor, object options) {
+				return visitor.VisitInputVarStmt(this, options);
+			}
+		}
+
+		/// <summary>Function definition.</summary>
 		public class Function : Stmt {
-			public Type returnType;
-			public List<Token> input;
+			public StmtType returnType;
+			public List<InputVar> input;
 			public List<Stmt> body;
-			public Function(Type returnType, Token token, List<Token> input, List<Stmt> body) {
+			public Function(StmtType returnType, Token token, List<InputVar> input, List<Stmt> body) {
 				this.returnType = returnType;
 				this.token = token;
 				this.input = input;
@@ -71,9 +80,7 @@ namespace Cy {
 		}
 
 
-		/// <summary>
-		/// The return statement.
-		/// </summary>
+		/// <summary>The return statement.</summary>
 		public class Return : Stmt {
 			public Expr value;
 			public Return(Token token, Expr value) {
@@ -86,10 +93,12 @@ namespace Cy {
 		}
 
 
-
+		/// <summary>Variable declaration, with possible assignment.</summary>
 		public class Var : Stmt {
+			public StmtType stmtType;
 			public Expr initialiser;
-			public Var(Token token, Expr initialiser) {
+			public Var(Token typeToken, Token token, Expr initialiser) {
+				this.stmtType = new StmtType(typeToken);
 				this.token = token;
 				this.initialiser = initialiser;
 			}
@@ -99,45 +108,12 @@ namespace Cy {
 		}
 
 
-
-		public class Type : Stmt {
+		/// <summary>A basic or user defined type.</summary>
+		public class StmtType : Stmt {
 			public CyType info;
-			public Type(Token token) {
+			public StmtType(Token token) {
 				this.token = token;
-				switch(token.type) {
-					case Token.Kind.INT:
-					case Token.Kind.INT32:
-						info = new CyType(CyType.Kind.INT, 32);
-						break;
-					case Token.Kind.INT8:
-						info = new CyType(CyType.Kind.INT, 8);
-						break;
-					case Token.Kind.INT16:
-						info = new CyType(CyType.Kind.INT, 16);
-						break;
-					case Token.Kind.INT64:
-						info = new CyType(CyType.Kind.INT, 64);
-						break;
-					case Token.Kind.INT128:
-						info = new CyType(CyType.Kind.INT, 128);
-						break;
-					case Token.Kind.FLOAT64:
-					case Token.Kind.FLOAT:
-						info = new CyType(CyType.Kind.FLOAT, 64);
-						break;
-					case Token.Kind.FLOAT16:
-						info = new CyType(CyType.Kind.FLOAT, 16);
-						break;
-					case Token.Kind.FLOAT32:
-						info = new CyType(CyType.Kind.FLOAT, 32);
-						break;
-					case Token.Kind.FLOAT128:
-						info = new CyType(CyType.Kind.FLOAT, 128);
-						break;
-					default:
-						info = new CyType(CyType.Kind.USERDEFINED, 32);
-						break;
-				}
+				info = new CyType(token.type);
 			}
 			public override object Accept(IVisitor visitor, object options) {
 				return visitor.VisitTypeStmt(this, options);

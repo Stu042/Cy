@@ -9,118 +9,17 @@ using System.IO;
 namespace Cy {
 
 
-	public class ExprValue {
-		//public string llvmtype; // type for llvm, i.e. i32, fp64, etc
-		public string llvmref;  // this will be %1 etc, or actual number if a literal
-		public bool isLiteral;  // is this an actual value
-		public object value;    // if literal this is the value
-		public CyType info;
-		/*public ExprValue(string llvmtype, string llvmref, bool isLiteral, object value = null) {
-			this.llvmtype = llvmtype;
-			this.llvmref = llvmref;
-			this.isLiteral = isLiteral;
-			this.value = value;
-		}*/
-		public ExprValue(Token.Kind tokenType, string llvmref, bool isLiteral, object value = null) {
-			this.llvmref = llvmref;
-			this.isLiteral = isLiteral;
-			this.value = value;
-			switch (tokenType) {
-				case Token.Kind.INT_LITERAL:
-					info = new CyType(CyType.Kind.INT, 0);
-					break;
-				case Token.Kind.FLOAT_LITERAL:
-					info = new CyType(CyType.Kind.FLOAT, 0);
-					break;
-				case Token.Kind.INT8:
-					info = new CyType(CyType.Kind.INT, 8);
-					break;
-				case Token.Kind.INT16:
-					info = new CyType(CyType.Kind.INT, 16);
-					break;
-				case Token.Kind.INT:
-				case Token.Kind.INT32:
-					info = new CyType(CyType.Kind.INT, 32);
-					break;
-				case Token.Kind.INT64:
-					info = new CyType(CyType.Kind.INT, 64);
-					break;
-				case Token.Kind.INT128:
-					info = new CyType(CyType.Kind.INT, 128);
-					break;
-				case Token.Kind.FLOAT16:
-					info = new CyType(CyType.Kind.FLOAT, 16);
-					break;
-				case Token.Kind.FLOAT32:
-					info = new CyType(CyType.Kind.FLOAT, 32);
-					break;
-				case Token.Kind.FLOAT64:
-					info = new CyType(CyType.Kind.FLOAT, 64);
-					break;
-				case Token.Kind.FLOAT128:
-					info = new CyType(CyType.Kind.FLOAT, 128);
-					break;
-				case Token.Kind.STR:
-				case Token.Kind.STR_LITERAL:
-					info = new CyType(CyType.Kind.STR, 8);
-					break;
-			}
-		}
-		public ExprValue(CyType info, string llvmref, bool isLiteral, object value = null) {
-			this.llvmref = llvmref;
-			this.isLiteral = isLiteral;
-			this.value = value;
-			this.info = info;
-		}
-		public ExprValue(CyType.Kind cyKind, string llvmref, bool isLiteral, object value = null) {
-			this.llvmref = llvmref;
-			this.isLiteral = isLiteral;
-			this.value = value;
-			switch (cyKind) {
-				case CyType.Kind.INT:
-					if (isLiteral)
-						info = new CyType(CyType.Kind.INT, 0);
-					else
-						info = new CyType(CyType.Kind.INT, 32);
-					break;
-				case CyType.Kind.FLOAT:
-					if (isLiteral)
-						info = new CyType(CyType.Kind.FLOAT, 0);
-					else
-						info = new CyType(CyType.Kind.FLOAT, 64);
-					break;
-				case CyType.Kind.STR:
-					info = new CyType(CyType.Kind.STR, 8);
-					break;
-			}
-		}
-		public ExprValue(CyType.Kind cyKind, int size, string llvmref, bool isLiteral, object value = null) {
-			this.llvmref = llvmref;
-			this.isLiteral = isLiteral;
-			this.value = value;
-			switch (cyKind) {
-				case CyType.Kind.INT:
-					info = new CyType(CyType.Kind.INT, size);
-					break;
-				case CyType.Kind.FLOAT:
-					info = new CyType(CyType.Kind.FLOAT, size);
-					break;
-				case CyType.Kind.STR:
-					info = new CyType(CyType.Kind.STR, size);
-					break;
-			}
-		}
-		public override string ToString() {
-			return $"{info.LLVM()} {llvmref}";
-		}
-	}
-
-
 
 	class Compiler : Expr.IVisitor, Stmt.IVisitor {
 		string outputFilename;
 		StringBuilder code = new StringBuilder();
-		uint indent = 0;
+		ExprList instances;
+
+
+
+		public Compiler() {
+			instances = new ExprList();
+		}
 
 
 
@@ -139,27 +38,21 @@ namespace Cy {
 		}
 
 
-		void AppendLine(string line) {
-			if (line.Contains("}"))
-				--indent;
-			for (int i = 0; i < indent; i++)
-				code.Append("  ");
-			code.AppendLine(line);
-			if (line.Contains("{"))
-				indent++;
-		}
 
 
 		/*************************************/
 		/* this is all a hack, todo fix this */
+		/* it is getting the base llvm ir required */
 		void RunCmd(string args) {
 			System.Diagnostics.Process process = new System.Diagnostics.Process();
-			System.Diagnostics.ProcessStartInfo startInfo = new System.Diagnostics.ProcessStartInfo();
-			startInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
-			startInfo.FileName = "cmd.exe";
-			startInfo.Arguments = "/C " + args;
+			System.Diagnostics.ProcessStartInfo startInfo = new System.Diagnostics.ProcessStartInfo {
+				WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden,
+				FileName = "cmd.exe",
+				Arguments = "/C " + args
+			};
 			process.StartInfo = startInfo;
 			process.Start();
+			process.WaitForExit();
 		}
 
 		string GetStr(string needle, string[] haystack) {
@@ -170,7 +63,7 @@ namespace Cy {
 			return "";
 		}
 
-		string fileName = @"C:\tmp\IHopeNoOneUsesThisFileName.c";
+		string fileName = @"C:\tmp\IHopeNoOneUsesThisFileName.c"; // Path.GetTempFileName();
 		string filePreLLVMCode;
 		string filePostLLVMCode;
 		void GetLLVMPreCode() {
@@ -181,6 +74,7 @@ namespace Cy {
 			RunCmd($"clang.exe {fileName} -S -emit-llvm");
 			string[] llvmPreCode = File.ReadAllLines(llfileName);
 			RunCmd($"del /f {fileName}");
+			RunCmd($"del /f {llfileName}");
 
 			string modulestr = GetStr("ModuleID", llvmPreCode);
 			pre.AppendLine(modulestr);
@@ -218,16 +112,26 @@ namespace Cy {
 			ExprValue leftVal = (ExprValue)expr.left.Accept(this, options);
 			ExprValue rightVal = (ExprValue)expr.right.Accept(this, options);
 			switch (expr.token.type) {
-				case Token.Kind.PLUS:
-					if (leftVal.isLiteral && rightVal.isLiteral) {
-						return Type.Literal.Add(leftVal, rightVal);
-					}
-					break;
-				case Token.Kind.STAR:
-					if (leftVal.isLiteral && rightVal.isLiteral) {
-						return Type.Literal.Mult(leftVal, rightVal);
-					}
-					break;
+				case Token.Kind.PLUS: {
+					ExprValue.ExprValueAndString xpandstr = leftVal.Add(rightVal);
+					code.Append(xpandstr.code);
+					return xpandstr.exprValue;
+				}
+				case Token.Kind.MINUS: {
+					ExprValue.ExprValueAndString xpandstr = leftVal.Sub(rightVal);
+					code.Append(xpandstr.code);
+					return xpandstr.exprValue;
+				}
+				case Token.Kind.STAR: {
+					ExprValue.ExprValueAndString xpandstr = leftVal.Mult(rightVal);
+					code.Append(xpandstr.code);
+					return xpandstr.exprValue;
+				}
+				case Token.Kind.SLASH: {
+					ExprValue.ExprValueAndString xpandstr = leftVal.Div(rightVal);
+					code.Append(xpandstr.code);
+					return xpandstr.exprValue;
+				}
 			}
 			return options;
 		}
@@ -245,47 +149,54 @@ namespace Cy {
 			return options;
 		}
 
-		class FuncDef {
+		class MethodInstance {
 			public string name;
-			public CyType retType;
-			public FuncDef(string name, CyType retType) {
+			public CyType type;
+			public bool isFunction;
+			public MethodInstance(string name, CyType type, bool isFunction) {
 				this.name = name;
-				this.retType = retType;
+				this.type = type;
+				this.isFunction = isFunction;
 			}
 		}
-		List<FuncDef> curFunc = new List<FuncDef>();
+		List<MethodInstance> curEnv = new List<MethodInstance>();
 
 		public object VisitFunctionStmt(Stmt.Function stmt, object options) {
 			string funcName = stmt.token.lexeme;
 			if (stmt.token.lexeme == "Main")
 				funcName = funcName.ToLower();
-			// TODO set i32 to whatever function returns (type), check return matches type here - last body.accept() could return type?
-			AppendLine($"define dso_local {stmt.returnType.info.LLVM()} @{funcName}() #0 {{");
-			FuncDef func = new FuncDef(funcName, stmt.returnType.info);
-			curFunc.Add(func);
+			code.Append(Llvm.Indent($"define dso_local {stmt.returnType.info.Llvm()} @{funcName}() #0 {{\n"));
+			MethodInstance func = new MethodInstance(funcName, stmt.returnType.info, true);
+			curEnv.Add(func);
 			foreach (Stmt body in stmt.body)
 				body.Accept(this, options);
-			AppendLine("}\n\n");
-			curFunc.RemoveAt(curFunc.Count - 1);
+			code.Append(Llvm.Indent("}\n\n"));
+			if (curEnv[curEnv.Count - 1] != func)
+				Display.Error(stmt.token, $"Compiler trying to return from a different object: {curEnv[curEnv.Count - 1].name}, should be {func.name}");
+			curEnv.RemoveAt(curEnv.Count - 1);
 			return options;
-		}
-
-
-		public object VisitLiteralExpr(Expr.Literal expr, object options) {
-			return new ExprValue(expr.token.type, expr.value.ToString(), true, expr.value);
 		}
 
 
 		public object VisitReturnStmt(Stmt.Return stmt, object options) {
 			if (stmt.value != null) {
 				ExprValue value = (ExprValue)stmt.value.Accept(this, options);
-				if (value.isLiteral)
-					value = Type.Literal.Cast(value, curFunc[curFunc.Count - 1].retType);
-				AppendLine($"ret {value}");
+				if (curEnv[curEnv.Count - 1].isFunction) {
+					value.Cast(curEnv[curEnv.Count - 1].type);
+					code.Append(Llvm.Indent($"ret {value}\n"));
+				} else
+					Display.Error(stmt.token, $"Object is non functional, unable to return from this: {curEnv[curEnv.Count - 1].name}");
 			} else {
-				AppendLine("ret");
+				code.Append(Llvm.Indent("ret\n"));
 			}
 			return options;
+		}
+
+
+
+
+		public object VisitLiteralExpr(Expr.Literal expr, object options) {
+			return new ExprValueLiteral(expr.token.type, expr.value);
 		}
 
 
@@ -297,24 +208,31 @@ namespace Cy {
 
 
 		public object VisitVariableExpr(Expr.Variable var, object options) {
-			return options;
+			ExprValue xpvar = instances.GetVar(var.token.lexeme);
+			return xpvar;
 		}
 
 
 		// creating a variable
 		public object VisitVarStmt(Stmt.Var stmt, object options) {
-			if (stmt.initialiser != null) {	// var equals something
-				
+			ExprValue xpllvm = new ExprValue(stmt.stmtType.info);
+			instances.AddVar(stmt.token.lexeme, xpllvm);
+			code.Append(xpllvm.StackAllocate());
+			if (stmt.initialiser != null) { // var equals something
+				ExprValue init = (ExprValue)stmt.initialiser.Accept(this, options);
+				code.Append(xpllvm.Store(init.llvmref));
+			} else {
+				code.Append(xpllvm.Store(0));
 			}
 			return options;
 		}
 
-		public object VisitTypeStmt(Stmt.Type stmt, object options) {
+		public object VisitTypeStmt(Stmt.StmtType stmt, object options) {
 			throw new NotImplementedException();
 		}
 
-
-
-
+		public object VisitInputVarStmt(Stmt.InputVar invar, object options) {
+			throw new NotImplementedException();
+		}
 	} // Compiler
 }

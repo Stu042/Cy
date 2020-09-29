@@ -25,9 +25,8 @@ namespace Cy {
 		public object VisitBlockStmt(Stmt.Block stmt, object options) {
 			StringBuilder builder = new StringBuilder();
 			builder.Append("(block ");
-			foreach (Stmt statement in stmt.statements) {
+			foreach (Stmt statement in stmt.statements)
 				builder.Append(statement.Accept(this, null));
-			}
 			builder.Append(")");
 			return builder.ToString();
 		}
@@ -36,13 +35,19 @@ namespace Cy {
 			return Parenthesize(";", stmt.expression);
 		}
 
+
+		public object VisitInputVarStmt(Stmt.InputVar invar, object options) {
+			return invar.type.token.lexeme + " " + invar.token.lexeme;
+		}
+
 		public object VisitFunctionStmt(Stmt.Function stmt, object options) {
 			StringBuilder builder = new StringBuilder();
-			builder.Append("(fun " + stmt.token.lexeme + "(");
-			foreach (Token param in stmt.input) {
+			string typestr = (string)stmt.returnType.Accept(this, null);
+			builder.Append("(" + typestr + " " + stmt.token.lexeme + "(");
+			foreach (var param in stmt.input) {
 				if (param != stmt.input[0])
-					builder.Append(" ");
-				builder.Append(param.lexeme);
+					builder.Append(", ");
+				builder.Append(param.Accept(this, null));
 			}
 			builder.Append(") ");
 			foreach (Stmt body in stmt.body)
@@ -64,8 +69,8 @@ namespace Cy {
 			return Parenthesize("return", stmt.value);
 		}
 
-		public object VisitTypeStmt(Stmt.Type stmt, object options) {
-			throw new NotImplementedException();
+		public object VisitTypeStmt(Stmt.StmtType stmt, object options) {
+			return stmt.token.lexeme;
 		}
 
 		public object VisitUnaryExpr(Expr.Unary expr, object options) {
@@ -77,9 +82,10 @@ namespace Cy {
 		}
 
 		public object VisitVarStmt(Stmt.Var stmt, object options) {
+			string typestr = (string)stmt.stmtType.Accept(this, null);
 			if (stmt.initialiser == null)
-				return Parenthesize2("var", stmt.token);
-			return Parenthesize2("var", stmt.token, "=", stmt.initialiser);
+				return Parenthesize2(typestr, stmt.token);
+			return Parenthesize2(typestr, stmt.token, "=", stmt.initialiser);
 		}
 
 
@@ -107,7 +113,7 @@ namespace Cy {
 					builder.Append(stmt.Accept(this, null));
 				} else if (part is Token token) {
 					builder.Append(token.lexeme);
-				} else {
+				} else if (part != null) {
 					builder.Append(part);
 				}
 			}

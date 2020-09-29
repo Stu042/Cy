@@ -8,11 +8,12 @@ using System.Collections.Generic;
 namespace Cy {
     class Program {
 
-        static int Main(string[] args) {
+		static int Main(string[] args) {
 			List<List<Token>> allTokens = new List<List<Token>>();
 
 			Scanner scanner = new Scanner();
 			foreach (var filename in args) {
+				Console.WriteLine($"Reading file: {filename}");
 				string alltext = File.ReadAllText(filename);
 				List<Token> tokens = scanner.ScanTokens(filename, alltext);
 				allTokens.Add(tokens);

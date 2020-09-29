@@ -18,6 +18,12 @@ namespace Cy {
 			Console.WriteLine("^");
 		}
 
+		public static void Error(Token tok, string message) {
+			Error(tok.filename, tok.line, tok.offset, "", message);
+		}
+
+		// TODO cache source files to auto get linestr
+
 
 	}
 }

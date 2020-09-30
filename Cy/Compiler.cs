@@ -69,13 +69,16 @@ namespace Cy {
 		void GetLLVMPreCode() {
 			StringBuilder pre = new StringBuilder();
 			string llfileName = @"IHopeNoOneUsesThisFileName.ll";
-			using (StreamWriter sw = File.CreateText(fileName))
-				sw.WriteLine(" ");
-			RunCmd($"clang.exe {fileName} -S -emit-llvm");
-			string[] llvmPreCode = File.ReadAllLines(llfileName);
-			RunCmd($"del /f {fileName}");
-			RunCmd($"del /f {llfileName}");
-
+			string[] llvmPreCode;
+			try {
+				using (StreamWriter sw = File.CreateText(fileName))
+					sw.WriteLine(" ");
+				RunCmd($"clang.exe {fileName} -S -emit-llvm");
+				llvmPreCode = File.ReadAllLines(llfileName);
+			} finally {
+				RunCmd($"del /f {fileName}");
+				RunCmd($"del /f {llfileName}");
+			}
 			string modulestr = GetStr("ModuleID", llvmPreCode);
 			pre.AppendLine(modulestr);
 			string srcstr = GetStr("source_filename", llvmPreCode);

@@ -160,8 +160,8 @@ namespace Cy {
 			int s = size;
 			if (isPtr)
 				s = 32;
-			double minalign = Math.Ceiling((double)s / 8.0);
-			return (int)Math.Ceiling(minalign % 4) * 4;
+			int minalign = (int)Math.Ceiling((double)s / 8.0);
+			return minalign;
 		}
 
 
@@ -178,17 +178,27 @@ namespace Cy {
 			}
 			switch (kind) {
 				case Kind.INT:
-					return (isPtr ? '*' : ' ') + $"i{s}";
+					if (isPtr)
+						return $"*i{s}";
+					return $"i{s}";
 				case Kind.FLOAT:
 					switch (s) {
 						case 16:
-							return (isPtr ? '*' : ' ') + $"half";
+							if (isPtr)
+								return $"*half";
+							return $"half";
 						case 32:
-							return (isPtr ? '*' : ' ') + $"float";
+							if (isPtr)
+								return $"*float";
+							return $"float";
 						case 64:
-							return (isPtr ? '*' : ' ') + $"double";
+							if (isPtr)
+								return $"*double";
+							return $"double";
 						case 128:
-							return (isPtr ? '*' : ' ') + $"fp128";
+							if (isPtr)
+								return $"*fp128";
+							return $"fp128";
 						default:
 							throw new TypeError("Unknown size of type float requested.");
 					}

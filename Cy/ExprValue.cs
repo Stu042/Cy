@@ -164,8 +164,7 @@ namespace Cy {
 			if (rhsvar.exprValue is ExprValueLiteral rhsLiteral) {
 				ExprValueLiteral rhsl = (ExprValueLiteral)rhs;
 				ExprValue xpval = new ExprValueLiteral(new CyType(info, rhs.info), AddLiterals(this, rhsl));
-				ExprValueLiteral xpvallit = new ExprValueLiteral(new CyType(info, rhs.info), xpval);
-				return new ExprValueAndString(xpvallit, "");
+				return new ExprValueAndString(xpval, "");
 			} else {
 				ExprValue xpval = new ExprValue(new CyType(info, rhs.info));
 				return new ExprValueAndString(xpval, rhsvar.code + Llvm.Indent($"{xpval.llvmref} = add nsw {info.Llvm()} {llvmref}, {rhsvar.exprValue.llvmref}\n"));
@@ -177,8 +176,7 @@ namespace Cy {
 			if (rhsvar.exprValue is ExprValueLiteral rhsLiteral) {
 				ExprValueLiteral rhsl = (ExprValueLiteral)rhs;
 				ExprValue xpval = new ExprValueLiteral(new CyType(info, rhs.info), SubLiterals(this, rhsl));
-				ExprValueLiteral xpvallit = new ExprValueLiteral(new CyType(info, rhs.info), xpval);
-				return new ExprValueAndString(xpvallit, "");
+				return new ExprValueAndString(xpval, "");
 			} else {
 				ExprValue xpval = new ExprValue(new CyType(info, rhs.info));
 				return new ExprValueAndString(xpval, rhsvar.code + Llvm.Indent($"{xpval.llvmref} = sub nsw {info.Llvm()} {llvmref}, {rhsvar.exprValue.llvmref}\n"));
@@ -190,8 +188,7 @@ namespace Cy {
 			if (rhsvar.exprValue is ExprValueLiteral rhsLiteral) {
 				ExprValueLiteral rhsl = (ExprValueLiteral)rhs;
 				ExprValue xpval = new ExprValueLiteral(new CyType(info, rhs.info), MultLiterals(this, rhsl));
-				ExprValueLiteral xpvallit = new ExprValueLiteral(new CyType(info, rhs.info), xpval);
-				return new ExprValueAndString(xpvallit, "");
+				return new ExprValueAndString(xpval, "");
 			} else {
 				ExprValue xpval = new ExprValue(new CyType(info, rhs.info));
 				return new ExprValueAndString(xpval, rhsvar.code + Llvm.Indent($"{xpval.llvmref} = mul nsw {info.Llvm()} {llvmref}, {rhsvar.exprValue.llvmref}\n"));
@@ -203,8 +200,7 @@ namespace Cy {
 			if (rhsvar.exprValue is ExprValueLiteral rhsLiteral) {
 				ExprValueLiteral rhsl = (ExprValueLiteral)rhs;
 				ExprValue xpval = new ExprValueLiteral(new CyType(info, rhs.info), DivLiterals(this, rhsl));
-				ExprValueLiteral xpvallit = new ExprValueLiteral(new CyType(info, rhs.info), xpval);
-				return new ExprValueAndString(xpvallit, "");
+				return new ExprValueAndString(xpval, "");
 			} else {
 				ExprValue xpval = new ExprValue(new CyType(info, rhs.info));
 				return new ExprValueAndString(xpval, rhsvar.code + Llvm.Indent($"{xpval.llvmref} = div nsw {info.Llvm()} {llvmref}, {rhsvar.exprValue.llvmref}\n"));
@@ -215,12 +211,13 @@ namespace Cy {
 		object AddLiterals(ExprValueLiteral lhs, ExprValueLiteral rhs) {
 			switch (info.kind) {
 				case CyType.Kind.INT: {
+					Type tp = lhs.value.GetType();
 					int l = (int)lhs.value;
 					switch (rhs.info.kind) {
 						case CyType.Kind.INT:
-							return l + (int)lhs.value;
+							return l + (int)rhs.value;
 						case CyType.Kind.FLOAT:
-							return l + (double)lhs.value;
+							return l + (double)rhs.value;
 						case CyType.Kind.STR:
 							return 0;
 						case CyType.Kind.USERDEFINED:
@@ -235,9 +232,9 @@ namespace Cy {
 					double l = (double)lhs.value;
 					switch (rhs.info.kind) {
 						case CyType.Kind.INT:
-							return l + (int)lhs.value;
+							return l + (int)rhs.value;
 						case CyType.Kind.FLOAT:
-							return l + (double)lhs.value;
+							return l + (double)rhs.value;
 						case CyType.Kind.STR:
 							return 0;
 						case CyType.Kind.USERDEFINED:
@@ -265,9 +262,9 @@ namespace Cy {
 					int l = (int)lhs.value;
 					switch (rhs.info.kind) {
 						case CyType.Kind.INT:
-							return l + (int)lhs.value;
+							return l + (int)rhs.value;
 						case CyType.Kind.FLOAT:
-							return l + (double)lhs.value;
+							return l + (double)rhs.value;
 						case CyType.Kind.STR:
 							return 0;
 						case CyType.Kind.USERDEFINED:
@@ -282,9 +279,9 @@ namespace Cy {
 					double l = (double)lhs.value;
 					switch (rhs.info.kind) {
 						case CyType.Kind.INT:
-							return l + (int)lhs.value;
+							return l + (int)rhs.value;
 						case CyType.Kind.FLOAT:
-							return l + (double)lhs.value;
+							return l + (double)rhs.value;
 						case CyType.Kind.STR:
 							return 0;
 						case CyType.Kind.USERDEFINED:
@@ -312,9 +309,9 @@ namespace Cy {
 					int l = (int)lhs.value;
 					switch (rhs.info.kind) {
 						case CyType.Kind.INT:
-							return l * (int)lhs.value;
+							return l * (int)rhs.value;
 						case CyType.Kind.FLOAT:
-							return l * (double)lhs.value;
+							return l * (double)rhs.value;
 						case CyType.Kind.STR:
 							return 0;
 						case CyType.Kind.USERDEFINED:
@@ -329,9 +326,9 @@ namespace Cy {
 					double l = (double)lhs.value;
 					switch (rhs.info.kind) {
 						case CyType.Kind.INT:
-							return l * (int)lhs.value;
+							return l * (int)rhs.value;
 						case CyType.Kind.FLOAT:
-							return l * (double)lhs.value;
+							return l * (double)rhs.value;
 						case CyType.Kind.STR:
 							return 0;
 						case CyType.Kind.USERDEFINED:
@@ -359,9 +356,9 @@ namespace Cy {
 					int l = (int)lhs.value;
 					switch (rhs.info.kind) {
 						case CyType.Kind.INT:
-							return l / (int)lhs.value;
+							return l / (int)rhs.value;
 						case CyType.Kind.FLOAT:
-							return l / (double)lhs.value;
+							return l / (double)rhs.value;
 						case CyType.Kind.STR:
 							return 0;
 						case CyType.Kind.USERDEFINED:
@@ -376,9 +373,9 @@ namespace Cy {
 					double l = (double)lhs.value;
 					switch (rhs.info.kind) {
 						case CyType.Kind.INT:
-							return l / (int)lhs.value;
+							return l / (int)rhs.value;
 						case CyType.Kind.FLOAT:
-							return l / (double)lhs.value;
+							return l / (double)rhs.value;
 						case CyType.Kind.STR:
 							return 0;
 						case CyType.Kind.USERDEFINED:
@@ -546,7 +543,7 @@ namespace Cy {
 
 		// bring a variable copy back ready to use
 		public virtual ExprValueAndString Load() {
-			string llvmref = Llvm.NextVarRef();
+			//string llvmref = Llvm.NextVarRef();
 			ExprValue xpval = new ExprValue(info);
 			return new ExprValueAndString(xpval, Llvm.Indent($"{xpval.llvmref} = load {info.Llvm()}, {info.Llvm()}* {llvmref}, align {info.AlignSize()}\n"));
 		}

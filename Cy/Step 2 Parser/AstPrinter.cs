@@ -56,11 +56,30 @@ namespace Cy {
 			return builder.ToString();
 		}
 
+		public object VisitClassStmt(Stmt.StmtClass obj, object options) {
+			StringBuilder builder = new StringBuilder();
+			builder.Append("(" + obj.token.lexeme + ": ");
+			List<string> memberStr = new List<string>();
+			foreach (Stmt.Var memb in obj.members)
+				memberStr.Add((string)memb.Accept(this, null));
+			builder.Append(Parenthesize2("members: ", memberStr.ToArray()));
+			List<string> methodStr = new List<string>();
+			foreach (Stmt.Function memb in obj.methods)
+				methodStr.Add((string)memb.Accept(this, null));
+			builder.Append(Parenthesize2("methods: ", methodStr.ToArray()));
+			builder.Append(")");
+			return builder.ToString();
+		}
+
 
 		public object VisitLiteralExpr(Expr.Literal expr, object options) {
 			if (expr.value == null)
 				return "nil";
 			return expr.value.ToString();
+		}
+
+		public object VisitSetExpr(Expr.Set expr, object options) {
+			return Parenthesize2("=", expr.obj, expr.token.lexeme, expr.value);
 		}
 
 		public object VisitReturnStmt(Stmt.Return stmt, object options) {
@@ -86,6 +105,14 @@ namespace Cy {
 			if (stmt.initialiser == null)
 				return Parenthesize2(typestr, stmt.token);
 			return Parenthesize2(typestr, stmt.token, "=", stmt.initialiser);
+		}
+
+		public object VisitGetExpr(Expr.Get expr, object options) {
+			return Parenthesize2(".", expr.obj, expr.token.lexeme);
+		}
+
+		public object VisitCallExpr(Expr.Call expr, object options) {
+			return Parenthesize2("call", expr.callee, Parenthesize("args: ", expr.arguments.ToArray()));
 		}
 
 

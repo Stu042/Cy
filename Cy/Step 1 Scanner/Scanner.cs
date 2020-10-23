@@ -12,19 +12,15 @@ namespace Cy {
 			public int start { get; private set; }
 			int current;
 
-
-
 			public void NewFile(string text) {
 				source = text.ToCharArray();
 				start = 0;
 				current = 0;
 			}
 
-
 			public void Start() {
 				start = current;
 			}
-
 
 			public bool Match(char expected) {
 				if (IsAtEnd() || source[current] != expected)
@@ -33,16 +29,13 @@ namespace Cy {
 				return true;
 			}
 
-
 			public bool IsAtEnd() {
 				return current >= source.Length;
 			}
 
-
 			public char Advance() {
 				return source[current++];
 			}
-
 
 			public char Peek() {
 				if (IsAtEnd())
@@ -50,13 +43,11 @@ namespace Cy {
 				return source[current];
 			}
 
-
 			public char PeekNext() {
 				if ((current + 1) >= source.Length)
 					return '\0';
 				return source[current + 1];
 			}
-
 
 			public char[] ToArray(int startOffset = 0, int endOffset = 0) {
 				int len = (current + startOffset) - (start - endOffset);
@@ -65,7 +56,6 @@ namespace Cy {
 				return res;
 			}
 
-
 			public int Offset() {
 				int s = start;
 				int c = 0;
@@ -73,7 +63,6 @@ namespace Cy {
 					--s;
 					c++;
 				}
-				c--;
 				return c;
 			}
 
@@ -103,6 +92,8 @@ namespace Cy {
 			}
 
 		}
+
+
 
 
 		string filename;
@@ -157,6 +148,8 @@ namespace Cy {
 				cursor.Start();
 				ScanToken();
 			}
+			AddToken(Token.Kind.EOF);
+			Tidy();
 			return tokens;
 		}
 
@@ -267,7 +260,7 @@ namespace Cy {
 						inLineWrap = false;
 						break;
 					}
-					AddToken(Token.Kind.NEWLINE, "", null);
+					AddToken(Token.Kind.NEWLINE);
 					int indent = 0;
 					while (cursor.Peek() == '\t' && !cursor.IsAtEnd()) {
 						indent++;
@@ -280,13 +273,12 @@ namespace Cy {
 					String();
 					break;
 				default:
-					if (IsDigit(c)) {
+					if (IsDigit(c))
 						Number();
-					} else if (IsAlpha(c)) {
+					else if (IsAlpha(c))
 						Identifier();
-					} else {
+					else
 						Error("Unexpected character.");
-					}
 					break;
 			}
 		}
@@ -296,7 +288,6 @@ namespace Cy {
 		void Identifier() {
 			while (IsAlphaNumeric(cursor.Peek()))
 				cursor.Advance();
-			// See if the identifier is a reserved word.
 			string text = new string(cursor.ToArray());
 			Token.Kind type = Token.Kind.IDENTIFIER;
 			if (keywords.ContainsKey(text))

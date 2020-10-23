@@ -37,7 +37,17 @@ namespace Cy {
 				}
 			}
 
-			Compiler compiler = new Compiler();
+			Console.WriteLine("\n\nMapping user defined types:");
+			
+			MapUserTypes usertypes = new MapUserTypes();
+			foreach (var stmts in allStmts) {
+				foreach (var stmt in stmts) {
+					usertypes.Run(stmt);
+				}
+			}
+			TypeHierarchy.Environ typeEnv = usertypes.GetEnv();
+			Console.WriteLine("\n\nCompiling:");
+			Compiler compiler = new Compiler(typeEnv);
 			int count = allStmts.Count;
 			for (var i = 0; i < count; i++) {
 				List<Stmt> stmts = allStmts[i];

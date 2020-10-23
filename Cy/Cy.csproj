@@ -13,6 +13,7 @@
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
     <TargetFrameworkProfile>Client</TargetFrameworkProfile>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -23,9 +24,8 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
-    <ApplicationRevision>0</ApplicationRevision>
-    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <ApplicationRevision>3</ApplicationRevision>
+    <ApplicationVersion>0.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
@@ -62,28 +62,40 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AstPrinter.cs" />
-    <Compile Include="Compiler.cs" />
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
+    <Compile Include="Step 2 Parser\AstPrinter.cs" />
+    <Compile Include="Step 4 Compiling\Compiler.cs" />
     <Compile Include="Display.cs" />
-    <Compile Include="Expr.cs" />
-    <Compile Include="ExprValue.cs" />
-    <Compile Include="Parser.cs" />
+    <Compile Include="Step 2 Parser\Expr.cs" />
+    <Compile Include="Step 4 Compiling\ExprValue.cs" />
+    <Compile Include="Step 2 Parser\Parser.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Scanner.cs" />
-    <Compile Include="Stmt.cs" />
-    <Compile Include="Symbols.cs" />
-    <Compile Include="Token.cs" />
-    <Compile Include="CyType.cs" />
+    <Compile Include="Step 1 Scanner\Scanner.cs" />
+    <Compile Include="Step 2 Parser\Stmt.cs" />
+    <Compile Include="Step 3 Pre Compiling\MapUserTypes.cs" />
+    <Compile Include="Step 1 Scanner\Token.cs" />
+    <Compile Include="Step 3 Pre Compiling\CyType.cs" />
+    <Compile Include="Step 4 Compiling\Llvm.cs" />
+    <Compile Include="Util.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
     <None Include="TestFiles.cy\test1.cy" />
     <None Include="TestFiles.cy\test2.cy" />
     <None Include="TestFiles.cy\test2a.cy" />
     <None Include="TestFiles.cy\test3a.cy" />
     <None Include="TestFiles.cy\test3.cy" />
     <None Include="TestFiles.cy\test4.cy" />
+    <None Include="TestFiles.cy\test6.cy" />
     <None Include="TestFiles.cy\test5.cy" />
     <None Include="TestFiles.cy\test5a.cy" />
   </ItemGroup>

@@ -129,10 +129,10 @@ namespace Cy {
 
 		public override string ToString() {
 			if (type == Kind.NEWLINE)
-				return $"NewLine I{indent}-L{line}:O{offset}";
+				return $"NewLine Indent:{indent} Line:{line} Offset:{offset}";
 			if (type == Kind.EOF)
-				return $"EOF I{indent}-L{line}:O{offset}";
-			return $"{lexeme} {literal} I{indent}-L{line}:O{offset}";
+				return $"EOF Indent:{indent} Line:{line} Offset:{offset}";
+			return $"{lexeme} {literal} Indent:{indent} Line:{line} Offset:{offset}";
 		}
 
 

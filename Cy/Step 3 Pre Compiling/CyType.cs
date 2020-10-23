@@ -5,6 +5,7 @@ using System.Text;
 
 namespace Cy {
 
+	// defines all types, gives type info for llvm
 	public class CyType {
 		/// <summary>Basic types.</summary>
 		public enum Kind { UNKNOWN, INT, FLOAT, STR, USERDEFINED }; // USERDEFINED will typically be classes but who knows what the future will bring
@@ -160,8 +161,13 @@ namespace Cy {
 			int s = size;
 			if (isPtr)
 				s = 32;
-			int minalign = (int)Math.Ceiling((double)s / 8.0);
-			return minalign;
+			if (s > 64)
+				return 16;
+			else if (s > 32)
+				return 8;
+			else if (s > 16)
+				return 4;
+			return 1;
 		}
 
 
@@ -318,77 +324,8 @@ namespace Cy {
 				}
 			}
 
-			/*
-			/// <summary>
-			/// Cast a value to a diff type, throw exception if not possible
-			/// </summary>
-			public static ExprValue Cast(ExprValue val, CyType toType) {
-				object ans = 0;
-				switch (val.info.kind) {
-					case CyType.Kind.INT:
-						switch (toType.kind) {
-							case CyType.Kind.INT:
-								return val;
-							case CyType.Kind.FLOAT:
-								double d = (double)val.value;
-								return new ExprValue(toType, d.ToString(), val.isLiteral, d);
-							case CyType.Kind.STR:
-								throw new CyType.TypeError("Unable to cast int as str");
-							case CyType.Kind.USERDEFINED:
-								throw new CyType.TypeError("Unable to cast int object as object");
-							default:
-								throw new CyType.TypeError("Attempting to cast int as unknown type");
-						}
 
-					case CyType.Kind.FLOAT:
-						switch (toType.kind) {
-							case CyType.Kind.INT:
-								int i = (int)Math.Floor((double)val.value);
-								return new ExprValue(toType, i.ToString(), val.isLiteral, i);
-							case CyType.Kind.FLOAT:
-								return val;
-							case CyType.Kind.STR:
-								throw new CyType.TypeError("Unable to cast float as str");
-							case CyType.Kind.USERDEFINED:
-								throw new CyType.TypeError("Unable to cast float as str");
-							default:
-								throw new CyType.TypeError("Attempting to cast float as unknown type");
-						}
-					case CyType.Kind.STR:
-						switch (toType.kind) {
-							case CyType.Kind.INT:
-								throw new CyType.TypeError("Unable to cast str as int");
-							case CyType.Kind.FLOAT:
-								throw new CyType.TypeError("Unable to cast str as float");
-							case CyType.Kind.STR:
-								return val;
-							case CyType.Kind.USERDEFINED:
-								throw new CyType.TypeError("Unable to cast str as object");
-							default:
-								throw new CyType.TypeError("Unable to cast str as unknown");
-						}
-					case CyType.Kind.USERDEFINED:
-						switch (toType.kind) {
-							case CyType.Kind.INT:
-								throw new CyType.TypeError("Unable to cast object as int");
-							case CyType.Kind.FLOAT:
-								throw new CyType.TypeError("Unable to cast object as float");
-							case CyType.Kind.STR:
-								throw new CyType.TypeError("Unable to cast object as str");
-							case CyType.Kind.USERDEFINED:
-								return val;
-							default:
-								throw new CyType.TypeError("Unable to cast object as unknown");
-						}
-					default:
-						return val;
-				}
-			}
-			*/
-
-			/// <summary>
-			/// Get Stmt.Type.Kind of this object
-			/// </summary>
+			/// <summary>Get Stmt.Type.Kind of this object</summary>
 			static CyType.Kind ObjectType(object val) {
 				CyType.Kind kind;
 				if (val is int i) {

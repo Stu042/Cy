@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 
 
 namespace Cy {
@@ -12,18 +13,32 @@ namespace Cy {
 			string errorstr = $"\t{line}|{offset} ";
 			Console.WriteLine($"{errorstr}{linestr}");
 			int c = 0;
-			int count = errorstr.Length + offset;
-			while (c++ < count)
-				Console.Write(" ");
+			int count = errorstr.Length + Math.Min(offset, linestr.Length);
+			while (c < errorstr.Length) {
+				if (errorstr[c] == '\t')
+					Console.Write("\t");
+				else
+					Console.Write(" ");
+				c++;
+			}
+			while (c < count) {
+				if (linestr[c++ - errorstr.Length] == '\t')
+					Console.Write("\t");
+				else
+					Console.Write(" ");
+			}
 			Console.WriteLine("^");
 		}
 
 		public static void Error(Token tok, string message) {
-			Error(tok.filename, tok.line, tok.offset, "", message);
+			Error(tok.filename, tok.line, tok.offset, GetLine(tok.filename, tok.line), message);
 		}
 
-		// TODO cache source files to auto get linestr
-
+		static string GetLine(string filename, int line) {
+			string[] alltext = File.ReadAllLines(filename);
+			int idx = Math.Min(line, alltext.Length - 1);
+			return alltext[idx];
+		}
 
 	}
 }

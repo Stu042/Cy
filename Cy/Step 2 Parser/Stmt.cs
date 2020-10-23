@@ -18,7 +18,7 @@ namespace Cy {
 			object VisitReturnStmt(Return stmt, object options);
 			object VisitVarStmt(Var stmt, object options);
 			object VisitTypeStmt(StmtType stmt, object options);
-			
+			object VisitClassStmt(StmtClass stmt, object options);
 		}
 
 
@@ -73,7 +73,7 @@ namespace Cy {
 				this.token = token;
 				this.input = input;
 				this.body = body;
-		    }
+			}
 			public override object Accept(IVisitor visitor, object options) {
 				return visitor.VisitFunctionStmt(this, options);
 			}
@@ -107,6 +107,20 @@ namespace Cy {
 			}
 		}
 
+		public class StmtClass : Stmt {
+			public List<Var> members;
+			public List<Function> methods;
+			public List<StmtClass> classes;
+			public StmtClass(Token token, List<Var> members, List<Function> methods, List<StmtClass> classes) {
+				this.token = token;
+				this.members = members;
+				this.methods = methods;
+				this.classes = classes;
+			}
+			public override object Accept(IVisitor visitor, object options) {
+				return visitor.VisitClassStmt(this, options);
+			}
+		}
 
 		/// <summary>A basic or user defined type.</summary>
 		public class StmtType : Stmt {

@@ -1,6 +1,6 @@
 Data:
 	int a
-	float b
+	float32 b
 
 
 int Main():

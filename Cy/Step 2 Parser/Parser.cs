@@ -21,22 +21,66 @@ namespace Cy {
 			return statements;
 		}
 
+		bool IsFuncDeclaration() {
+			if (cursor.PeekAnyType() && cursor.PeekNext().type == Token.Kind.IDENTIFIER) {
+				int a = 2;
+				if (cursor.PeekNext(a++).type == Token.Kind.LEFT_PAREN) {
+					Token.Kind toktype = cursor.PeekNext(a).type;
+					while (toktype != Token.Kind.RIGHT_PAREN) {
+						if (toktype == Token.Kind.NEWLINE || toktype == Token.Kind.EOF)
+							return false;
+						a++;
+						toktype = cursor.PeekNext(a).type;
+					}
+					a++;
+					if (cursor.PeekNext(a).type == Token.Kind.COLON)
+						return true;
+				}
+			}
+			return false;
+		}
 
 
 		Stmt Declaration() {
 			try {
-				if (cursor.MatchAnyType()) {
-					if (cursor.CheckAll(Token.Kind.IDENTIFIER, Token.Kind.LEFT_PAREN) && cursor.LineCheck(Token.Kind.RIGHT_PAREN, Token.Kind.COLON))
+				if (cursor.Peek().type == Token.Kind.IDENTIFIER && cursor.PeekNext().type == Token.Kind.COLON)
+					return ClassDeclaration();
+				if (cursor.PeekAnyType()) {
+					if (IsFuncDeclaration())
 						return FunDeclaration("function");
-					else if (cursor.Check(Token.Kind.IDENTIFIER))
+					else if (cursor.PeekNext().type == Token.Kind.IDENTIFIER)
 						return VarDeclaration();
 				}
 				return Statement();
 			} catch (ParseError e) {
-				Console.WriteLine($"Parse error: {e.Message}");
+				Display.Error(e.token, e.Message);
 				Synchronize();
-				return null;
 			}
+			return null;
+		}
+
+		Stmt.StmtClass ClassDeclaration() {
+			Token name = cursor.Advance();
+			int startindent = name.indent;
+			cursor.Consume(Token.Kind.COLON, "Expect ':' after " + name.lexeme + " for an object definition.");
+			cursor.Consume(Token.Kind.NEWLINE, "Expect 'newline' after " + name.lexeme + ": for an object definition.");
+			List<Stmt.Var> members = new List<Stmt.Var>();
+			List<Stmt.Function> methods = new List<Stmt.Function>();
+			List<Stmt.StmtClass> classes = new List<Stmt.StmtClass>();
+			Stmt astmt;
+			while (cursor.Peek().indent > startindent) {
+				astmt = Declaration();
+				if (astmt is Stmt.Var v) {
+					members.Add(v);
+				} else if (astmt is Stmt.Function f) {
+					methods.Add(f);
+				} else if (astmt is Stmt.StmtClass c) {
+					classes.Add(c);
+				} else {
+					Error(astmt.token, "Object definitions should only contain methods, members or objects.");
+				}
+			}
+			return new Stmt.StmtClass(name, members, methods, classes);
 		}
 
 
@@ -44,7 +88,7 @@ namespace Cy {
 		/// Declare a function/method.
 		/// </summary>
 		Stmt.Function FunDeclaration(string kind) {
-			Stmt.StmtType type = new Stmt.StmtType(cursor.Previous());
+			Stmt.StmtType type = new Stmt.StmtType(cursor.Advance());
 			Token name = cursor.Consume(Token.Kind.IDENTIFIER, "Expect " + kind + " name.");
 			cursor.Consume(Token.Kind.LEFT_PAREN, "Expect '(' after " + kind + " name.");
 			List<Stmt.InputVar> parameters = new List<Stmt.InputVar>();
@@ -52,7 +96,11 @@ namespace Cy {
 				do {
 					if (parameters.Count >= 255)
 						Error(cursor.Peek(), "Cannot have more than 255 parameters.");
-					Token typeTok = cursor.Consume(Token.Kind.IDENTIFIER, "Expect parameter type.");
+					Token typeTok;
+					if (cursor.PeekAnyType())
+						typeTok = cursor.Advance();
+					else
+						throw new ParseError(cursor.Peek(), "Expect parameter type.");
 					Token id = cursor.Consume(Token.Kind.IDENTIFIER, "Expect parameter name.");
 					parameters.Add(new Stmt.InputVar(new Stmt.StmtType(typeTok), id));
 				} while (cursor.Match(Token.Kind.COMMA));
@@ -119,11 +167,27 @@ namespace Cy {
 		}
 
 
+		Expr Assignment() {
+			Expr expr = Or();
+			if (cursor.Match(Token.Kind.EQUAL)) {
+				Token equals = cursor.Previous();
+				Expr value = Assignment();
+				if (expr is Expr.Variable vexpr) {
+					Token name = vexpr.token;
+					return new Expr.Assign(name, value);
+				} else if (expr is Expr.Get gexpr) {
+					return new Expr.Set(gexpr.obj, gexpr.token, value);
+				}
+				Error(equals, "Invalid assignment target."); // [no-throw]
+			}
+			return expr;
+		}
+
 		/// <summary>
 		/// Create a variable which optionally has an assigned expression.
 		/// </summary>
-		Stmt VarDeclaration() {         // called after type, cur token is var name
-			Token type = cursor.Previous();
+		Stmt VarDeclaration() {
+			Token type = cursor.Advance();
 			Token name = cursor.Consume(Token.Kind.IDENTIFIER, "Expect variable name.");
 			Expr initializer = null;
 			if (cursor.Match(Token.Kind.EQUAL))
@@ -137,9 +201,30 @@ namespace Cy {
 		/// Create an expression. could be a+b or 2+3 or could be rhs of an assign, a=2, etc...
 		/// </summary>
 		Expr Expression() {
-			return Equality();
+			Expr expr = Assignment();
+			//cursor.Consume(Token.Kind.NEWLINE, "Expect 'newline' after expression.");
+			return expr;
 		}
 
+		Expr Or() {
+			Expr expr = And();
+			while (cursor.Match(Token.Kind.OR)) {
+				Token op = cursor.Previous();
+				Expr right = And();
+//				expr = new Expr.Logical(expr, op, right);
+			}
+			return expr;
+		}
+
+		Expr And() {
+			Expr expr = Equality();
+			while (cursor.Match(Token.Kind.AND)) {
+				Token op = cursor.Previous();
+				Expr right = Equality();
+//				expr = new Expr.Logical(expr, op, right);
+			}
+			return expr;
+		}
 
 		Expr Equality() {
 			Expr expr = Compare();
@@ -187,9 +272,37 @@ namespace Cy {
 				Expr right = Unary();
 				return new Expr.Unary(op, right);
 			}
-			return Primary();
+			return Call();
 		}
 
+		Expr FinishCall(Expr callee) {
+			List<Expr> arguments = new List<Expr>();
+			if (!cursor.Check(Token.Kind.RIGHT_PAREN)) {
+				do {
+					if (arguments.Count >= 255)
+						Error(cursor.Peek(), "Cannot have more than 255 arguments.");
+					arguments.Add(Expression());
+				} while (cursor.Match(Token.Kind.COMMA));
+			}
+			Token paren = cursor.Consume(Token.Kind.RIGHT_PAREN, "Expect ')' after arguments.");
+			return new Expr.Call(callee, paren, arguments);
+		}
+
+		Expr Call() {
+			Expr expr = Primary();
+			while (true) {
+				if (cursor.Match(Token.Kind.LEFT_PAREN)) {
+					expr = FinishCall(expr);
+				} else if (cursor.Match(Token.Kind.DOT)) {
+					Token name = cursor.Consume(Token.Kind.IDENTIFIER, "Expect property name after '.'.");
+					expr = new Expr.Get(expr, name);
+				} else {
+					break;
+				}
+			}
+			return expr;
+		}
+		
 		Expr Primary() {
 			if (cursor.Match(Token.Kind.FALSE))
 				return new Expr.Literal(cursor.Previous(), false);
@@ -197,17 +310,23 @@ namespace Cy {
 				return new Expr.Literal(cursor.Previous(), true);
 			if (cursor.Match(Token.Kind.NIL))
 				return new Expr.Literal(cursor.Previous(), null);
-			if (cursor.Match(Token.Kind.IDENTIFIER))
-				return new Expr.Variable(cursor.Previous());
+			if (cursor.Match(Token.Kind.IDENTIFIER)) {
+				Expr expr = new Expr.Variable(cursor.Previous());
+				while (cursor.Match(Token.Kind.DOT)) {
+					Token name = cursor.Consume(Token.Kind.IDENTIFIER, "Expect property name after '.'.");
+					expr = new Expr.Get(expr, name);
+				}
+				return expr;
+			}
 			if (cursor.Peek().IsLiteral()) {
 				Token tok = cursor.Advance();
 				return new Expr.Literal(tok, tok.literal);
 			}
 			
-			/*
+			/* for grouping expressions, i.e. 2 * (5+2)
 			if (cursor.Match(Token.Kind.LEFT_PAREN)) {
 				Expr expr = Expression();
-				cursor.Consume(Token.Kind.RIGHT_PAREN, "Expect ')' after expression.");
+				cursor.Consume(Token.Kind.RIGHT_PAREN, "Expect matching ')' after expression.");
 				return new Expr.Grouping(expr);
 			}
 			*/
@@ -247,8 +366,7 @@ namespace Cy {
 
 
 		void Error(Token token, string message) {
-			Display.Error(token, "", message);
-			//Console.WriteLine("Parse error: {0} in {1} at {2}, {3}:{4}", message, token.filename, token.lexeme, token.line, token.offset);
+			Display.Error(token, message);
 		}
 
 
@@ -295,9 +413,8 @@ namespace Cy {
 			/// <summary>
 			/// Matches any type, including IDENTIFIER for a user defined type...
 			/// </summary>
-			public bool MatchAnyType() {
+			public bool PeekAnyType() {
 				if (tokens[current].IsAnyType()) {
-					Advance();
 					return true;
 				}
 				return false;
@@ -309,7 +426,7 @@ namespace Cy {
 			public bool Check(Token.Kind expected) {
 				if (IsAtEnd())
 					return false;
-				return expected == Token.Kind.ANY || tokens[current].type == expected;
+				return tokens[current].type == expected || expected == Token.Kind.ANY;
 			}
 
 
@@ -355,7 +472,7 @@ namespace Cy {
 			}
 
 			public bool IsAtEnd() {
-				return current >= tokens.Count;
+				return current >= tokens.Count || tokens[current].type == Token.Kind.EOF;
 			}
 
 			public Token Advance() {
@@ -380,6 +497,7 @@ namespace Cy {
 				return tokens[current - 1];
 			}
 
+
 		}   // Cursor
 
 
@@ -389,8 +507,11 @@ namespace Cy {
 		///  Error exception for parser.
 		/// </summary>
 		class ParseError : Exception {
+			public Token token;
 			public ParseError() { }
-			public ParseError(Token token, string message) : base(string.Format("Parse error: {0} : {1}", message, token)) { }
+			public ParseError(Token token, string message) : base(string.Format("Parse error: {0} : {1}", message, token)) {
+				this.token = token;
+			}
 		}
 
 

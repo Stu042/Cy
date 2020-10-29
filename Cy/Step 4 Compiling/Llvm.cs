@@ -8,40 +8,69 @@ namespace Cy {
 	// utils to help working with llvm
 	public static class Llvm {
 
-		// string name needs to be fullname, unique name for this method/function/object - as unique as I want it anyway
+		/// <summary>returns the unique name for this function - name plus types</summary>
+		public static string GetFuncName(string tokName, List<Stmt.InputVar> inargs) {
+			if (tokName == "Main")
+				tokName = tokName.ToLower();              // until we add our own startup main code
+			return Llvm.GetUniqueName(tokName, ArgsToStr(inargs));
+
+		}
+
+		public static string[] ArgsToStr(List<Stmt.InputVar> inargs = null) {
+			if (inargs == null)
+				return null;
+			string[] inargtypes = new string[inargs.Count];
+			int idx = 0;
+			foreach (Stmt.InputVar inarg in inargs)
+				inargtypes[idx++] = inarg.type.info.Llvm();
+			return inargtypes;
+		}
+		public static List<string> ArgsToStrList(List<Stmt.InputVar> inargs = null) {
+			if (inargs == null)
+				return null;
+			List<string> inargtypes = new List<string>();
+			foreach (Stmt.InputVar inarg in inargs)
+				inargtypes.Add(inarg.type.info.Llvm());
+			return inargtypes;
+		}
+
+		/// <summary>string name needs to be fullname, unique name for this method/function/object - as unique as I want it anyway</summary>
 		public static string GetUniqueName(string name, string[] inputLlvmTypes = null) {
-			StringBuilder str = new StringBuilder();
-			if (inputLlvmTypes != null) {
-				foreach (string t in inputLlvmTypes)
-					str.Append(t);
-			}
-			return name + str.ToString();
+			string args;
+			if (inputLlvmTypes == null)
+				args = "";
+			else
+				args = string.Join("", inputLlvmTypes);
+			return name + args;
 		}
 		public static string GetUniqueName(string name, List<string> inputLlvmTypes) {
 			return GetUniqueName(name, inputLlvmTypes.ToArray());
 		}
 
-		public static string[] FullNameArray(Tracking tracking, string next = "") {
-			TypeHierarchy.Environ cur = tracking.GetCurrent();
-			TypeHierarchy.Environ glob = tracking.GetGlobal();
+		static string[] FullNameArray(TypeHierarchy.Environ cur, TypeHierarchy.Environ global, string next = "") {
 			List<string> name = new List<string>();
 			if (next != "")
 				name.Add(next);
-			if (cur != glob) {
+			if (cur != global) {
 				do {
 					name.Add(cur.name);
 					cur = cur.parent;
-				} while (cur != glob);
+				} while (cur != global);
 			}
 			name.Reverse();
 			return name.ToArray();
 		}
 
-		// return the full name of a function/object that is defined in the current scope
-		// Note: next doesnt need to exist
-		public static string FullName(Tracking tracking, string next, string[] inArgTypes = null) {
-			string[] name = FullNameArray(tracking, next);
-			return Llvm.GetUniqueName(string.Join(".", name), inArgTypes);
+		/// <summary>return the full name of a function/object that is defined in the current scope. Note: next doesnt need to exist</summary>
+		public static string FullName(Tracking tracking, string next, List<Stmt.InputVar> inargs = null) {
+			TypeHierarchy.Environ cur = tracking.GetCurrent();
+			TypeHierarchy.Environ glob = tracking.GetGlobal();
+			string[] name = FullNameArray(cur, glob, next);
+			return Llvm.GetUniqueName(string.Join(".", name), ArgsToStr(inargs));
+		}
+		public static string FullName(TypeHierarchy.Environ cur, TypeHierarchy.Environ global, string next, List<Stmt.InputVar> inargs = null) {
+			string[] name = FullNameArray(cur, global, next);
+			return Llvm.GetUniqueName(string.Join(".", name), ArgsToStr(inargs));
 		}
 
 

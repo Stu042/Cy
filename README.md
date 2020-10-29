@@ -15,7 +15,7 @@ int Main():
 ```
 
 ```cy
-// Gotta have a hello world program, also showing string arrays are possible
+// Gotta have a hello world program, also shows the format of Mains input arguments
 int Main(str[] argv):
 	print("Hello world\n")
 	return 0
@@ -51,14 +51,12 @@ User:
 		print("{name} says hi.\n")
 	
 	int NameLength():
-		return name.count	// str is an array of int8, arrays have the member variable, count
+		return name.count	// str is an array of int8, arrays have a member named, count
 ```
 
 ### Resources
 
 The code in this project has been heavily influenced by https://github.com/munificent/craftinginterpreters
-
-
 
 ## Specification
 
@@ -74,8 +72,6 @@ Main() can be defined in several ways:
 - `int Main():`
 - `int32 Main():`
 - `int Main(str args):`
-
-
 
 ### Types
 
@@ -93,6 +89,7 @@ Most basic types have the type (starting with a lowercase letter) followed by a 
 - `float64`
 - `float128`
 - `str`
+- `void`
 
 `int` and `float` are also basic types and will be sized to suit ideal performance of the targets architecture. For a 64 bit Windows or Linux system these would be 32 bits and 64 bits respectively. 32 bits for the default int is not the obvious size (as its a 64 bit machine and OS) but this is likely to be large enough for most uses and should improve CPU cache performance. Strings - initially - are an array of 8 bit ASCII characters, UTF8 and UTF16 will be added at a later stage.
 
@@ -110,15 +107,13 @@ Note int8[] and str are synonymous.
 
 `a.length` - will give the length of the array held in variable a
 
-
-
 ### Functions
 
 The main function is defined as above and other functions can be defined in a similar manner.
 
 Example function definition:
 
-`int Factorial(int n):  #1`
+`int Factorial(int n): #1`
 
 The factorial function will (by default) run on thread #1, will return an integer of default size and takes an integer of default size as input.  Main always runs on thread #0.
 
@@ -134,7 +129,7 @@ The above code will call the Factorial function with input of 10, will ask it to
 
 `Factorial(10) #3 FactorialCallback(int result)`
 
-Called like this FactorialCallback() will be called, on the default thread (#0), with the result. Call-backs must always have only the output result as an input argument. but can be asked to run on a different thread by appending `#<thread number>`
+Called like this FactorialCallback() will be called, on the default thread (#0), with the result. Callbacks must always have only the output result as an input argument. but can be asked to run on a different thread by appending `#<thread number>`
 
 Functions can have no more than 255 input arguments, but it is highly recommended to stick to a lot less.
 
@@ -165,9 +160,7 @@ int Factorial(int n):
 
 Statements end with a new line and not a semicolon. A function or object ends when the indentation is same or less than the definition or when the file ends.
 
-Indentation must be by tab, spaces will not be counted.
-
-
+Indentation must be by tab, spaces are not counted.
 
 ### Objects
 
@@ -195,4 +188,20 @@ obj.a = 5
 ```
 
 All members of objects are public, all members of functions are private. Attributes will be added at a later stage to allow object members to be private.
+
+### Internals
+
+How does Cy handle calling functions on different threads? Well each function that could be run on a thread - other than thread #0 - has two entry points.
+
+First entry point is similar to standard C (cdecl).
+
+The second entry point is designed to unwrap the input arguments from a void* to the expected C (cdecl) format.
+
+If a function calls another on its own thread then the first entry point is used, otherwise a Job is created and sent to the JobQueue. At Job creation a shallow copy of the input arguments is taken and this is packed up in aside a void* which will be passed to the second entry point of the called function. Then the JobQueue will dispatch the Job to the requested - or first available - thread as soon as possible.
+
+If the result of this function is to be assigned to a variable then a mutex will be automatically added to that variable and the calling thread will lock when that variable is attempted to be read or used.
+
+If the return value it to be sent to a callback function and that function is on the same thread then it is called directly, otherwise if the callback function is to be run on a separate thread a new Job will be created and dispatched as soon as possible after the initial function is finished.
+
+If no return value is to be assigned and no callback to be called with the result, the function will run and end with no notification given to the calling thread.
 

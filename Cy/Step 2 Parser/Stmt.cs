@@ -129,6 +129,10 @@ namespace Cy {
 				this.token = token;
 				info = new CyType(token.type);
 			}
+			public StmtType() {
+				this.token = new Token(Token.Kind.VOID);
+				info = new CyType(token.type);
+			}
 			public override object Accept(IVisitor visitor, object options) {
 				return visitor.VisitTypeStmt(this, options);
 			}

@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
-
-
+using System.Security.Policy;
 
 namespace Cy {
 
 
 	// track types, visibility what is avail etc
+	// Functional objects must use unique name, but not the full name
 	public class Tracking {
 		TypeHierarchy.Environ global;
 		TypeHierarchy.Environ current;
@@ -46,8 +46,10 @@ namespace Cy {
 			return true;
 		}
 
+
 		// call when entering a function
-		public void InFunction(string funcName) {
+		public void InFunction(string funcName, List<Stmt.InputVar> inargs) {
+			funcName = Llvm.GetFuncName(funcName, inargs);
 			foreach (var c in current.children) {
 				if (c.name == funcName && c.isFunc) {
 					current = c;
@@ -57,7 +59,8 @@ namespace Cy {
 		}
 
 		// call when finished function - after return
-		public bool OutFunction(string funcName) {
+		public bool OutFunction(string funcName, List<Stmt.InputVar> inargs) {
+			funcName = Llvm.GetFuncName(funcName, inargs);
 			if (funcName != current.name) {
 				Console.WriteLine($"Tracking Error: Exiting wrong function, in: {current.name}, attempting to exit {funcName}");
 				// TODO deal with error
@@ -240,13 +243,13 @@ namespace Cy {
 				Util.RunCmd($"del /f {fileName}");
 				Util.RunCmd($"del /f {llfileName}");
 			}
-			string modulestr = Util.GetStr("ModuleID", llvmPreCode);
+			string modulestr = Util.FindStrInArray("ModuleID", llvmPreCode);
 			pre.AppendLine(modulestr);
-			string srcstr = Util.GetStr("source_filename", llvmPreCode);
+			string srcstr = Util.FindStrInArray("source_filename", llvmPreCode);
 			pre.AppendLine(srcstr.Replace("\\\\", "\\"));
-			string datalayoutstr = Util.GetStr("target datalayout", llvmPreCode);
+			string datalayoutstr = Util.FindStrInArray("target datalayout", llvmPreCode);
 			pre.AppendLine(datalayoutstr);
-			string triplestr = Util.GetStr("target triple", llvmPreCode);
+			string triplestr = Util.FindStrInArray("target triple", llvmPreCode);
 			pre.AppendLine(triplestr);
 			pre.AppendLine();
 			filePreLLVMCode = pre.ToString();
@@ -357,24 +360,17 @@ namespace Cy {
 
 		public object VisitFunctionStmt(Stmt.Function stmt, object options) {
 			Llvm.RefStartFunc();
-			string funcName = stmt.token.lexeme;
-			if (stmt.token.lexeme == "Main")
-				funcName = funcName.ToLower();              // until we add our own startup main code
-			string[] inargtypes = new string[stmt.input.Count];
-			int idx = 0;
-			foreach (Stmt.InputVar inarg in stmt.input)
-				inargtypes[idx++] = inarg.type.info.Llvm();
-			string fullName = tracking.FullName(funcName, inargtypes);
-			tracking.InFunction(stmt.token.lexeme);
-			FunctionInstance func = new FunctionInstance(funcName, stmt.returnType.info, true);
+			tracking.InFunction(stmt.token.lexeme, stmt.input);
+			FunctionInstance func = new FunctionInstance(stmt.token.lexeme, stmt.returnType.info, true);
 			curEnv.Add(func);
-			idx = 0;
+			int idx = 0;
 			string[] inargs = new string[stmt.input.Count];
 			ExprValue[] inargxpvs = new ExprValue[stmt.input.Count];
 			foreach (Stmt.InputVar inarg in stmt.input) {
 				inargxpvs[idx] = (ExprValue)inarg.Accept(this, options);
 				inargs[idx++] = instances.GetVar(inarg.token.lexeme).ToString();
 			}
+			string fullName = Llvm.FullName(tracking, stmt.token.lexeme, stmt.input);
 			if (fullName == "main")
 				code.Append(Llvm.Indent($"define dso_local {stmt.returnType.info.Llvm()} @{fullName}({string.Join(", ", inargs)}) #0 {{\n"));
 			else
@@ -392,7 +388,7 @@ namespace Cy {
 			if (curEnv[curEnv.Count - 1] != func)
 				Display.Error(stmt.token, $"Compiler trying to return from a different object: {curEnv[curEnv.Count - 1].name}, should be {func.name}");
 			curEnv.RemoveAt(curEnv.Count - 1);
-			tracking.OutFunction(stmt.token.lexeme);
+			tracking.OutFunction(stmt.token.lexeme, stmt.input);
 			return options;
 		}
 
@@ -403,8 +399,9 @@ namespace Cy {
 				if (curEnv[curEnv.Count - 1].isFunction) {
 					value.Cast(curEnv[curEnv.Count - 1].type);
 					code.Append(Llvm.Indent($"ret {value}\n"));
-				} else
+				} else {
 					Display.Error(stmt.token, $"Object is non functional, unable to return from this: {curEnv[curEnv.Count - 1].name}");
+				}
 			} else {
 				code.Append(Llvm.Indent("ret\n"));
 			}
@@ -422,8 +419,8 @@ namespace Cy {
 		}
 
 		public object VisitClassStmt(Stmt.StmtClass obj, object options) {
-			string fullName = tracking.FullName(obj.token.lexeme);
 			tracking.InObject(obj.token.lexeme);
+			string fullName = Llvm.FullName(tracking, obj.token.lexeme);
 			WriteClassDefinition(fullName, obj.members);
 			foreach (Stmt.Function f in obj.methods)
 				f.Accept(this, options);
@@ -481,5 +478,7 @@ namespace Cy {
 			//}
 			return xpllvm;
 		}
+
 	} // Compiler
+
 }

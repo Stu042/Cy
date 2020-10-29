@@ -42,7 +42,11 @@ namespace Cy {
 
 		public object VisitFunctionStmt(Stmt.Function stmt, object options) {
 			StringBuilder builder = new StringBuilder();
-			string typestr = (string)stmt.returnType.Accept(this, null);
+			string typestr;
+			if (stmt.returnType != null)
+				typestr = (string)stmt.returnType.Accept(this, null);
+			else
+				typestr = "void";
 			builder.Append("(" + typestr + " " + stmt.token.lexeme + "(");
 			foreach (var param in stmt.input) {
 				if (param != stmt.input[0])

@@ -130,7 +130,8 @@ namespace Cy {
 			{ "float32", Token.Kind.FLOAT32 },
 			{ "float64", Token.Kind.FLOAT64 },
 			{ "float128", Token.Kind.FLOAT128 },
-			{ "str", Token.Kind.STR }
+			{ "str", Token.Kind.STR },
+			{ "void", Token.Kind.VOID },
 		};
 
 

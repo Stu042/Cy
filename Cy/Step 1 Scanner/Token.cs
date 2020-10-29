@@ -14,6 +14,7 @@ namespace Cy {
 			INT, INT8, INT16, INT32, INT64, INT128,
 			FLOAT, FLOAT16, FLOAT32, FLOAT64, FLOAT128,
 			STR,
+			VOID,
 
 			IDENTIFIER,
 			// Literals.

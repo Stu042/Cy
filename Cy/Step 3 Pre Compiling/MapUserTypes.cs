@@ -131,7 +131,7 @@ namespace Cy {
 
 
 	// tracks which object and function we are in/[pre]compiling (hierarchy)
-	// todo dont add functions, but track them to know when not to add vars
+	// Functional objects must use unique name, but not the full name
 	public class TypeHierarchy {
 
 		// an environment, object or function, that may contain variables
@@ -165,8 +165,8 @@ namespace Cy {
 
 		public const string globalName = "*!Global!*"; // safe as its not possible for an object or function to start with *!
 
-		public List<Environ> env;	// full environment
-		Environ cur;                // current part of env we are processing/in
+		public List<Environ> env;   // full environment
+		public Environ cur;                // current part of env we are processing/in
 		Stack<bool> inObj;
 
 		public TypeHierarchy() {
@@ -178,13 +178,19 @@ namespace Cy {
 			env.Add(item);
 		}
 
+
+		void InItem(Environ item, bool isobj) {
+			cur.children.Add(item);
+			env.Add(item);
+			inObj.Push(isobj);
+			cur = item;
+		}
+
+
 		// call when entering an object
 		public void InObject(string objName) {
 			Environ item = new Environ(objName, Environ.Attribute.PUBLIC, cur, false);  // contents of objects are all public (currently)
-			cur.children.Add(item);
-			env.Add(item);
-			inObj.Push(true);
-			cur = item;
+			InItem(item, true);
 		}
 
 		public void SetAlignSize(int alignSize) {
@@ -205,17 +211,18 @@ namespace Cy {
 		}
 
 		// call when entering a function
-		public void InFunction(string funcName, CyType cytype, List<string> llvmArgsTypesList) {
-			Environ item = new Environ(funcName, Environ.Attribute.PRIVATE, cur, true);    // contents of functions are all private
-			cur.children.Add(item);
-			cur.methods.AddMethod(funcName, cytype, llvmArgsTypesList);
-			env.Add(item);
-			inObj.Push(false);
+		public void InFunction(string funcName, CyType cytype, List<Stmt.InputVar> args) {
+			string uniqueName = Llvm.GetFuncName(funcName, args);
+			Environ item = new Environ(uniqueName, Environ.Attribute.PRIVATE, cur, true);    // contents of functions are all private
+			cur.methods.AddMethod(funcName, cytype, Llvm.ArgsToStrList(args));
+			InItem(item, false);
 		}
 
+
 		// call when finished function - after return
-		public bool OutFunction(string funcName) {
-			if (funcName != cur.name) {
+		public bool OutFunction(string funcName, List<Stmt.InputVar> args) {
+			string uniqueName = Llvm.GetFuncName(funcName, args);
+			if (uniqueName != cur.name) {
 				Console.WriteLine($"EnvError: Exiting wrong function, in: {cur.name}, attempting to exit {funcName}");
 				// TODO deal with error
 				return false;
@@ -255,9 +262,8 @@ namespace Cy {
 		}
 
 		// run this and return the map
-		public List<TypeHierarchy.Environ> Run(Stmt stmt) {
+		public void Run(Stmt stmt) {
 			stmt.Accept(this, null);
-			return env.env;
 		}
 
 		public TypeHierarchy.Environ GetEnv() {
@@ -296,13 +302,10 @@ namespace Cy {
 		}
 
 		public object VisitFunctionStmt(Stmt.Function stmt, object options) {
-			List<string> inarglist = new List<string>();
-			foreach (var inarg in stmt.input)
-				inarglist.Add(inarg.type.info.Llvm());
-			env.InFunction(stmt.token.lexeme, stmt.returnType.info, inarglist);
+			env.InFunction(stmt.token.lexeme, stmt.returnType.info, stmt.input);
 			foreach (Stmt statement in stmt.body)
 				statement.Accept(this, null);
-			env.OutFunction(stmt.token.lexeme);
+			env.OutFunction(stmt.token.lexeme, stmt.input);
 			return null;
 		}
 
@@ -323,13 +326,8 @@ namespace Cy {
 			env.InObject(obj.token.lexeme);
 			foreach (Stmt.Var memb in obj.members)
 				env.AddMember(memb.token.lexeme, memb.stmtType.info.Llvm(), memb.stmtType.info.AlignSize());
-			foreach (Stmt.Function membfun in obj.methods) {
-				List<string> argTypes = new List<string>();
-				foreach (var arg in membfun.input)
-					argTypes.Add(arg.type.info.Llvm());
-				env.AddMethod(membfun.token.lexeme, membfun.returnType.info, argTypes);
+			foreach (Stmt.Function membfun in obj.methods)
 				membfun.Accept(this, null);
-			}
 			env.OutObject(obj.token.lexeme);
 			return options;
 		}

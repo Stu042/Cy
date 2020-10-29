@@ -8,7 +8,7 @@ namespace Cy {
 	// defines all types, gives type info for llvm
 	public class CyType {
 		/// <summary>Basic types.</summary>
-		public enum Kind { UNKNOWN, INT, FLOAT, STR, USERDEFINED }; // USERDEFINED will typically be classes but who knows what the future will bring
+		public enum Kind { UNKNOWN, INT, FLOAT, STR, VOID,  USERDEFINED }; // USERDEFINED will typically be classes but who knows what the future will bring
 		/// <summary>INT, FLOAT, STR.</summary>
 		public Kind kind;
 		/// <summary>Bit size of type.</summary>
@@ -47,6 +47,7 @@ namespace Cy {
 							isPtr = false;
 							break;
 						case Kind.STR:
+						case Kind.VOID:
 						case Kind.USERDEFINED:
 						case Kind.UNKNOWN:
 						default:
@@ -65,6 +66,7 @@ namespace Cy {
 							isPtr = false;
 							break;
 						case Kind.STR:
+						case Kind.VOID:
 						case Kind.USERDEFINED:
 						case Kind.UNKNOWN:
 						default:
@@ -74,6 +76,7 @@ namespace Cy {
 							break;
 					}
 					break;
+				case Kind.VOID:
 				case Kind.STR:
 				case Kind.USERDEFINED:
 				case Kind.UNKNOWN:
@@ -143,6 +146,11 @@ namespace Cy {
 					this.size = 8;
 					this.isPtr = true;
 					break;
+				case Token.Kind.VOID:
+					this.kind = Kind.VOID;
+					this.size = 0;
+					this.isPtr = false;
+					break;
 				default:
 					this.kind = Kind.USERDEFINED;
 					this.size = 8;  // should check for Token.Kind.IDENTIFIER...
@@ -167,6 +175,8 @@ namespace Cy {
 				return 8;
 			else if (s > 16)
 				return 4;
+			else if (s == 0)
+				return 0;
 			return 1;
 		}
 
@@ -187,6 +197,8 @@ namespace Cy {
 					if (isPtr)
 						return $"*i{s}";
 					return $"i{s}";
+				case Kind.VOID:
+					return "void";
 				case Kind.FLOAT:
 					switch (s) {
 						case 16:
@@ -235,6 +247,7 @@ namespace Cy {
 						case CyType.Kind.FLOAT:
 							return new CyType(CyType.Kind.FLOAT, Math.Min(Math.Max(lhs.size, rhs.size), 128));
 						case CyType.Kind.STR:
+						case CyType.Kind.VOID:
 						case CyType.Kind.USERDEFINED:
 						case CyType.Kind.UNKNOWN:
 						default:
@@ -246,12 +259,14 @@ namespace Cy {
 						case CyType.Kind.FLOAT:
 							return new CyType(CyType.Kind.FLOAT, Math.Min(Math.Max(lhs.size, rhs.size), 128));
 						case CyType.Kind.STR:
+						case CyType.Kind.VOID:
 						case CyType.Kind.USERDEFINED:
 						case CyType.Kind.UNKNOWN:
 						default:
 							return new CyType(CyType.Kind.UNKNOWN, Math.Min(Math.Max(lhs.size, rhs.size), 128));
 					}
 				case CyType.Kind.STR:
+				case CyType.Kind.VOID:
 				case CyType.Kind.USERDEFINED:
 				case CyType.Kind.UNKNOWN:
 				default:
@@ -271,6 +286,8 @@ namespace Cy {
 						return "fp64";
 					case CyType.Kind.STR:
 						return "*i8";
+					case CyType.Kind.VOID:
+						return "void";
 					case CyType.Kind.USERDEFINED:
 						return "*i8";
 					default:
@@ -291,6 +308,7 @@ namespace Cy {
 							case CyType.Kind.FLOAT:
 								return true;
 							case CyType.Kind.STR:
+							case CyType.Kind.VOID:
 							case CyType.Kind.USERDEFINED:
 								return false;
 							default:
@@ -303,6 +321,7 @@ namespace Cy {
 								return false;
 							case CyType.Kind.STR:
 								return true;
+							case CyType.Kind.VOID:
 							case CyType.Kind.USERDEFINED:
 								return false;
 							default:
@@ -314,6 +333,7 @@ namespace Cy {
 							case CyType.Kind.FLOAT:
 							case CyType.Kind.STR:
 								return false;
+							case CyType.Kind.VOID:
 							case CyType.Kind.USERDEFINED:
 								return true;		// probably not true... need id as well as kind
 							default:
@@ -328,15 +348,15 @@ namespace Cy {
 			/// <summary>Get Stmt.Type.Kind of this object</summary>
 			static CyType.Kind ObjectType(object val) {
 				CyType.Kind kind;
-				if (val is int i) {
+				if (val is int) {
 					kind = CyType.Kind.INT;
-				} else if(val is long l) {
+				} else if(val is long) {
 					kind = CyType.Kind.INT;
-				} else if (val is float f) {
+				} else if (val is float) {
 					kind = CyType.Kind.FLOAT;
-				} else if (val is double d) {
+				} else if (val is double) {
 					kind = CyType.Kind.FLOAT;
-				} else if (val is string s) {
+				} else if (val is string) {
 					kind = CyType.Kind.STR;
 				} else {
 					kind = CyType.Kind.USERDEFINED;

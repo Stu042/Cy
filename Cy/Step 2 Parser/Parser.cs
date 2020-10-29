@@ -21,22 +21,30 @@ namespace Cy {
 			return statements;
 		}
 
-		bool IsFuncDeclaration() {
-			if (cursor.PeekAnyType() && cursor.PeekNext().type == Token.Kind.IDENTIFIER) {
-				int a = 2;
-				if (cursor.PeekNext(a++).type == Token.Kind.LEFT_PAREN) {
-					Token.Kind toktype = cursor.PeekNext(a).type;
-					while (toktype != Token.Kind.RIGHT_PAREN) {
-						if (toktype == Token.Kind.NEWLINE || toktype == Token.Kind.EOF)
-							return false;
-						a++;
-						toktype = cursor.PeekNext(a).type;
-					}
-					a++;
-					if (cursor.PeekNext(a).type == Token.Kind.COLON)
-						return true;
+
+		bool IsFuncArgs(int idxtostart) {
+			if (cursor.PeekNext(idxtostart++).type == Token.Kind.LEFT_PAREN) {
+				Token.Kind toktype = cursor.PeekNext(idxtostart).type;
+				while (toktype != Token.Kind.RIGHT_PAREN) {
+					if (toktype == Token.Kind.NEWLINE || toktype == Token.Kind.EOF)
+						return false;
+					idxtostart++;
+					toktype = cursor.PeekNext(idxtostart).type;
 				}
+				idxtostart++;
+				if (cursor.PeekNext(idxtostart).type == Token.Kind.COLON)
+					return true;
 			}
+			return false;
+		}
+		bool IsFuncDeclaration() {
+			if (cursor.PeekAnyType() && cursor.PeekNext().type == Token.Kind.IDENTIFIER)	// func or method
+				return IsFuncArgs(2);
+			return false;
+		}
+		bool IsConOrDestructorDeclaration() {
+			if (cursor.Peek().type == Token.Kind.IDENTIFIER && cursor.PeekNext().type == Token.Kind.LEFT_PAREN)		// con/destructor
+				return IsFuncArgs(1);
 			return false;
 		}
 
@@ -48,6 +56,8 @@ namespace Cy {
 				if (cursor.PeekAnyType()) {
 					if (IsFuncDeclaration())
 						return FunDeclaration("function");
+					else if (IsConOrDestructorDeclaration())
+						return FunDeclaration("structor");
 					else if (cursor.PeekNext().type == Token.Kind.IDENTIFIER)
 						return VarDeclaration();
 				}
@@ -88,7 +98,15 @@ namespace Cy {
 		/// Declare a function/method.
 		/// </summary>
 		Stmt.Function FunDeclaration(string kind) {
-			Stmt.StmtType type = new Stmt.StmtType(cursor.Advance());
+			Stmt.StmtType type;
+			if (kind == "function") {
+				type = new Stmt.StmtType(cursor.Advance());
+			} else {
+				Token t = cursor.Peek();
+				if (t.lexeme[0] == '~')     // destructor
+					t = new Token(Token.Kind.VOID, t.lexeme, t.literal, t.indent, t.line, t.offset, t.filename);
+				type = new Stmt.StmtType(t);
+			}
 			Token name = cursor.Consume(Token.Kind.IDENTIFIER, "Expect " + kind + " name.");
 			cursor.Consume(Token.Kind.LEFT_PAREN, "Expect '(' after " + kind + " name.");
 			List<Stmt.InputVar> parameters = new List<Stmt.InputVar>();
@@ -348,13 +366,6 @@ namespace Cy {
 				if (cursor.Previous().type == Token.Kind.NEWLINE)
 					return;
 				switch (cursor.Peek().type) {
-					case Token.Kind.CLASS:
-					//case Token.Kind.FUN:
-					case Token.Kind.FOR:
-					case Token.Kind.IF:
-					case Token.Kind.WHILE:
-					case Token.Kind.PRINT:
-					case Token.Kind.RETURN:
 					case Token.Kind.NEWLINE:
 						return;
 					default:
@@ -377,19 +388,13 @@ namespace Cy {
 		/// Control the point in the token list we are looking at.
 		/// </summary>
 		class Cursor {
-			int start;
 			int current;
 			List<Token> tokens;
 
 
 			public Cursor(List<Token> tokens) {
 				this.tokens = tokens;
-				start = 0;
 				current = 0;
-			}
-
-			public void Start() {
-				start = current;
 			}
 
 			public bool Match(Token.Kind expected) {

@@ -22,7 +22,7 @@ namespace Cy {
 		}
 
 		// find a string in an array of strings, even if string only matches a part of a single array item
-		public static string GetStr(string needle, string[] haystack) {
+		public static string FindStrInArray(string needle, string[] haystack) {
 			foreach (string str in haystack) {
 				if (str.IndexOf(needle) != -1)
 					return str;

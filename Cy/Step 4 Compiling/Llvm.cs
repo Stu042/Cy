@@ -62,7 +62,7 @@ namespace Cy {
 		}
 
 		/// <summary>return the full name of a function/object that is defined in the current scope. Note: next doesnt need to exist</summary>
-		public static string FullName(Tracking tracking, string next, List<Stmt.InputVar> inargs = null) {
+		public static string FullName(TypeTracking tracking, string next, List<Stmt.InputVar> inargs = null) {
 			TypeHierarchy.Environ cur = tracking.GetCurrent();
 			TypeHierarchy.Environ glob = tracking.GetGlobal();
 			string[] name = FullNameArray(cur, glob, next);

@@ -69,6 +69,7 @@ namespace Cy {
 			return null;
 		}
 
+
 		Stmt.StmtClass ClassDeclaration() {
 			Token name = cursor.Advance();
 			int startindent = name.indent;
@@ -103,7 +104,7 @@ namespace Cy {
 				type = new Stmt.StmtType(cursor.Advance());
 			} else {
 				Token t = cursor.Peek();
-				if (t.lexeme[0] == '~')     // destructor
+				if (kind == "structor")     // destructor
 					t = new Token(Token.Kind.VOID, t.lexeme, t.literal, t.indent, t.line, t.offset, t.filename);
 				type = new Stmt.StmtType(t);
 			}

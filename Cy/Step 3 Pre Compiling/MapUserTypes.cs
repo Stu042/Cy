@@ -128,6 +128,7 @@ namespace Cy {
 
 
 
+	public enum Attribute { PRIVATE, PUBLIC };
 
 
 	// tracks which object and function we are in/[pre]compiling (hierarchy)
@@ -136,7 +137,6 @@ namespace Cy {
 
 		// an environment, object or function, that may contain variables
 		public class Environ {
-			public enum Attribute { PRIVATE, PUBLIC };
 			public string name;             // object or functions name
 			public Attribute attr;          // are the contents of this item visible to outside?
 			public Environ parent;          // parent EnvItem
@@ -173,7 +173,7 @@ namespace Cy {
 			env = new List<Environ>();
 			inObj = new Stack<bool>();
 			inObj.Push(true);
-			Environ item = new Environ(globalName, Environ.Attribute.PUBLIC, null, false);
+			Environ item = new Environ(globalName, Attribute.PUBLIC, null, false);
 			cur = item;
 			env.Add(item);
 		}
@@ -189,7 +189,7 @@ namespace Cy {
 
 		// call when entering an object
 		public void InObject(string objName) {
-			Environ item = new Environ(objName, Environ.Attribute.PUBLIC, cur, false);  // contents of objects are all public (currently)
+			Environ item = new Environ(objName, Attribute.PUBLIC, cur, false);  // contents of objects are all public (currently)
 			InItem(item, true);
 		}
 
@@ -213,7 +213,7 @@ namespace Cy {
 		// call when entering a function
 		public void InFunction(string funcName, CyType cytype, List<Stmt.InputVar> args) {
 			string uniqueName = Llvm.GetFuncName(funcName, args);
-			Environ item = new Environ(uniqueName, Environ.Attribute.PRIVATE, cur, true);    // contents of functions are all private
+			Environ item = new Environ(uniqueName, Attribute.PRIVATE, cur, true);    // contents of functions are all private
 			cur.methods.AddMethod(funcName, cytype, Llvm.ArgsToStrList(args));
 			InItem(item, false);
 		}

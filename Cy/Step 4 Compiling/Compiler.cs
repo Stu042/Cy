@@ -3,17 +3,34 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using System.Security.Policy;
+using System.ComponentModel.Design;
+using System.Collections;
+using System.ComponentModel;
+
+/*
+ * Instead of using foreach...
+ *	AnObj:
+ *		int a
+ *		str b
+ *		
+ *	List<AnObj> listData;
+ *	for (b = all listData)
+ *		b.a = 5
+ *		b.b = "hello"
+ * 
+ * so "all" creates an iterator and allows the next item to be assigned.
+ */
 
 namespace Cy {
 
 
 	// track types, visibility what is avail etc
 	// Functional objects must use unique name, but not the full name
-	public class Tracking {
+	public class TypeTracking {
 		TypeHierarchy.Environ global;
 		TypeHierarchy.Environ current;
 
-		public Tracking(TypeHierarchy.Environ global) {
+		public TypeTracking(TypeHierarchy.Environ global) {
 			this.global = global;
 			current = global;
 		}
@@ -76,8 +93,8 @@ namespace Cy {
 			int destIdx = 0;
 			do {
 				start = start.children.Find(x => x.name == destObj[destIdx++]);
-			} while (destIdx < destObj.Length && start != null && start.attr == TypeHierarchy.Environ.Attribute.PUBLIC);
-			if (destIdx == destObj.Length && (start.attr == TypeHierarchy.Environ.Attribute.PUBLIC || destIdx == 1))
+			} while (destIdx < destObj.Length && start != null && start.attr == Attribute.PUBLIC);
+			if (destIdx == destObj.Length && (start.attr == Attribute.PUBLIC || destIdx == 1))
 				return start;
 			return null;
 		}
@@ -114,6 +131,10 @@ namespace Cy {
 		public Method FindMethod(string name, List<string> inargs) {
 			TypeHierarchy.Environ p = current.parent;
 			return p.methods.Fetch(name, inargs);
+		}
+
+		public Method FindMethodIn(TypeHierarchy.Environ startEnv, string name, List<string> inargs) {
+			return startEnv.methods.Fetch(name, inargs);
 		}
 
 		public string[] FullNameArray(string next = "") {
@@ -154,10 +175,10 @@ namespace Cy {
 		StringBuilder typeCode;
 		StringBuilder code;
 		ExprList instances;
-		Tracking tracking;
+		TypeTracking typeTracking;
 
 		public Compiler(TypeHierarchy.Environ typeEnvironment) {
-			tracking = new Tracking(typeEnvironment);
+			typeTracking = new TypeTracking(typeEnvironment);
 			typeCode = new StringBuilder();
 			code = new StringBuilder();
 			instances = new ExprList();
@@ -174,9 +195,11 @@ namespace Cy {
 				instances = new Dictionary<string, ExprValue>();
 			}
 
-
 			public void AddVar(string varname, ExprValue xpval) {
 				instances.Add(varname, xpval);
+			}
+			public void RemVar(string varname, ExprValue xpval) {
+				instances.Remove(varname);
 			}
 
 			public ExprValue GetVar(string name) {
@@ -190,6 +213,122 @@ namespace Cy {
 		} // ExprList
 
 
+		// track currently declared variables
+		public class InstanceTracking {
+			class ObjEnv {
+				Attribute visibility;						// private or public
+				List<Dictionary<string, ExprValue>> block;	// current vars in this object
+
+				public ObjEnv(Attribute visibility = Attribute.PRIVATE) {
+					this.visibility = visibility;
+					block = new List<Dictionary<string, ExprValue>> {
+						new Dictionary<string, ExprValue>()
+					};
+				}
+				public void EnterBlock() {
+					block.Add(new Dictionary<string, ExprValue>());
+				}
+				public void LeaveBlock() {
+					block.RemoveAt(block.Count - 1);
+				}
+				// add a var to the last block
+				public void AddVar(string name, ExprValue var) {
+					block[block.Count - 1].Add(name, var);
+				}
+				// return last occurance of a var called name, else return null from within this object
+				public ExprValue GetVar(string name) {
+					for (int i = block.Count; i >= 0; --i) {
+						if (block[i].ContainsKey(name))
+							return block[i][name];
+					}
+					return null;
+				}
+				// remove last occurance of var from this object, return true if successful
+				public bool RemoveVar(string name) {
+					for (int i = block.Count; i >= 0; --i) {
+						if (block[i].ContainsKey(name)) {
+							block[i].Remove(name);
+							return true;
+						}
+					}
+					return false;
+				}
+			} // ObjEnv
+
+			Stack<ObjEnv> environs;
+			ObjEnv global;
+
+			public InstanceTracking() {
+				environs = new Stack<ObjEnv>();
+				global = new ObjEnv(Attribute.PUBLIC);
+				environs.Push(global);
+			}
+
+			public void EnterObj(Attribute visibility = Attribute.PRIVATE) {
+				environs.Push(new ObjEnv(visibility));
+			}
+			public void LeaveObj() {
+				environs.Pop();
+			}
+			public void EnterFunc() {
+				environs.Push(new ObjEnv(Attribute.PRIVATE));
+			}
+			public void LeaveFunc() {
+				environs.Pop();
+			}
+			public void EnterBlock() {
+				environs.Peek().EnterBlock();
+			}
+			public void LeaveBlock() {
+				environs.Peek().LeaveBlock();
+			}
+
+			public void AddVar(string varName, ExprValue xpval) {
+				environs.Peek().AddVar(varName, xpval);
+			}
+			public ExprValue GetVar(string varName) {
+				ExprValue val =  environs.Peek().GetVar(varName);
+				if (val == null)
+					val = global.GetVar(varName);
+				return val;
+			}
+			/*
+			 * Example of how InstanceTracking works
+			 * 
+			 *	AnObject:			< call EnterObj with visibilty set to public
+			 *		int a			< call AddVar
+			 *		float b			< call AddVar
+			 *		float Mult():	< call AddVar then EnterObj with visibilty set to private 
+			 *			return b * a	< has access to int a and float b
+			 *						< call LeaveObj
+			 *		float MultAnCheck():	< call AddVar then EnterObj with visibilty set to private 
+			 *			float ans = Mult()	< call AddVar
+			 *			if (ans == 0)	< GetVar
+			 *				return 1
+			 *			return ans	< GetVar, then LeaveFunc
+			 *						< LeaveObj is called
+			 *		
+			 *	int32 a = 0			< call AddVar, return this when a is asked for
+			 *	int64 c = -1		< call AddVar, return this when c is asked for
+			 *	
+			 *	void AFunction():	< EnterObj is called with visibilty set to private
+			 *		str a = "hello"	< call AddVar, return this when a is asked for
+			 *		float a = 5.0	< call AddVar, return this when a is asked for, str a is deleted as if never existed
+			 *		for(...)		< EnterBlock() is called
+			 *			int a = 2	< call AddVar, return this when a is asked for, float a still exists but in a previous block
+			 *		next line		< LeaveBlock is called - block is deleted along with int a
+			 *		CallAFunction() < all previous is kept but not accessable from within this function. EnterFunc is called when compiling this function and when finished LeaveFunc is called
+			 *		AnObject b		< call AddVar, b along with its public members are added, named b b.a and b.b float a is still accessable
+			 *		b.Mult()		< In Mult int a and float b are accessable (members of AnObject) , nothing from AFunction is visible
+			 *		b.MultAnCheck()	< in MultAnCheck int a and float b but if Mult declared vars they would not be visible
+			 *		next line		< a, b, b.a, b.b and c are still accessable
+			 *		
+			 *	void CallAFunction():	< EnterFunc is called
+			 *		int b = 0		< call AddVar, return this when b is asked for, int32 a and int64 c are still accessable
+			 *		int c = 0		< call AddVar, return this when c is asked for, int32 a is still accessable
+			 *		str h = "Stu"	< call AddVar, return this when h is asked for, LeaveFunc is called
+			 */
+		} // InstanceTracking
 
 
 
@@ -274,7 +413,7 @@ namespace Cy {
 		public object VisitCallExpr(Expr.Call expr, object options) {
 			ExprValue xpvalRet = null;
 			string[] findName = { expr.callee.token.lexeme };
-			TypeHierarchy.Environ env = tracking.Find(findName);
+			TypeHierarchy.Environ env = typeTracking.Find(findName);
 			if (env != null) {
 				if (env.isFunc) {
 					List<ExprValue> xpvslist = new List<ExprValue>();
@@ -284,7 +423,7 @@ namespace Cy {
 						xpvslist.Add(xpvs);
 						argsTypes.Add(xpvs.cytype.Llvm());
 					}
-					Method m = tracking.FindMethod(expr.callee.token.lexeme, argsTypes);
+					Method m = typeTracking.FindMethod(expr.callee.token.lexeme, argsTypes);
 					if (m != null) {
 						List<string> argarray = new List<string>();
 						foreach (var xpvs in xpvslist)
@@ -302,10 +441,10 @@ namespace Cy {
 						xpvslist.Add(xpvs);
 						argsTypes.Add(xpvs.cytype.Llvm());
 					}
-					Method m = tracking.FindMethod(expr.callee.token.lexeme, argsTypes);
+					Method m = typeTracking.FindMethodIn(env, expr.callee.token.lexeme, argsTypes);
 					if (m != null) {
 						xpvalRet = new ExprValue(code, m.Cytype());
-						code.Append(Llvm.Indent($"{xpvalRet.llvmref} = call {m.GetLlvmType()} @{m.UniqueName()}(%class.Data* %2)"));
+						code.Append(Llvm.Indent($"{xpvalRet.llvmref} = call {m.GetLlvmType()} @{env.name}.{m.UniqueName()}(%class.Data* %2)"));
 					} else {
 						//if (is default constructor) then do it inline
 						//else	error as trying to call nonexistant class method
@@ -358,23 +497,24 @@ namespace Cy {
 		}
 
 
+		// deals with functions, such as int Main(str argv):\n body... , as well as member functions - including constructors and destructors
 		public object VisitFunctionStmt(Stmt.Function stmt, object options) {
 			Llvm.RefStartFunc();
-			tracking.InFunction(stmt.token.lexeme, stmt.input);
+			string fullName = Llvm.FullName(typeTracking, stmt.token.lexeme, stmt.input);
+			typeTracking.InFunction(stmt.token.lexeme, stmt.input);
 			FunctionInstance func = new FunctionInstance(stmt.token.lexeme, stmt.returnType.info, true);
 			curEnv.Add(func);
 			int idx = 0;
-			string[] inargs = new string[stmt.input.Count];
+			string[] inargtypes = new string[stmt.input.Count];
 			ExprValue[] inargxpvs = new ExprValue[stmt.input.Count];
 			foreach (Stmt.InputVar inarg in stmt.input) {
 				inargxpvs[idx] = (ExprValue)inarg.Accept(this, options);
-				inargs[idx++] = instances.GetVar(inarg.token.lexeme).ToString();
+				inargtypes[idx++] = instances.GetVar(inarg.token.lexeme).ToString();
 			}
-			string fullName = Llvm.FullName(tracking, stmt.token.lexeme, stmt.input);
 			if (fullName == "main")
-				code.Append(Llvm.Indent($"define dso_local {stmt.returnType.info.Llvm()} @{fullName}({string.Join(", ", inargs)}) #0 {{\n"));
+				code.Append(Llvm.Indent($"define dso_local {stmt.returnType.info.Llvm()} @{fullName}({string.Join(", ", inargtypes)}) #0 {{\n"));
 			else
-				code.Append(Llvm.Indent($"define dso_local {stmt.returnType.info.Llvm()} @{fullName}({string.Join(", ", inargs)}) #1 {{\n"));
+				code.Append(Llvm.Indent($"define dso_local {stmt.returnType.info.Llvm()} @{fullName}({string.Join(", ", inargtypes)}) #1 {{\n"));
 			Llvm.RefStartBody();
 			for (int i=0; i < inargxpvs.Length; i++) {
 				ExprValue xp = new ExprValue(code, inargxpvs[i].cytype);
@@ -388,7 +528,7 @@ namespace Cy {
 			if (curEnv[curEnv.Count - 1] != func)
 				Display.Error(stmt.token, $"Compiler trying to return from a different object: {curEnv[curEnv.Count - 1].name}, should be {func.name}");
 			curEnv.RemoveAt(curEnv.Count - 1);
-			tracking.OutFunction(stmt.token.lexeme, stmt.input);
+			typeTracking.OutFunction(stmt.token.lexeme, stmt.input);
 			return options;
 		}
 
@@ -419,12 +559,13 @@ namespace Cy {
 		}
 
 		public object VisitClassStmt(Stmt.StmtClass obj, object options) {
-			tracking.InObject(obj.token.lexeme);
-			string fullName = Llvm.FullName(tracking, obj.token.lexeme);
+			string fullName = Llvm.FullName(typeTracking, obj.token.lexeme);
+			typeTracking.InObject(obj.token.lexeme);
 			WriteClassDefinition(fullName, obj.members);
+			// create a `this` and set options to it to pass to all child statements
 			foreach (Stmt.Function f in obj.methods)
 				f.Accept(this, options);
-			tracking.OutObject(obj.token.lexeme);
+			typeTracking.OutObject(obj.token.lexeme);
 			return options;
 		}
 
@@ -458,7 +599,7 @@ namespace Cy {
 			xpv.StackAllocate();
 			if (stmt.initialiser != null) {     // var equals something
 				ExprValue init = (ExprValue)stmt.initialiser.Accept(this, options);
- 				xpv.Store(init.llvmref);
+				xpv.Store(init.llvmref);
 			}
 			return options;
 		}

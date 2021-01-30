@@ -56,12 +56,14 @@ namespace Cy {
 							cytype = newType;
 							return;
 						}
+						case CyType.Kind.VOID:
+							throw new CyType.TypeError("Unable to cast int as void.");
 						case CyType.Kind.STR:
-							throw new CyType.TypeError("Unable to cast int as str");
+							throw new CyType.TypeError("Unable to cast int as str.");
 						case CyType.Kind.USERDEFINED:
-							throw new CyType.TypeError("Unable to cast int as object");
+							throw new CyType.TypeError("Unable to cast int as object.");
 						default:
-							throw new CyType.TypeError("Attempting to cast int as unknown type");
+							throw new CyType.TypeError("Attempting to cast int as unknown type.");
 					}
 				case CyType.Kind.FLOAT:
 					switch (newType.kind) {
@@ -96,6 +98,8 @@ namespace Cy {
 							cytype = newType;
 							return;
 						}
+						case CyType.Kind.VOID:
+							throw new CyType.TypeError("Unable to cast float as void.");
 						case CyType.Kind.STR:
 							throw new CyType.TypeError("Unable to cast float as str.");
 						case CyType.Kind.USERDEFINED:
@@ -111,6 +115,8 @@ namespace Cy {
 							throw new CyType.TypeError("Unable to cast str as float.");
 						case CyType.Kind.STR:
 							return;
+						case CyType.Kind.VOID:
+							throw new CyType.TypeError("Unable to cast str as void");
 						case CyType.Kind.USERDEFINED:
 							throw new CyType.TypeError("Unable to cast str as object.");
 						default:
@@ -126,9 +132,13 @@ namespace Cy {
 							throw new CyType.TypeError("Unable to cast object as str.");
 						case CyType.Kind.USERDEFINED:
 							return;  // TODO fix, wrong as likely a diff user defined type
+						case CyType.Kind.VOID:
+							throw new CyType.TypeError("Unable to cast object as void.");
 						default:
 							throw new CyType.TypeError("Unable to cast object as unknown.");
 					}
+				case CyType.Kind.VOID:
+					throw new CyType.TypeError("Unable to cast void.");
 				default:
 					throw new CyType.TypeError("Attempting to cast from an unknown type.");
 			}
@@ -138,7 +148,6 @@ namespace Cy {
 
 		// bring a variable copy back ready to use
 		public virtual ExprValue Load() {
-			//string llvmref = Llvm.NextVarRef();
 			ExprValue xpval = new ExprValue(code, cytype);
 			code.Append(Llvm.Indent($"{xpval.llvmref} = load {cytype.Llvm()}, {cytype.Llvm()}* {llvmref}, align {cytype.AlignSize()}\n"));
 			return xpval;

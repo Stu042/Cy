@@ -31,6 +31,7 @@ namespace Cy {
 			this.isPtr = isPtr;
 		}
 
+
 		// when doing arithmetic (add, sub, mult, etc) with two types this will be the resultant type
 		public CyType(CyType lhs, CyType rhs) {
 			switch (lhs.kind) {

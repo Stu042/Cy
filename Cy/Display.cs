@@ -8,6 +8,10 @@ namespace Cy {
 			Error(token.filename, token.line, token.offset, linestr, message);
 		}
 
+		public static void Error(Token tok, string message) {
+			Error(tok.filename, tok.line, tok.offset, GetLine(tok.filename, tok.line), message);
+		}
+
 		public static void Error(string filename, int line, int offset, string linestr, string message) {
 			Console.WriteLine($"Error in {filename}: {message}");
 			string errorstr = $"\t{line}|{offset} ";
@@ -28,10 +32,6 @@ namespace Cy {
 					Console.Write(" ");
 			}
 			Console.WriteLine("^");
-		}
-
-		public static void Error(Token tok, string message) {
-			Error(tok.filename, tok.line, tok.offset, GetLine(tok.filename, tok.line), message);
 		}
 
 		static string GetLine(string filename, int line) {

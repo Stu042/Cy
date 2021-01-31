@@ -65,6 +65,7 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
+    <Compile Include="Step 1 Scanner\SourceFile.cs" />
     <Compile Include="Step 2 Parser\AstPrinter.cs" />
     <Compile Include="Step 4 Compiling\Compiler.cs" />
     <Compile Include="Display.cs" />

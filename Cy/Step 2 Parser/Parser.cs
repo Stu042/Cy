@@ -3,13 +3,11 @@ using System.Collections.Generic;
 
 namespace Cy {
 	class Parser {
-		Cursor cursor;
+		readonly Cursor cursor;
 
-
-		public Parser(List<Token> tokens) {
+		public Parser(Token[] tokens) {
 			cursor = new Cursor(tokens);
 		}
-
 
 		public List<Stmt> Parse() {
 			List<Stmt> statements = new List<Stmt>();
@@ -20,7 +18,6 @@ namespace Cy {
 			}
 			return statements;
 		}
-
 
 		bool IsFuncArgs(int idxtostart) {
 			if (cursor.PeekNext(idxtostart++).type == Token.Kind.LEFT_PAREN) {
@@ -48,7 +45,6 @@ namespace Cy {
 			return false;
 		}
 
-
 		Stmt Declaration() {
 			try {
 				if (cursor.Peek().type == Token.Kind.IDENTIFIER && cursor.PeekNext().type == Token.Kind.COLON)
@@ -68,7 +64,6 @@ namespace Cy {
 			}
 			return null;
 		}
-
 
 		Stmt.StmtClass ClassDeclaration() {
 			Token name = cursor.Advance();
@@ -94,10 +89,7 @@ namespace Cy {
 			return new Stmt.StmtClass(name, members, methods, classes);
 		}
 
-
-		/// <summary>
-		/// Declare a function/method.
-		/// </summary>
+		// Declare a function/method.
 		Stmt.Function FunDeclaration(string kind) {
 			Stmt.StmtType type;
 			if (kind == "function") {
@@ -131,7 +123,6 @@ namespace Cy {
 			return new Stmt.Function(type, name, parameters, body);
 		}
 
-
 		Stmt Statement() {
 			/*
 			if (cursor.Match(Token.Kind.FOR))
@@ -152,8 +143,6 @@ namespace Cy {
 			return ExpressionStatement();
 		}
 
-
-
 		Stmt ReturnStatement() {
 			Token keyword = cursor.Previous();
 			Expr value = null;
@@ -163,17 +152,13 @@ namespace Cy {
 			return new Stmt.Return(keyword, value);
 		}
 
-
 		Stmt ExpressionStatement() {
 			Expr expr = Expression();
 			cursor.Consume(Token.Kind.NEWLINE, "Expect 'newline' after expression.");
 			return new Stmt.Expression(expr);
 		}
 
-
-		/// <summary>
-		/// Get the current Block of statements.
-		/// </summary>
+		// Get the current Block of statements.
 		List<Stmt> Block() {
 			List<Stmt> statements = new List<Stmt>();
 			int startIndent = cursor.Peek().indent;
@@ -184,7 +169,6 @@ namespace Cy {
 			}
 			return statements;
 		}
-
 
 		Expr Assignment() {
 			Expr expr = Or();
@@ -202,9 +186,7 @@ namespace Cy {
 			return expr;
 		}
 
-		/// <summary>
-		/// Create a variable which optionally has an assigned expression.
-		/// </summary>
+		// Create a variable which optionally has an assigned expression.
 		Stmt VarDeclaration() {
 			Token type = cursor.Advance();
 			Token name = cursor.Consume(Token.Kind.IDENTIFIER, "Expect variable name.");
@@ -215,10 +197,7 @@ namespace Cy {
 			return new Stmt.Var(type, name, initializer);
 		}
 
-
-		/// <summary>
-		/// Create an expression. could be a+b or 2+3 or could be rhs of an assign, a=2, etc...
-		/// </summary>
+		// Create an expression. could be a+b or 2+3 or could be rhs of an assign, a=2, etc...
 		Expr Expression() {
 			Expr expr = Assignment();
 			//cursor.Consume(Token.Kind.NEWLINE, "Expect 'newline' after expression.");
@@ -341,25 +320,13 @@ namespace Cy {
 				Token tok = cursor.Advance();
 				return new Expr.Literal(tok, tok.literal);
 			}
-			
-			/* for grouping expressions, i.e. 2 * (5+2)
 			if (cursor.Match(Token.Kind.LEFT_PAREN)) {
 				Expr expr = Expression();
 				cursor.Consume(Token.Kind.RIGHT_PAREN, "Expect matching ')' after expression.");
 				return new Expr.Grouping(expr);
 			}
-			*/
 			throw new ParseError(cursor.Peek(), "Expect expression.");
 		}
-
-
-
-
-
-
-
-
-
 
 		void Synchronize() {
 			cursor.Advance();
@@ -376,24 +343,17 @@ namespace Cy {
 			}
 		}
 
-
 		void Error(Token token, string message) {
 			Display.Error(token, message);
 		}
 
 
-
-
-
-		/// <summary>
 		/// Control the point in the token list we are looking at.
-		/// </summary>
 		class Cursor {
 			int current;
-			List<Token> tokens;
+			Token[] tokens;
 
-
-			public Cursor(List<Token> tokens) {
+			public Cursor(Token[] tokens) {
 				this.tokens = tokens;
 				current = 0;
 			}
@@ -416,9 +376,7 @@ namespace Cy {
 				return false;
 			}
 
-			/// <summary>
-			/// Matches any type, including IDENTIFIER for a user defined type...
-			/// </summary>
+			// Matches any type, including IDENTIFIER for a user defined type...
 			public bool PeekAnyType() {
 				if (tokens[current].IsAnyType()) {
 					return true;
@@ -426,9 +384,7 @@ namespace Cy {
 				return false;
 			}
 
-			/// <summary>
-			/// Is the expected token type next.
-			/// </summary>
+			// Is the expected token type next.
 			public bool Check(Token.Kind expected) {
 				if (IsAtEnd())
 					return false;
@@ -436,28 +392,24 @@ namespace Cy {
 			}
 
 
-			/// <summary>
-			/// Are allExpected token types next.
-			/// </summary>
+			// Are allExpected token types next.
 			public bool CheckAll(params Token.Kind[] allExpected) {
 				int offset = 0;
 				foreach (Token.Kind expected in allExpected) {
-					if ((current + offset) >= tokens.Count || expected != Token.Kind.ANY && tokens[current + offset].type != expected)
+					if ((current + offset) >= tokens.Length || expected != Token.Kind.ANY && tokens[current + offset].type != expected)
 						return false;
 					offset++;
 				}
 				return true;
 			}
 
-			/// <summary>
-			/// Does the line contain (in order, starting at current position) the specified token kinds - dont start with ANY
-			/// </summary>
+			// Does the line contain (in order, starting at current position) the specified token kinds - dont start with ANY
 			public bool LineCheck(params Token.Kind[] allExpected) {
 				int lineOffset = 0;
 				int paramOffset = 0;
-				while (tokens[current + lineOffset].type != Token.Kind.NEWLINE && (current + lineOffset) < tokens.Count) {
+				while (tokens[current + lineOffset].type != Token.Kind.NEWLINE && (current + lineOffset) < tokens.Length) {
 					if (allExpected[paramOffset] == tokens[current + lineOffset].type) {
-						while (tokens[current + lineOffset].type != Token.Kind.NEWLINE && (current + lineOffset) < tokens.Count) {
+						while (tokens[current + lineOffset].type != Token.Kind.NEWLINE && (current + lineOffset) < tokens.Length) {
 							if (allExpected[paramOffset] == Token.Kind.ANY || allExpected[paramOffset] == tokens[current + lineOffset].type) {
 								paramOffset++;
 								if (paramOffset >= allExpected.Length)
@@ -478,7 +430,7 @@ namespace Cy {
 			}
 
 			public bool IsAtEnd() {
-				return current >= tokens.Count || tokens[current].type == Token.Kind.EOF;
+				return current >= tokens.Length || tokens[current].type == Token.Kind.EOF;
 			}
 
 			public Token Advance() {
@@ -492,26 +444,22 @@ namespace Cy {
 			}
 
 			public Token PeekNext(int offset = 1) {
-				if ((current + offset) >= tokens.Count)
+				if ((current + offset) >= tokens.Length)
 					return new Token(Token.Kind.EOF);
 				return tokens[current + offset];
 			}
 
 			public Token Previous() {
-				if ((current - 1) >= tokens.Count)
+				if ((current - 1) >= tokens.Length)
 					return new Token(Token.Kind.EOF);
 				return tokens[current - 1];
 			}
 
 
-		}   // Cursor
+		}	// Cursor
 
 
-
-
-		/// <summary>
-		///  Error exception for parser.
-		/// </summary>
+		//  Error exception for parser.
 		class ParseError : Exception {
 			public Token token;
 			public ParseError() { }
@@ -521,6 +469,5 @@ namespace Cy {
 		}
 
 
-
-	} // Parser
+	}	// Parser
 }

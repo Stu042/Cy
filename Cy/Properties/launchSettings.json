@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Cy": {
+      "commandName": "Project",
+      "commandLineArgs": "cy -I../path/to/foo -I../foo/bar/baz -o temp.c -i afile.cy -ianother.cy"
+    }
+  }
+}

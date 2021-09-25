@@ -76,9 +76,9 @@ namespace Cy {
 		}
 
 
-		public class Call : Expr {			// token is end of function call - rparen
-			public Expr callee;				// function we are calling (might be a constructor with no function body as yet)
-			public List<Expr> arguments;	// input args
+		public class Call : Expr {          // token is end of function call - rparen
+			public Expr callee;             // function we are calling (might be a constructor with no function body as yet)
+			public List<Expr> arguments;    // input args
 			public Call(Expr callee, Token token, List<Expr> arguments) {
 				this.callee = callee;
 				this.token = token;
@@ -119,11 +119,11 @@ namespace Cy {
 
 
 
-	// todo add pre -- and ++
-	/// <summary>
-	/// Minus and not (!)
-	/// </summary>
-	public class Unary : Expr {
+		// todo add pre -- and ++
+		/// <summary>
+		/// Minus and not (!)
+		/// </summary>
+		public class Unary : Expr {
 			public Expr right;
 			public Unary(Token token, Expr right) {
 				this.token = token;

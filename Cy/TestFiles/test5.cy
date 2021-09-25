@@ -13,5 +13,3 @@ int Main():
 	Data d = Data(10, 2)
 	//return d.a * d.b
 	return d.Mult()
-
-

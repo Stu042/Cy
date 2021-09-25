@@ -1,67 +1,70 @@
 ﻿using System;
 using System.IO;
 using System.Collections.Generic;
-
-
+using System.Linq;
+using Cocona;
 
 
 namespace Cy {
-    class Program {
-
+	class Program {
 		static int Main(string[] args) {
-			List<List<Token>> allTokens = new List<List<Token>>();
-
-			Scanner scanner = new Scanner();
+			CoconaApp.Run<Program>(args);
+			var allFilesTokens = new List<List<Token>>();
+			var scanner = new Scanner();
 			foreach (var filename in args) {
-				Console.WriteLine($"Reading file: {filename}");
-				string alltext = File.ReadAllText(filename);
-				List<Token> tokens = scanner.ScanTokens(filename, alltext);
-				allTokens.Add(tokens);
-			}
-
-			Console.WriteLine("\n\nTokens:");
-			foreach (var tokens in allTokens)
-				scanner.Show(tokens);
-
-			List<List<Stmt>> allStmts = new List<List<Stmt>>();
-			foreach (var tokens in allTokens) {
-				Parser parser = new Parser(tokens);
-				List<Stmt> stmts = parser.Parse();
-				allStmts.Add(stmts);
-			}
-
-			Console.WriteLine("\n\nAST:");
-			foreach (var stmts in allStmts) {
-				foreach (var stmt in stmts) {
-					Console.WriteLine(new AstPrinter().Print(stmt));
+				if (Config.Instance.Verbose) {
+					Console.WriteLine($"Reading file: {filename}");
 				}
+				var alltext = File.ReadAllText(filename);
+				var tokens = scanner.ScanTokens(filename, alltext);
+				allFilesTokens.Add(tokens);
 			}
+			DisplayTokens(scanner, allFilesTokens);
 
-			Console.WriteLine("\n\nMapping user defined types:");
-			
-			MapUserTypes usertypes = new MapUserTypes();
-			foreach (var stmts in allStmts) {
-				foreach (var stmt in stmts) {
-					usertypes.Run(stmt);
-				}
+			var allFilesStmts = new List<List<Ast.Stmt>>();
+			foreach (var tokens in allFilesTokens) {
+				var parser = new Parser(tokens);
+				var stmts = parser.Parse();
+				allFilesStmts.Add(stmts);
 			}
-			TypeHierarchy.Environ typeEnv = usertypes.GetEnv();
-			Console.WriteLine("\n\nCompiling:");
-			Compiler compiler = new Compiler(typeEnv);
-			int count = allStmts.Count;
-			for (var i = 0; i < count; i++) {
-				List<Stmt> stmts = allStmts[i];
-				compiler.Prep(stmts[0].token.filename);
-				foreach (var stmt in stmts)
-					compiler.Compile(stmt);
-				Console.WriteLine("\n\nCompiler Output:");
-				Console.WriteLine(compiler.ToString());
-			}
+			DisplayAsts(allFilesStmts);
 
 			return 0;
 		}
 
 
+		public static void DisplayTokens(Scanner scanner, List<List<Token>> allFilesTokens) {
+			if (Config.Instance.DisplayTokens) {
+				var tokenCount = allFilesTokens.Sum(tokens => tokens.Count);
+				Console.WriteLine($"\n\n{tokenCount} Tokens:");
+				foreach (var tokens in allFilesTokens) {
+					scanner.Show(tokens);
+				}
+			}
+		}
 
+
+		public static void DisplayAsts(List<List<Ast.Stmt>> allFilesStmts) {
+			if (Config.Instance.DisplayAsts) {
+				Console.WriteLine("\n\nAST:");
+				foreach (var stmts in allFilesStmts) {
+					foreach (var stmt in stmts) {
+						Console.WriteLine(new Ast.Printer().Print(stmt));
+					}
+				}
+			}
+		}
+
+
+		public void Cy(
+		[Option('A', Description = "Display parser generated ASTs.")] bool ast,
+		[Option('v', Description = "Verbose output.")] bool verbose,
+		[Option('I', Description = "Includes to use.")] string[] includes,
+		[Option('i', Description = "Input files to compile.")] string[] filesIn,
+		[Option('T', Description = "Display scanner generated tokens.")] bool tokens,
+		[Option('o', Description = "Output file name.")] string output = "main.c"
+		) {
+			Config.Instance.Init(includes, filesIn, output, tokens, verbose, ast);
+		}
 	}
 }

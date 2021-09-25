@@ -5,27 +5,12 @@ using System.Text;
 
 
 
-namespace Cy {
-	public abstract class Stmt {
+namespace Cy.Ast {
+	public abstract partial class Stmt {
 		public Token token;
 		public abstract object Accept(IVisitor visitor, object options);
 
-		public interface IVisitor {
-			object VisitBlockStmt(Block stmt, object options);
-			object VisitExpressionStmt(Expression stmt, object options);
-			object VisitFunctionStmt(Function stmt, object options);
-			object VisitInputVarStmt(InputVar invar, object options);
-			object VisitReturnStmt(Return stmt, object options);
-			object VisitVarStmt(Var stmt, object options);
-			object VisitTypeStmt(StmtType stmt, object options);
-			object VisitClassStmt(StmtClass stmt, object options);
-		}
-
-
-
-		/// <summary>
-		/// A group of statements.
-		/// </summary>
+		/// <summary>A group of statements.</summary>
 		public class Block : Stmt {
 			public List<Stmt> statements;
 			public Block(List<Stmt> statements) {
@@ -107,11 +92,11 @@ namespace Cy {
 			}
 		}
 
-		public class StmtClass : Stmt {
+		public class ClassDefinition : Stmt {
 			public List<Var> members;
 			public List<Function> methods;
-			public List<StmtClass> classes;
-			public StmtClass(Token token, List<Var> members, List<Function> methods, List<StmtClass> classes) {
+			public List<ClassDefinition> classes;
+			public ClassDefinition(Token token, List<Var> members, List<Function> methods, List<ClassDefinition> classes) {
 				this.token = token;
 				this.members = members;
 				this.methods = methods;
@@ -127,19 +112,15 @@ namespace Cy {
 			public CyType info;
 			public StmtType(Token token) {
 				this.token = token;
-				info = new CyType(token.type);
+				info = new CyType(token.tokenType);
 			}
 			public StmtType() {
-				this.token = new Token(Token.Kind.VOID);
-				info = new CyType(token.type);
+				this.token = new Token(TokenType.VOID);
+				info = new CyType(token.tokenType);
 			}
 			public override object Accept(IVisitor visitor, object options) {
 				return visitor.VisitTypeStmt(this, options);
 			}
 		}
-
-
-	} // Stmt
-
-
+	}
 }

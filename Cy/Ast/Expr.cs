@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 
 
-namespace Cy {
+namespace Cy.Ast {
 	public abstract class Expr {
 		public Token token;
 		public abstract object Accept(Expr.IVisitor visitor, object options);

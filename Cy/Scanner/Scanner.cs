@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
-
-namespace Cy {
+namespace Cy.Scanner {
 	public partial class Scanner {
 		string filename;
 		List<Token> tokens;
@@ -16,7 +16,7 @@ namespace Cy {
 			{ "false", TokenType.FALSE },
 			{ "for", TokenType.FOR },
 			{ "if", TokenType.IF },
-			{ "null", TokenType.NIL },
+			{ "null", TokenType.NULL },
 			{ "print", TokenType.PRINT },
 			{ "return", TokenType.RETURN },
 			{ "super", TokenType.SUPER },
@@ -91,6 +91,9 @@ namespace Cy {
 					break;
 				case '#':
 					AddToken(TokenType.HASH);
+					break;
+				case '~':
+					AddToken(TokenType.TILDE);
 					break;
 				case '!':
 					AddToken(cursor.Match('=') ? TokenType.BANG_EQUAL : TokenType.BANG);
@@ -236,11 +239,6 @@ namespace Cy {
 			tokens.Add(new Token(type, cursor.ToString(), literal, currentIndent, line, cursor.Offset(), filename));
 		}
 
-		void AddToken(TokenType type, string text, object literal) {
-			tokens.Add(new Token(type, text, literal, currentIndent, line, cursor.Offset(), filename));
-		}
-
-
 		void Error(string message) {
 			Display.Error(filename, line, cursor.Offset(), cursor.GetLineStr(), "Scanner error: " + message);
 		}
@@ -250,6 +248,16 @@ namespace Cy {
 		public void Show(List<Token> tokens) {
 			foreach (Token token in tokens) {
 				Console.WriteLine(token);
+			}
+		}
+
+		public void DisplayAllTokens(List<List<Token>> allFilesTokens) {
+			if (Config.Instance.DisplayTokens) {
+				var tokenCount = allFilesTokens.Sum(tokens => tokens.Count);
+				Console.WriteLine($"\n\n{tokenCount} Tokens:");
+				foreach (var tokens in allFilesTokens) {
+					this.Show(tokens);
+				}
 			}
 		}
 	}

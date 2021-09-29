@@ -1,17 +1,18 @@
 ﻿using System;
 using System.IO;
 using System.Collections.Generic;
-using System.Linq;
 using Cocona;
 
 
 namespace Cy {
 	class Program {
+		private static Config config;
 		static int Main(string[] args) {
-			CoconaApp.Run<Program>(args);
+			config = Config.Instance;
+			CoconaLiteApp.Run<Program>(args);
 			var allFilesTokens = new List<List<Token>>();
-			var scanner = new Scanner();
-			foreach (var filename in args) {
+			var scanner = new Scanner.Scanner();
+			foreach (var filename in config.FilesIn) {
 				if (Config.Instance.Verbose) {
 					Console.WriteLine($"Reading file: {filename}");
 				}
@@ -19,52 +20,35 @@ namespace Cy {
 				var tokens = scanner.ScanTokens(filename, alltext);
 				allFilesTokens.Add(tokens);
 			}
-			DisplayTokens(scanner, allFilesTokens);
+			if (Config.Instance.DisplayTokens) {
+				scanner.DisplayAllTokens(allFilesTokens);
+			}
 
 			var allFilesStmts = new List<List<Ast.Stmt>>();
 			foreach (var tokens in allFilesTokens) {
-				var parser = new Parser(tokens);
+				var cursor = new Parser.Cursor(tokens);
+				var parser = new Parser.Parser(cursor);
 				var stmts = parser.Parse();
 				allFilesStmts.Add(stmts);
 			}
-			DisplayAsts(allFilesStmts);
+			if (Config.Instance.DisplayAsts) {
+				new Ast.Printer().DisplayAllAsts(allFilesStmts);
+			}
 
 			return 0;
 		}
 
 
-		public static void DisplayTokens(Scanner scanner, List<List<Token>> allFilesTokens) {
-			if (Config.Instance.DisplayTokens) {
-				var tokenCount = allFilesTokens.Sum(tokens => tokens.Count);
-				Console.WriteLine($"\n\n{tokenCount} Tokens:");
-				foreach (var tokens in allFilesTokens) {
-					scanner.Show(tokens);
-				}
-			}
-		}
-
-
-		public static void DisplayAsts(List<List<Ast.Stmt>> allFilesStmts) {
-			if (Config.Instance.DisplayAsts) {
-				Console.WriteLine("\n\nAST:");
-				foreach (var stmts in allFilesStmts) {
-					foreach (var stmt in stmts) {
-						Console.WriteLine(new Ast.Printer().Print(stmt));
-					}
-				}
-			}
-		}
-
-
 		public void Cy(
-		[Option('A', Description = "Display parser generated ASTs.")] bool ast,
-		[Option('v', Description = "Verbose output.")] bool verbose,
-		[Option('I', Description = "Includes to use.")] string[] includes,
-		[Option('i', Description = "Input files to compile.")] string[] filesIn,
-		[Option('T', Description = "Display scanner generated tokens.")] bool tokens,
-		[Option('o', Description = "Output file name.")] string output = "main.c"
+			[Option('i', Description = "Input files to compile.")] string[] filesIn,
+			[Option('A', Description = "Display parser generated ASTs.")] bool ast = false,
+			[Option('v', Description = "Verbose output.")] bool verbose = false,
+			[Option('T', Description = "Display scanner generated tokens.")] bool tokens = false,
+			[Option('I', Description = "Includes to use.")] string[] includes = null,
+			[Option('o', Description = "Output file name.")] string output = "main.c",
+			[Option('s', Description = "Tab size (in spaces).")] int tabSize = 4
 		) {
-			Config.Instance.Init(includes, filesIn, output, tokens, verbose, ast);
+			Config.Instance.Init(includes, filesIn, output, tokens, verbose, ast, tabSize);
 		}
 	}
 }

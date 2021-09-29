@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 
 namespace Cy {
-	public class Token : ICloneable {
+	public class Token {
 		public TokenType tokenType; // type of token
 		public string lexeme;       // actual text of token from source
 		public object literal;      // value if a literal
@@ -15,6 +15,8 @@ namespace Cy {
 		public int line;            // line number
 		public int offset;          // index from start of line
 		public string filename;     // source filename
+
+		public static readonly Token EOF = new Token(TokenType.EOF);
 
 		public Token() {
 			tokenType = TokenType.EOF;
@@ -25,7 +27,7 @@ namespace Cy {
 			offset = 0;
 			filename = "";
 		}
-		public Token(TokenType type) {
+	public Token(TokenType type) {
 			tokenType = type;
 			lexeme = "";
 			literal = null;
@@ -46,74 +48,28 @@ namespace Cy {
 		}
 
 		public bool IsLiteral() {
-			switch (tokenType) {
-				case TokenType.STR_LITERAL:
-				case TokenType.INT_LITERAL:
-				case TokenType.FLOAT_LITERAL:
-					return true;
-				default:
-					return false;
-			}
+			return tokenType switch {
+				TokenType.STR_LITERAL or TokenType.INT_LITERAL or TokenType.FLOAT_LITERAL => true,
+				_ => false,
+			};
 		}
 		public bool IsAnyType() {
-			switch (tokenType) {
-				case TokenType.STR_LITERAL:
-				case TokenType.INT_LITERAL:
-				case TokenType.FLOAT_LITERAL:
-				case TokenType.INT:
-				case TokenType.INT8:
-				case TokenType.INT16:
-				case TokenType.INT32:
-				case TokenType.INT64:
-				case TokenType.INT128:
-				case TokenType.FLOAT:
-				case TokenType.FLOAT16:
-				case TokenType.FLOAT32:
-				case TokenType.FLOAT64:
-				case TokenType.FLOAT128:
-				case TokenType.IDENTIFIER:
-				case TokenType.STR:
-					return true;
-				default:
-					return false;
-			}
+			return tokenType switch {
+				TokenType.STR_LITERAL or TokenType.INT_LITERAL or TokenType.FLOAT_LITERAL or TokenType.INT or TokenType.INT8 or TokenType.INT16 or TokenType.INT32 or TokenType.INT64 or TokenType.INT128 or TokenType.FLOAT or TokenType.FLOAT16 or TokenType.FLOAT32 or TokenType.FLOAT64 or TokenType.FLOAT128 or TokenType.IDENTIFIER or TokenType.STR => true,
+				_ => false,
+			};
 		}
 		public bool IsBasicType() {
-			switch (tokenType) {
-				case TokenType.INT:
-				case TokenType.INT8:
-				case TokenType.INT16:
-				case TokenType.INT32:
-				case TokenType.INT64:
-				case TokenType.INT128:
-				case TokenType.FLOAT:
-				case TokenType.FLOAT16:
-				case TokenType.FLOAT32:
-				case TokenType.FLOAT64:
-				case TokenType.FLOAT128:
-				case TokenType.STR:
-					return true;
-				default:
-					return false;
-			}
+			return tokenType switch {
+				TokenType.INT or TokenType.INT8 or TokenType.INT16 or TokenType.INT32 or TokenType.INT64 or TokenType.INT128 or TokenType.FLOAT or TokenType.FLOAT16 or TokenType.FLOAT32 or TokenType.FLOAT64 or TokenType.FLOAT128 or TokenType.STR => true,
+				_ => false,
+			};
 		}
 		public bool IsNumericType() {
-			switch (tokenType) {
-				case TokenType.INT:
-				case TokenType.INT8:
-				case TokenType.INT16:
-				case TokenType.INT32:
-				case TokenType.INT64:
-				case TokenType.INT128:
-				case TokenType.FLOAT:
-				case TokenType.FLOAT16:
-				case TokenType.FLOAT32:
-				case TokenType.FLOAT64:
-				case TokenType.FLOAT128:
-					return true;
-				default:
-					return false;
-			}
+			return tokenType switch {
+				TokenType.INT or TokenType.INT8 or TokenType.INT16 or TokenType.INT32 or TokenType.INT64 or TokenType.INT128 or TokenType.FLOAT or TokenType.FLOAT16 or TokenType.FLOAT32 or TokenType.FLOAT64 or TokenType.FLOAT128 => true,
+				_ => false,
+			};
 		}
 
 		//public override string ToString() {
@@ -145,26 +101,15 @@ namespace Cy {
 		}
 
 		public Token Clone() {
-			var tok = new Token();
-			tok.tokenType = tokenType;
-			tok.lexeme = lexeme;
-			tok.literal = literal;
-			tok.indent = indent;
-			tok.line = line;
-			tok.offset = offset;
-			tok.filename = filename;
-			return tok;
-		}
-
-		object ICloneable.Clone() {
-			var tok = new Token();
-			tok.tokenType = tokenType;
-			tok.lexeme = lexeme;
-			tok.literal = literal;
-			tok.indent = indent;
-			tok.line = line;
-			tok.offset = offset;
-			tok.filename = filename;
+			var tok = new Token {
+				tokenType = tokenType,
+				lexeme = lexeme,
+				literal = literal,
+				indent = indent,
+				line = line,
+				offset = offset,
+				filename = filename
+			};
 			return tok;
 		}
 	}

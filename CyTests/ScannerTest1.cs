@@ -148,12 +148,12 @@ int Main():
 			new Cy.Token(Cy.TokenType.EOF, "\0", null, 0, 16, 0, test2_Filename)
 		};
 
-		private readonly Cy.Scanner scanner = null;
+		private readonly Cy.Scanner.Scanner scanner = null;
 
 
 		public ScannerTest1() {
 			if (scanner == null) {
-				scanner = new Cy.Scanner();
+				scanner = new Cy.Scanner.Scanner();
 			}
 		}
 

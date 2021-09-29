@@ -1,6 +1,6 @@
 ﻿using System;
 using System.IO;
-
+using System.Linq;
 
 namespace Cy {
 	static class Display {
@@ -8,25 +8,14 @@ namespace Cy {
 			Error(token.filename, token.line, token.offset, linestr, message);
 		}
 
-		public static void Error(string filename, int line, int offset, string linestr, string message) {
-			Console.WriteLine($"Error in {filename}: {message}");
-			string errorstr = $"\t{line}|{offset} ";
-			Console.WriteLine($"{errorstr}{linestr}");
-			int c = 0;
-			int count = errorstr.Length + Math.Min(offset, linestr.Length);
-			while (c < errorstr.Length) {
-				if (errorstr[c] == '\t')
-					Console.Write("\t");
-				else
-					Console.Write(" ");
-				c++;
-			}
-			while (c < count) {
-				if (linestr[c++ - errorstr.Length] == '\t')
-					Console.Write("\t");
-				else
-					Console.Write(" ");
-			}
+		public static void Error(string filename, int line, int offset, string lineText, string message) {
+			var tabstr = new string(' ', Config.Instance.TabSize);
+			Console.WriteLine($"Error in {filename}, {message}");
+			string infoText = $"{tabstr}{line}|{offset} ";
+			Console.WriteLine($"{infoText}{lineText.Replace("\t", tabstr)}");
+			var lineTextToErrorTabCount = lineText.Substring(0, offset).Count(c => c == '\t');
+			var fixedLineText = lineText.Replace("\t", tabstr);
+			Console.Write(new string(' ', infoText.Length + lineTextToErrorTabCount * Config.Instance.TabSize + offset));
 			Console.WriteLine("^");
 		}
 
@@ -36,9 +25,9 @@ namespace Cy {
 
 		static string GetLine(string filename, int line) {
 			string[] alltext = File.ReadAllLines(filename);
-			int idx = Math.Min(line, alltext.Length - 1);
-			return alltext[idx];
+			int idx = Math.Clamp(line - 1, 0, alltext.Length - 1);
+			var text = alltext[idx];
+			return text;
 		}
-
 	}
 }

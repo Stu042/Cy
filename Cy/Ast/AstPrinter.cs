@@ -5,6 +5,16 @@ using System.Text;
 
 namespace Cy.Ast {
 	class Printer : Expr.IVisitor, Ast.Stmt.IVisitor {
+
+		public void DisplayAllAsts(List<List<Ast.Stmt>> allFilesStmts) {
+			Console.WriteLine("\n\nAST:");
+			foreach (var stmts in allFilesStmts) {
+				foreach (var stmt in stmts) {
+					Console.WriteLine(new Ast.Printer().Print(stmt));
+				}
+			}
+		}
+
 		public string Print(Expr expr) {
 			return (string)expr.Accept(this, null);
 		}

@@ -72,7 +72,7 @@ namespace Cy {
 			};
 		}
 
-		//public override string ToString() {
+		//public string ToFormattedString() {
 		//	string lexemeStr = lexeme;
 		//	string literalStr = (literal == null) ? "null" : literal.ToString();
 		//	if (tokenType == TokenType.NEWLINE) {
@@ -85,7 +85,7 @@ namespace Cy {
 		//	lexemeStr = lexemeStr.Replace("\n", "\\n");
 		//	return $"new Cy.Token(Cy.TokenType.{tokenType}, \"{lexemeStr}\",  {literalStr}, {indent}, {line}, {offset}, test2_Filename),";
 		//}
-		public override string ToString() {
+		public string ToFormattedString() {
 			string lexemeStr = lexeme;
 			string literalStr = literal?.ToString();
 			if (tokenType == TokenType.NEWLINE) {
@@ -98,6 +98,20 @@ namespace Cy {
 				lexemeStr = "\\r";
 			}
 			return $"{lexemeStr,-10} {tokenType,-20} {literalStr,-20} Indent:{indent,2} Line:{line,4} Offset:{offset,3}";
+		}
+		public override string ToString() {
+			string lexemeStr = lexeme;
+			string literalStr = literal?.ToString();
+			if (tokenType == TokenType.NEWLINE) {
+				lexemeStr = "\\n";
+			}
+			if (tokenType == TokenType.EOF) {
+				lexemeStr = "\\0";
+			}
+			if (lexeme == "\r") {
+				lexemeStr = "\\r";
+			}
+			return $"Lexeme: {lexemeStr}, Type: {tokenType}, Literal: {literalStr}, Indent:{indent}, Line:{line}, Offset:{offset}";
 		}
 
 		public Token Clone() {

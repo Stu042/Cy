@@ -16,7 +16,18 @@ namespace Cy.Parser {
 
 		public Cursor(List<Token> tokens) {
 			this.fullTokens = tokens;
-			this.tokens = tokens.FindAll(token => token.tokenType != TokenType.IGNORED);
+			var toks = tokens.FindAll(token => token.tokenType != TokenType.IGNORED);
+			this.tokens = new List<Token>(toks.Count);
+			bool lastWasNewline = true;
+			for (int i = 0; i < toks.Count; i++) {
+				if (toks[i].tokenType != TokenType.NEWLINE) {
+					lastWasNewline = false;
+					this.tokens.Add(toks[i]);
+				} else if (!lastWasNewline) {
+					lastWasNewline = true;
+					this.tokens.Add(toks[i]);
+				}
+			}
 			current = 0;
 		}
 
@@ -72,15 +83,13 @@ namespace Cy.Parser {
 			return false;
 		}
 
-		/// <summary>If tokens is expected return true and advance.</summary>
-		public bool IsMatch(params TokenType[] allExpected) {
-			var firstIdx = current;
-			foreach (var expected in allExpected) {
-				if (!IsCheck(expected)) {
-					current = firstIdx;
-					return false;
+		/// <summary>If any of anyExpected TokenType is next return true and advance.</summary>
+		public bool IsMatchAny(params TokenType[] anyExpected) {
+			foreach (var expected in anyExpected) {
+				if (IsCheck(expected)) {
+					Advance();
+					return true;
 				}
-				current++;
 			}
 			return false;
 		}

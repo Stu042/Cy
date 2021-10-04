@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
-namespace Cy.Ast {
-	class Printer : Expr.IVisitor, Ast.Stmt.IVisitor {
 
-		public void DisplayAllAsts(List<List<Ast.Stmt>> allFilesStmts) {
+namespace Cy.Ast {
+	class Printer : Expr.IVisitor, Stmt.IVisitor {
+
+		public void DisplayAllAsts(List<List<Stmt>> allFilesStmts) {
 			Console.WriteLine("\n\nAST:");
 			foreach (var stmts in allFilesStmts) {
 				foreach (var stmt in stmts) {
@@ -19,7 +19,7 @@ namespace Cy.Ast {
 			return (string)expr.Accept(this, null);
 		}
 
-		public string Print(Ast.Stmt stmt) {
+		public string Print(Stmt stmt) {
 			return (string)stmt.Accept(this, null);
 		}
 
@@ -32,63 +32,68 @@ namespace Cy.Ast {
 			return Parenthesize(expr.token.lexeme, expr.left, expr.right);
 		}
 
-		public object VisitBlockStmt(Ast.Stmt.Block stmt, object options) {
-			StringBuilder builder = new StringBuilder();
+		public object VisitBlockStmt(Stmt.Block stmt, object options) {
+			StringBuilder builder = new();
 			builder.Append("(block ");
-			foreach (Ast.Stmt statement in stmt.statements)
+			foreach (Stmt statement in stmt.statements) {
 				builder.Append(statement.Accept(this, null));
-			builder.Append(")");
+			}
+			builder.Append(')');
 			return builder.ToString();
 		}
 
-		public object VisitExpressionStmt(Ast.Stmt.Expression stmt, object options) {
+		public object VisitExpressionStmt(Stmt.Expression stmt, object options) {
 			return Parenthesize(".", stmt.expression);
 		}
 
 
-		public object VisitInputVarStmt(Ast.Stmt.InputVar invar, object options) {
+		public object VisitInputVarStmt(Stmt.InputVar invar, object options) {
 			return invar.type.token.lexeme + " " + invar.token.lexeme;
 		}
 
-		public object VisitFunctionStmt(Ast.Stmt.Function stmt, object options) {
-			StringBuilder builder = new StringBuilder();
+		public object VisitFunctionStmt(Stmt.Function stmt, object options) {
+			StringBuilder builder = new();
 			string typestr;
 			if (stmt.returnType != null)
 				typestr = (string)stmt.returnType.Accept(this, null);
 			else
 				typestr = "void";
-			builder.Append("(" + typestr + " " + stmt.token.lexeme + "(");
+			builder.Append($"({typestr} {stmt.token.lexeme}(");
 			foreach (var param in stmt.input) {
-				if (param != stmt.input[0])
+				if (param != stmt.input[0]) {
 					builder.Append(", ");
+				}
 				builder.Append(param.Accept(this, null));
 			}
 			builder.Append(") ");
-			foreach (Ast.Stmt body in stmt.body)
+			foreach (Stmt body in stmt.body)
 				builder.Append(body.Accept(this, null));
-			builder.Append(")");
+			builder.Append(')');
 			return builder.ToString();
 		}
 
-		public object VisitClassStmt(Ast.Stmt.ClassDefinition obj, object options) {
-			StringBuilder builder = new StringBuilder();
-			builder.Append("(" + obj.token.lexeme + ": ");
-			List<string> memberStr = new List<string>();
-			foreach (Ast.Stmt.Var memb in obj.members)
+		public object VisitClassStmt(Stmt.ClassDefinition obj, object options) {
+			StringBuilder builder = new();
+			builder.Append($"({obj.token.lexeme}: ");
+			List<string> memberStr = new();
+			foreach (Stmt.Var memb in obj.members) {
 				memberStr.Add((string)memb.Accept(this, null));
+			}
 			builder.Append(Parenthesize2("members: ", memberStr.ToArray()));
-			List<string> methodStr = new List<string>();
-			foreach (Ast.Stmt.Function memb in obj.methods)
+			List<string> methodStr = new();
+			foreach (Ast.Stmt.Function memb in obj.methods) {
 				methodStr.Add((string)memb.Accept(this, null));
-			builder.Append(Parenthesize2("methods: ", methodStr.ToArray()));
-			builder.Append(")");
+			}
+			builder.Append(Parenthesize2("methods:", methodStr.ToArray()));
+			builder.Append(')');
 			return builder.ToString();
 		}
 
 
 		public object VisitLiteralExpr(Expr.Literal expr, object options) {
-			if (expr.value == null)
-				return "nil";
+			if (expr.value == null) {
+				return "null";
+			}
 			return expr.value.ToString();
 		}
 
@@ -96,13 +101,14 @@ namespace Cy.Ast {
 			return Parenthesize2("=", expr.obj, expr.token.lexeme, expr.value);
 		}
 
-		public object VisitReturnStmt(Ast.Stmt.Return stmt, object options) {
-			if (stmt.value == null)
+		public object VisitReturnStmt(Stmt.Return stmt, object options) {
+			if (stmt.value == null) {
 				return "(return)";
+			}
 			return Parenthesize("return", stmt.value);
 		}
 
-		public object VisitTypeStmt(Ast.Stmt.StmtType stmt, object options) {
+		public object VisitTypeStmt(Stmt.StmtType stmt, object options) {
 			return stmt.token.lexeme;
 		}
 
@@ -114,10 +120,11 @@ namespace Cy.Ast {
 			return var.token.lexeme;
 		}
 
-		public object VisitVarStmt(Ast.Stmt.Var stmt, object options) {
+		public object VisitVarStmt(Stmt.Var stmt, object options) {
 			string typestr = (string)stmt.stmtType.Accept(this, null);
-			if (stmt.initialiser == null)
+			if (stmt.initialiser == null) {
 				return Parenthesize2(typestr, stmt.token);
+			}
 			return Parenthesize2(typestr, stmt.token, "=", stmt.initialiser);
 		}
 
@@ -129,28 +136,40 @@ namespace Cy.Ast {
 			return Parenthesize2("call", expr.callee, Parenthesize("args: ", expr.arguments.ToArray()));
 		}
 
+		public object VisitIfStmt(Stmt.If stmt, object options) {
+			return Parenthesize("if", stmt.value);
+		}
+
+		public object VisitForStmt(Stmt.For stmt, object options) {
+			throw new NotImplementedException();
+		}
+
+		public object VisitWhileStmt(Stmt.While stmt, object options) {
+			throw new NotImplementedException();
+		}
+
 
 
 		string Parenthesize(string name, params Expr[] exprs) {
-			StringBuilder builder = new StringBuilder();
-			builder.Append("(").Append(name);
+			StringBuilder builder = new();
+			builder.Append('(').Append(name);
 			foreach (Expr expr in exprs) {
-				builder.Append(" ");
+				builder.Append(' ');
 				builder.Append(expr.Accept(this, null));
 			}
-			builder.Append(")");
+			builder.Append(')');
 			return builder.ToString();
 		}
 
 
 		string Parenthesize2(string name, params object[] parts) {
-			StringBuilder builder = new StringBuilder();
-			builder.Append("(").Append(name);
+			StringBuilder builder = new();
+			builder.Append('(').Append(name);
 			foreach (object part in parts) {
-				builder.Append(" ");
+				builder.Append(' ');
 				if (part is Expr expr) {
 					builder.Append(expr.Accept(this, null));
-				} else if (part is Ast.Stmt stmt) {
+				} else if (part is Stmt stmt) {
 					builder.Append(stmt.Accept(this, null));
 				} else if (part is Token token) {
 					builder.Append(token.lexeme);
@@ -158,9 +177,8 @@ namespace Cy.Ast {
 					builder.Append(part);
 				}
 			}
-			builder.Append(")");
+			builder.Append(')');
 			return builder.ToString();
 		}
-
-	} // AstPrinter
+	}
 }

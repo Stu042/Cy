@@ -23,15 +23,17 @@ namespace Cy.Parser {
 		// <summary>Check for class definitions, function definition - including constructors and destructors and variable declaration.</summary>
 		Ast.Stmt Declaration() {
 			try {
-				if (cursor.IsMatch(TokenType.IDENTIFIER) && cursor.IsMatch(TokenType.COLON)) {
+				if (cursor.IsCheck(TokenType.IDENTIFIER, TokenType.COLON)) {
 					return DefineClass();
+				}
+				if (IsContructorDeclaration()) {
+					return ConstructorDeclaration();
 				}
 				if (cursor.IsCheckAnyType()) {
 					if (IsFuncDeclaration()) {
 						return FunDeclaration();
-					} else if (IsContructorDeclaration()) {
-						return ConstructorDeclaration("structor");
-					} else if (cursor.IsCheckNext(TokenType.IDENTIFIER)) {
+					}
+					if (cursor.IsCheckNext(TokenType.IDENTIFIER)) {
 						return VarDeclaration();
 					}
 				}
@@ -44,29 +46,14 @@ namespace Cy.Parser {
 		}
 
 		bool IsFuncDeclaration() {
-			if (cursor.IsCheckAnyType() && cursor.IsCheckNext(TokenType.IDENTIFIER)) {   // func, method or property
+			if (cursor.IsCheckAnyType() && cursor.IsCheckNext(TokenType.IDENTIFIER)) {
 				return IsFuncArgs(2);
-			}
-			return false;
-		}
-		bool IsConOrDestructorDeclaration() {
-			if (cursor.Peek().tokenType == TokenType.IDENTIFIER && cursor.PeekNext().tokenType == TokenType.LEFT_PAREN) {     // con/destructor
-				return IsFuncArgs(1);
 			}
 			return false;
 		}
 		bool IsContructorDeclaration() {
-			if (cursor.PeekNext().tokenType == TokenType.IDENTIFIER &&
-				cursor.PeekAt(2).tokenType == TokenType.LEFT_PAREN) {     // destructor
-				return IsFuncArgs(2);
-			}
-			return false;
-		}
-		bool IsDestructorDeclaration() {
-			if (cursor.Peek().tokenType == TokenType.TILDE &&
-				cursor.PeekNext().tokenType == TokenType.IDENTIFIER &&
-				cursor.PeekAt(2).tokenType == TokenType.LEFT_PAREN) {     // destructor
-				return IsFuncArgs(2);
+			if (cursor.IsCheck(TokenType.IDENTIFIER, TokenType.LEFT_PAREN)) {
+				return IsFuncArgs(1);
 			}
 			return false;
 		}
@@ -76,7 +63,7 @@ namespace Cy.Parser {
 			if (cursor.IsCheckAt(TokenType.LEFT_PAREN, idxtostart)) {
 				lparenCount++;
 			}
-			while (lparenCount > 0) { 
+			while (lparenCount > 0) {
 				idxtostart++;
 				TokenType toktype = cursor.PeekAt(idxtostart).tokenType;
 				while (toktype != TokenType.RIGHT_PAREN) {
@@ -92,7 +79,10 @@ namespace Cy.Parser {
 					toktype = cursor.PeekAt(idxtostart).tokenType;
 				}
 				idxtostart++;
-				if (cursor.IsCheckAt(TokenType.COLON, idxtostart)) {
+				if (!cursor.IsCheckAt(TokenType.COLON, idxtostart++)) {
+					return false;
+				}
+				if (cursor.IsCheckAt(TokenType.NEWLINE, idxtostart)) {
 					return true;
 				}
 			}
@@ -101,15 +91,14 @@ namespace Cy.Parser {
 
 		Ast.Stmt.ClassDefinition DefineClass() {
 			Token name = cursor.Advance();
-			int startindent = name.indent;
+			int startIndent = name.indent;
 			cursor.Consume(TokenType.COLON, "Expect a : after '" + name.lexeme + "' for an object definition.");
 			cursor.Consume(TokenType.NEWLINE, "Expect a newline after '" + name.lexeme + "' for an object definition.");
 			var members = new List<Ast.Stmt.Var>();
 			var methods = new List<Ast.Stmt.Function>();
 			var classes = new List<Ast.Stmt.ClassDefinition>();
-			Ast.Stmt astmt;
-			while (cursor.Peek().indent > startindent) {
-				astmt = Declaration();
+			while (!cursor.IsAtEnd() && (cursor.Peek().indent > startIndent || cursor.Peek().tokenType == TokenType.NEWLINE)) {
+				var astmt = Declaration();
 				if (astmt is Ast.Stmt.Var v) {
 					members.Add(v);
 				} else if (astmt is Ast.Stmt.Function f) {
@@ -117,16 +106,14 @@ namespace Cy.Parser {
 				} else if (astmt is Ast.Stmt.ClassDefinition c) {
 					classes.Add(c);
 				} else {
-					Error(astmt.token, "Object definitions should only contain methods, properties or class definitions.");
+					Error(astmt.token, "Object definitions should contain only methods, properties or class definitions.");
 				}
 			}
 			return new Ast.Stmt.ClassDefinition(name, members, methods, classes);
 		}
 
 
-		/// <summary>
-		/// Declare a function/method.
-		/// </summary>
+		/// <summary>Declare a function/method.</summary>
 		Ast.Stmt.Function FunDeclaration() {
 			var returnType = new Ast.Stmt.StmtType(cursor.Advance());
 			Token name = cursor.Consume(TokenType.IDENTIFIER, "Expected function name.");
@@ -151,20 +138,16 @@ namespace Cy.Parser {
 			return new Ast.Stmt.Function(returnType, name, parameters, body);
 		}
 
-		Ast.Stmt.Function ConstructorDeclaration(string kind) {
-			Ast.Stmt.StmtType type;
-			if (kind == "function") {
-				type = new Ast.Stmt.StmtType(cursor.Advance());
+		Ast.Stmt.Function ConstructorDeclaration() {
+			Token name = cursor.Advance();
+			string structorType;
+			if (name.lexeme[0] == '~') {
+				structorType = "Destructor";
 			} else {
-				Token t = cursor.Peek();
-				if (kind == "structor") {     // destructor
-					t = new Token(TokenType.VOID, t.lexeme, t.literal, t.indent, t.line, t.offset, t.filename);
-				}
-				type = new Ast.Stmt.StmtType(t);
+				structorType = "Constructor";
 			}
-			Token name = cursor.Consume(TokenType.IDENTIFIER, "Expect " + kind + " name.");
-			cursor.Consume(TokenType.LEFT_PAREN, "Expect '(' after " + kind + " name.");
-			List<Ast.Stmt.InputVar> parameters = new List<Ast.Stmt.InputVar>();
+			cursor.Consume(TokenType.LEFT_PAREN, $"Expect opening bracket after {structorType} name.");
+			List<Ast.Stmt.InputVar> parameters = new();
 			if (!cursor.IsCheck(TokenType.RIGHT_PAREN)) {
 				do {
 					Token typeTok;
@@ -177,64 +160,81 @@ namespace Cy.Parser {
 					parameters.Add(new Ast.Stmt.InputVar(new Ast.Stmt.StmtType(typeTok), id));
 				} while (cursor.IsMatch(TokenType.COMMA));
 			}
-			cursor.Consume(TokenType.RIGHT_PAREN, "Expect ')' after parameters.");
-			cursor.Consume(TokenType.COLON, "Expect ':' before " + kind + " body.");
-			cursor.Consume(TokenType.NEWLINE, "Expect 'newline' before " + kind + " body.");
-			List<Ast.Stmt> body = Block();
-			return new Ast.Stmt.Function(type, name, parameters, body);
+			cursor.Consume(TokenType.RIGHT_PAREN, "Expect closing bracket after parameters.");
+			cursor.Consume(TokenType.COLON, $"Expect colon before {structorType} body.");
+			cursor.Consume(TokenType.NEWLINE, $"Expect 'newline' before {structorType} body.");
+			var body = Block();
+			return new Ast.Stmt.Function(null, name, parameters, body);
 		}
 
 
 		Ast.Stmt Statement() {
-			/*
-			if (cursor.Match(TokenType.FOR)) {
-				return ForStatement();
-			}
-			if (cursor.Match(TokenType.IF)) {
-				return IfStatement();
-			}
-			if (cursor.Match(TokenType.PRINT)) {
-				return PrintStatement();
-			}
-			*/
-			if (cursor.IsMatch(TokenType.RETURN)) {
-				return ReturnStatement();
-			}
-			/*
-			if (cursor.Match(TokenType.WHILE)) {
-				return WhileStatement();
-			}
-			*/
-			return ExpressionStatement();
+			var tokenType = cursor.Peek().tokenType;
+			return tokenType switch {
+				TokenType.FOR => ForStatement(),
+				TokenType.IF => IfStatement(),
+				TokenType.RETURN => ReturnStatement(),
+				TokenType.WHILE => WhileStatement(),
+				_ => ExpressionStatement(),
+			};
 		}
 
+		/// <summary>Statement is a while statement, i.e. "while(condition):" or "while condition:"</summary>
+		Ast.Stmt WhileStatement() {
+			Token whileKeyword = cursor.Advance();
+			Ast.Expr condition = Expression();
+			cursor.Consume(TokenType.COLON, "Expect colon after for statement.");
+			cursor.Consume(TokenType.NEWLINE, "Expect newline at end of for statement.");
+			var body = Block();
+			return new Ast.Stmt.While(whileKeyword, condition, body);
+		}
 
+		/// <summary>Statement is a for statement, i.e. "for(type iterator : collection):", maybe do "int a = for b:"</summary>
+		Ast.Stmt ForStatement() {
+			Token forKeyword = cursor.Advance();
+			cursor.Consume(TokenType.LEFT_PAREN, "Expect opening bracket after for statement.");
+			Token iteratorType = cursor.Advance();
+			Token iteratorName = cursor.Consume(TokenType.IDENTIFIER, "Expect variable name for iterator in for statement.");
+			Ast.Expr collection = Expression();
+			cursor.Consume(TokenType.RIGHT_PAREN, "Expect closing bracket after for statement.");
+			cursor.Consume(TokenType.COLON, "Expect colon after for statement.");
+			cursor.Consume(TokenType.NEWLINE, "Expect newline at end of for statement.");
+			var body = Block();
+			return new Ast.Stmt.For(forKeyword, iteratorType, iteratorName, collection, body);
+		}
+
+		/// <summary>Statement is an if statement, i.e. "if condition:" or "if (condition):"</summary>
+		Ast.Stmt IfStatement() {
+			Token ifKeyword = cursor.Advance();
+			Ast.Expr condition = Expression();
+			cursor.Consume(TokenType.COLON, "Expect colon after if statement.");
+			cursor.Consume(TokenType.NEWLINE, "Expect newline after colon.");
+			return new Ast.Stmt.If(ifKeyword, condition);
+		}
 
 		Ast.Stmt ReturnStatement() {
-			Token keyword = cursor.Previous();
+			Token keyword = cursor.Advance();
 			Ast.Expr value = null;
 			if (!cursor.IsCheck(TokenType.NEWLINE)) {
 				value = Expression();
 			}
-			cursor.Consume(TokenType.NEWLINE, "Expect 'newline' after return value.");  // new line is not reqd (could be eof)
+			cursor.Consume(TokenType.NEWLINE, "Expect newline after return value.");  // new line is not reqd (could be eof)
 			return new Ast.Stmt.Return(keyword, value);
 		}
 
 
+		// Cy will not require this...
 		Ast.Stmt ExpressionStatement() {
 			Ast.Expr expr = Expression();
-			cursor.Consume(TokenType.NEWLINE, "Expect 'newline' after expression.");
+			cursor.Consume(TokenType.NEWLINE, "Expect newline after expression.");
 			return new Ast.Stmt.Expression(expr);
 		}
 
-
-		/// <summary>
-		/// Get the current Block of statements.
-		/// </summary>
+		/// <summary>Get the current Block of statements.</summary>
 		List<Ast.Stmt> Block() {
-			List<Ast.Stmt> statements = new List<Ast.Stmt>();
+			List<Ast.Stmt> statements = new();
 			int startIndent = cursor.Peek().indent;
-			while (startIndent <= cursor.Peek().indent && !cursor.IsAtEnd()) {
+			while (!cursor.IsAtEnd() && cursor.Peek().indent >= startIndent) {
 				Ast.Stmt stmt = Declaration();
 				if (stmt != null) {
 					statements.Add(stmt);
@@ -243,6 +243,26 @@ namespace Cy.Parser {
 			return statements;
 		}
 
+
+		/// <summary>Create a variable which optionally has an assigned expression.</summary>
+		Ast.Stmt VarDeclaration() {
+			Token type = cursor.Advance();
+			Token name = cursor.Consume(TokenType.IDENTIFIER, "Expect variable name.");
+			Ast.Expr initializer = null;
+			if (cursor.IsMatch(TokenType.EQUAL)) {
+				initializer = Expression();
+			}
+			cursor.Consume(TokenType.NEWLINE, "Expect newline after variable declaration.");
+			return new Ast.Stmt.Var(type, name, initializer);
+		}
+
+
+
+		/// <summary>Create an expression. could be a+b or 2+3 or could be rhs of an assign, a=2, etc...</summary>
+		Ast.Expr Expression() {
+			Ast.Expr expr = Assignment();
+			return expr;
+		}
 
 		Ast.Expr Assignment() {
 			Ast.Expr expr = Or();
@@ -257,30 +277,6 @@ namespace Cy.Parser {
 				}
 				Error(equals, "Invalid assignment target."); // [no-throw]
 			}
-			return expr;
-		}
-
-		/// <summary>
-		/// Create a variable which optionally has an assigned expression.
-		/// </summary>
-		Ast.Stmt VarDeclaration() {
-			Token type = cursor.Advance();
-			Token name = cursor.Consume(TokenType.IDENTIFIER, "Expect variable name.");
-			Ast.Expr initializer = null;
-			if (cursor.IsMatch(TokenType.EQUAL)) {
-				initializer = Expression();
-			}
-			cursor.Consume(TokenType.NEWLINE, "Expect 'newline' after variable declaration.");
-			return new Ast.Stmt.Var(type, name, initializer);
-		}
-
-
-		/// <summary>
-		/// Create an expression. could be a+b or 2+3 or could be rhs of an assign, a=2, etc...
-		/// </summary>
-		Ast.Expr Expression() {
-			Ast.Expr expr = Assignment();
-			//cursor.Consume(TokenType.NEWLINE, "Expect 'newline' after expression.");
 			return expr;
 		}
 
@@ -299,14 +295,15 @@ namespace Cy.Parser {
 			while (cursor.IsMatch(TokenType.AND)) {
 				Token op = cursor.Previous();
 				Ast.Expr right = Equality();
-				//				expr = new Expr.Logical(expr, op, right);
+				//expr = new Ast.Expr.Logical(expr, op, right);
 			}
 			return expr;
 		}
 
+		/// <summary>Expression tests for not equal and equal.</summary>
 		Ast.Expr Equality() {
 			Ast.Expr expr = Compare();
-			while (cursor.IsMatch(TokenType.BANG_EQUAL, TokenType.EQUAL_EQUAL)) {
+			while (cursor.IsMatchAny(TokenType.BANG_EQUAL, TokenType.EQUAL_EQUAL)) {
 				Token op = cursor.Previous();
 				Ast.Expr right = Compare();
 				expr = new Ast.Expr.Binary(expr, op, right);
@@ -316,7 +313,7 @@ namespace Cy.Parser {
 
 		Ast.Expr Compare() {
 			Ast.Expr expr = Addition();
-			while (cursor.IsMatch(TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL)) {
+			while (cursor.IsMatchAny(TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL)) {
 				Token op = cursor.Previous();
 				Ast.Expr right = Addition();
 				expr = new Ast.Expr.Binary(expr, op, right);
@@ -324,9 +321,10 @@ namespace Cy.Parser {
 			return expr;
 		}
 
+		/// <summary>Expression is an addition or subtraction.</summary>
 		Ast.Expr Addition() {
 			Ast.Expr expr = Multiplication();
-			while (cursor.IsMatch(TokenType.MINUS, TokenType.PLUS)) {
+			while (cursor.IsMatchAny(TokenType.MINUS, TokenType.PLUS)) {
 				Token op = cursor.Previous();
 				Ast.Expr right = Multiplication();
 				expr = new Ast.Expr.Binary(expr, op, right);
@@ -334,9 +332,10 @@ namespace Cy.Parser {
 			return expr;
 		}
 
+		/// <summary>Expression is a multiplication or division.</summary>
 		Ast.Expr Multiplication() {
 			Ast.Expr expr = Unary();
-			while (cursor.IsMatch(TokenType.SLASH, TokenType.STAR)) {
+			while (cursor.IsMatchAny(TokenType.SLASH, TokenType.STAR)) {
 				Token op = cursor.Previous();
 				Ast.Expr right = Unary();
 				expr = new Ast.Expr.Binary(expr, op, right);
@@ -344,26 +343,14 @@ namespace Cy.Parser {
 			return expr;
 		}
 
+		/// <summary>Expression is a number.</summary>
 		Ast.Expr Unary() {
-			if (cursor.IsMatch(TokenType.BANG, TokenType.MINUS)) {
+			if (cursor.IsMatchAny(TokenType.BANG, TokenType.MINUS)) {
 				Token op = cursor.Previous();
 				Ast.Expr right = Unary();
 				return new Ast.Expr.Unary(op, right);
 			}
 			return Call();
-		}
-
-		Ast.Expr FinishCall(Ast.Expr callee) {
-			List<Ast.Expr> arguments = new List<Ast.Expr>();
-			if (!cursor.IsCheck(TokenType.RIGHT_PAREN)) {
-				do {
-					if (arguments.Count >= 255)
-						Error(cursor.Peek(), "Cannot have more than 255 arguments.");
-					arguments.Add(Expression());
-				} while (cursor.IsMatch(TokenType.COMMA));
-			}
-			Token paren = cursor.Consume(TokenType.RIGHT_PAREN, "Expect ')' after arguments.");
-			return new Ast.Expr.Call(callee, paren, arguments);
 		}
 
 		Ast.Expr Call() {
@@ -372,7 +359,7 @@ namespace Cy.Parser {
 				if (cursor.IsMatch(TokenType.LEFT_PAREN)) {
 					expr = FinishCall(expr);
 				} else if (cursor.IsMatch(TokenType.DOT)) {
-					Token name = cursor.Consume(TokenType.IDENTIFIER, "Expect property name after '.'.");
+					Token name = cursor.Consume(TokenType.IDENTIFIER, "Expect property name after dot.");
 					expr = new Ast.Expr.Get(expr, name);
 				} else {
 					break;
@@ -381,6 +368,18 @@ namespace Cy.Parser {
 			return expr;
 		}
 
+		Ast.Expr FinishCall(Ast.Expr callee) {
+			var arguments = new List<Ast.Expr>();
+			if (!cursor.IsCheck(TokenType.RIGHT_PAREN)) {
+				do {
+					arguments.Add(Expression());
+				} while (cursor.IsMatch(TokenType.COMMA));
+			}
+			Token paren = cursor.Consume(TokenType.RIGHT_PAREN, "Expect closing bracket after arguments.");
+			return new Ast.Expr.Call(callee, paren, arguments);
+		}
+
+		/// <summary>Parse an expression.</summary>
 		Ast.Expr Primary() {
 			if (cursor.IsMatch(TokenType.FALSE)) {
 				return new Ast.Expr.Literal(cursor.Previous(), false);
@@ -394,7 +393,7 @@ namespace Cy.Parser {
 			if (cursor.IsMatch(TokenType.IDENTIFIER)) {
 				Ast.Expr expr = new Ast.Expr.Variable(cursor.Previous());
 				while (cursor.IsMatch(TokenType.DOT)) {
-					Token name = cursor.Consume(TokenType.IDENTIFIER, "Expect property name after '.'.");
+					Token name = cursor.Consume(TokenType.IDENTIFIER, "Expect property name after dot.");
 					expr = new Ast.Expr.Get(expr, name);
 				}
 				return expr;
@@ -414,6 +413,7 @@ namespace Cy.Parser {
 			throw new ParseException(cursor.Peek(), "Expect expression.");
 		}
 
+		/// <summary>After encountering an error try find next sane position to continue parsing</summary>
 		void Synchronise() {
 			cursor.Advance();
 			while (!cursor.IsAtEnd()) {
@@ -429,7 +429,6 @@ namespace Cy.Parser {
 				cursor.Advance();
 			}
 		}
-
 
 		void Error(Token token, string message) {
 			Display.Error(token, "Parser error:" + message);

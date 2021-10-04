@@ -12,17 +12,17 @@ namespace Cy.Scanner {
 
 
 		static readonly Dictionary<string, TokenType> keywords = new Dictionary<string, TokenType> {
-			{ "else", TokenType.ELSE },
-			{ "false", TokenType.FALSE },
-			{ "for", TokenType.FOR },
+			{ "this", TokenType.THIS },
 			{ "if", TokenType.IF },
+			{ "while", TokenType.WHILE },
+			{ "for", TokenType.FOR },
+			{ "else", TokenType.ELSE },
+			{ "return", TokenType.RETURN },
+			{ "false", TokenType.FALSE },
+			{ "true", TokenType.TRUE },
 			{ "null", TokenType.NULL },
 			{ "print", TokenType.PRINT },
-			{ "return", TokenType.RETURN },
 			{ "super", TokenType.SUPER },
-			{ "this", TokenType.THIS },
-			{ "true", TokenType.TRUE },
-			{ "while", TokenType.WHILE },
 		};
 
 
@@ -91,9 +91,6 @@ namespace Cy.Scanner {
 					break;
 				case '#':
 					AddToken(TokenType.HASH);
-					break;
-				case '~':
-					AddToken(TokenType.TILDE);
 					break;
 				case '!':
 					AddToken(cursor.Match('=') ? TokenType.BANG_EQUAL : TokenType.BANG);
@@ -219,7 +216,7 @@ namespace Cy.Scanner {
 
 
 		bool IsAlpha(char c) {
-			return char.IsLetter(c) || c == '_';
+			return char.IsLetter(c) || c == '_' || c == '~';
 		}
 
 		bool IsAlphaNumeric(char c) {
@@ -247,7 +244,7 @@ namespace Cy.Scanner {
 		// Write tokens to console
 		public void Show(List<Token> tokens) {
 			foreach (Token token in tokens) {
-				Console.WriteLine(token);
+				Console.WriteLine(token.ToFormattedString());
 			}
 		}
 

@@ -65,6 +65,36 @@ namespace Cy.Ast {
 		}
 
 
+		public class For : Stmt {
+			public Token forKeyword;
+			public Token iteratorType;
+			public Token iterator;
+			public Expr condition;
+			public List<Stmt> body;
+
+			public For(Token forKeyword, Token iteratorType, Token iterator, Expr condition, List<Stmt> body) {
+				this.token = forKeyword;
+				this.iteratorType = iteratorType;
+				this.iterator = iterator;
+				this.condition = condition;
+				this.body = body;
+			}
+			public override object Accept(IVisitor visitor, object options) {
+				return visitor.VisitForStmt(this, options);
+			}
+		}
+
+		public class If : Stmt {
+			public Expr value;
+			public If(Token ifKeyword, Expr value) {
+				this.token = ifKeyword;
+				this.value = value;
+			}
+			public override object Accept(IVisitor visitor, object options) {
+				return visitor.VisitIfStmt(this, options);
+			}
+		}
+
 		/// <summary>The return statement.</summary>
 		public class Return : Stmt {
 			public Expr value;
@@ -91,6 +121,7 @@ namespace Cy.Ast {
 				return visitor.VisitVarStmt(this, options);
 			}
 		}
+
 
 		public class ClassDefinition : Stmt {
 			public List<Var> members;
@@ -120,6 +151,20 @@ namespace Cy.Ast {
 			}
 			public override object Accept(IVisitor visitor, object options) {
 				return visitor.VisitTypeStmt(this, options);
+			}
+		}
+
+		public class While : Stmt {
+			public Expr condition;
+			public List<Stmt> body;
+
+			public While(Token whileKeyword, Expr condition, List<Stmt> body) {
+				this.token = whileKeyword;
+				this.condition = condition;
+				this.body = body;
+			}
+			public override object Accept(IVisitor visitor, object options) {
+				return visitor.VisitWhileStmt(this, options);
 			}
 		}
 	}

@@ -4,7 +4,7 @@ namespace Cy {
 		// Single-character tokens.
 		LEFT_PAREN, RIGHT_PAREN, LEFT_BRACE, RIGHT_BRACE,
 		COMMA, DOT, MINUS, PLUS, SEMICOLON, SLASH, BACKSLASH,
-		STAR, COLON, NEWLINE, HASH, TILDE,
+		STAR, COLON, NEWLINE, HASH,
 
 		// One or two character tokens.
 		BANG, BANG_EQUAL, EQUAL, EQUAL_EQUAL, GREATER, GREATER_EQUAL, LESS, LESS_EQUAL,
@@ -23,6 +23,6 @@ namespace Cy {
 		AND, CLASS, ELSE, FALSE, FUN, FOR, IF, NULL, OR, PRINT, RETURN, SUPER, THIS, TRUE, WHILE,
 
 		EOF,
-		IGNORED     // token to represent unimportnat text for compilation, i.e. remarks etc
+		IGNORED     // token to represent unimportant text for compilation, i.e. remarks etc
 	}
 }

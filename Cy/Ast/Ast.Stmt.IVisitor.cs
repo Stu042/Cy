@@ -1,4 +1,5 @@
-﻿namespace Cy.Ast {
+﻿
+namespace Cy.Ast {
 	public partial class Stmt {
 		public interface IVisitor {
 			object VisitBlockStmt(Stmt.Block stmt, object options);
@@ -6,9 +7,12 @@
 			object VisitExpressionStmt(Stmt.Expression stmt, object options);
 			object VisitFunctionStmt(Stmt.Function stmt, object options);
 			object VisitInputVarStmt(Stmt.InputVar invar, object options);
+			object VisitIfStmt(Stmt.If stmt, object options);
 			object VisitReturnStmt(Stmt.Return stmt, object options);
 			object VisitTypeStmt(Stmt.StmtType stmt, object options);
 			object VisitVarStmt(Stmt.Var stmt, object options);
+			object VisitForStmt(Stmt.For stmt, object options);
+			object VisitWhileStmt(While stmt, object options);
 		}
 	}
 }

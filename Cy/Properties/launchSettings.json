@@ -2,7 +2,8 @@
   "profiles": {
     "Cy": {
       "commandName": "Project",
-      "commandLineArgs": "-TAv -o temp.c -i ..\\..\\..\\TestFiles\\test.cy"
+      "commandLineArgs": "-STAv -o temp.c -i test.cy",
+      "workingDirectory": "E:\\src\\cs\\Cy-vs2022\\Cy\\TestFiles"
     }
   }
 }

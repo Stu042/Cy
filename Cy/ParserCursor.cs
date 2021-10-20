@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Linq;
+using System.Collections.Generic;
 
 
 
@@ -11,21 +12,22 @@ namespace Cy.Parser {
 	public class Cursor {
 		public int current { get; private set; }
 		readonly List<Token> tokens;
-		readonly List<Token> fullTokens;
 
 
 		public Cursor(List<Token> tokens) {
-			this.fullTokens = tokens;
 			var toks = tokens.FindAll(token => token.tokenType != TokenType.IGNORED);
 			this.tokens = new List<Token>(toks.Count);
 			bool lastWasNewline = true;
-			for (int i = 0; i < toks.Count; i++) {
-				if (toks[i].tokenType != TokenType.NEWLINE) {
+			foreach (Token token in toks) {
+				if (token.tokenType == TokenType.EOF && !lastWasNewline) {
+					this.tokens.Add(new Token(TokenType.NEWLINE));
+				}
+				if (token.tokenType != TokenType.NEWLINE) {
 					lastWasNewline = false;
-					this.tokens.Add(toks[i]);
+					this.tokens.Add(token);
 				} else if (!lastWasNewline) {
 					lastWasNewline = true;
-					this.tokens.Add(toks[i]);
+					this.tokens.Add(token);
 				}
 			}
 			current = 0;
@@ -40,8 +42,8 @@ namespace Cy.Parser {
 			return tokens[current].tokenType == expected;
 		}
 
-		/// <summary>Are allExpected token types next, jumps past IGNORED.</summary>
-		public bool IsCheck(params TokenType[] allExpected) {
+		/// <summary>Are allExpected token types next.</summary>
+		public bool IsCheckAll(params TokenType[] allExpected) {
 			int offset = 0;
 			foreach (TokenType expected in allExpected) {
 				if (!IsCheckAt(expected, offset)) {
@@ -52,7 +54,16 @@ namespace Cy.Parser {
 			return true;
 		}
 
-		/// <summary>Is expected token type at current + 1, jumps past IGNORED tokens.</summary>
+		public bool IsCheckAny(params TokenType[] allExpected) {
+			var tokenType = Peek().tokenType;
+			if (allExpected.Any(expected => expected == tokenType)) {
+				Advance();
+				return true;
+			}
+			return false;
+		}
+
+		/// <summary>Is expected token type at current + 1.</summary>
 		public bool IsCheckNext(TokenType expected) {
 			if (IsAtEnd(1)) {
 				return false;
@@ -60,7 +71,7 @@ namespace Cy.Parser {
 			return tokens[current + 1].tokenType == expected;
 		}
 
-		/// <summary>Is expected token type at current + offset, jumps past IGNORED tokens.</summary>
+		/// <summary>Is expected token type at current + offset.</summary>
 		public bool IsCheckAt(TokenType expected, int offset = 1) {
 			if (IsAtEnd(offset)) {
 				return false;
@@ -85,11 +96,10 @@ namespace Cy.Parser {
 
 		/// <summary>If any of anyExpected TokenType is next return true and advance.</summary>
 		public bool IsMatchAny(params TokenType[] anyExpected) {
-			foreach (var expected in anyExpected) {
-				if (IsCheck(expected)) {
-					Advance();
-					return true;
-				}
+			var nextTokenType = Peek().tokenType;
+			if (anyExpected.Any(expected => expected == nextTokenType)) {
+				Advance();
+				return true;
 			}
 			return false;
 		}
@@ -101,9 +111,15 @@ namespace Cy.Parser {
 			}
 			throw new ParseException(Peek(), message);
 		}
+		public Token ConsumeAny(string message, params TokenType[] expecteds) {
+			if (IsCheckAny(expecteds)) {
+				return Advance();
+			}
+			throw new ParseException(Peek(), message);
+		}
 
 		public bool IsAtEnd(int offset = 0) {
-			return (current + offset) >= tokens.Count || tokens[current + offset].tokenType == TokenType.EOF || (current + offset) < 0;
+			return (current + offset) >= tokens.Count || (current + offset) < 0 || tokens[current + offset].tokenType == TokenType.EOF;
 		}
 
 		public Token Advance() {
@@ -137,17 +153,6 @@ namespace Cy.Parser {
 				return Token.EOF;
 			}
 			return tokens[index];
-		}
-
-
-		private int SkipIgnored(int offset = 0) {
-			while (tokens[current + offset].tokenType == TokenType.IGNORED) {
-				if (IsAtEnd()) {
-					return offset;
-				}
-				offset++;
-			}
-			return offset;
 		}
 	}   // Cursor
 }

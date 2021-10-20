@@ -13,11 +13,12 @@ namespace Cy {
 		public bool Verbose { get; set; }
 		public bool DisplayAsts { get; set; }
 		public int TabSize { get; set; }
+		public bool DisplayPreCompileSymbols { get; set; }
 
 		public static Config Instance { get { return lazy.Value; } }
 
 		private Config() { }
-		public void Init(string[] includes, string[] filesIn, string output, bool tokens, bool verbose, bool ast, int tabSize) {
+		public void Init(string[] includes, string[] filesIn, string output, bool tokens, bool verbose, bool ast, int tabSize, bool displayPreCompileSymbols) {
 			Includes = includes;
 			FilesIn = filesIn;
 			FileOut = output;
@@ -25,6 +26,7 @@ namespace Cy {
 			Verbose = verbose;
 			DisplayAsts = ast;
 			TabSize = tabSize;
+			DisplayPreCompileSymbols = displayPreCompileSymbols;
 		}
 	}
 }

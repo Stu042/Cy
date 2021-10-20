@@ -8,19 +8,19 @@ namespace Cy {
 
 		// One or two character tokens.
 		BANG, BANG_EQUAL, EQUAL, EQUAL_EQUAL, GREATER, GREATER_EQUAL, LESS, LESS_EQUAL,
+		MINUSMINUS, PLUSPLUS,
 
 		// types
 		INT, INT8, INT16, INT32, INT64, INT128,
 		FLOAT, FLOAT16, FLOAT32, FLOAT64, FLOAT128,
-		STR,
-		VOID,
+		ASCII, UTF8, BOOL, VOID,
 
 		IDENTIFIER,
 		// Literals.
 		STR_LITERAL, INT_LITERAL, FLOAT_LITERAL,
 
 		// Keywords.
-		AND, CLASS, ELSE, FALSE, FUN, FOR, IF, NULL, OR, PRINT, RETURN, SUPER, THIS, TRUE, WHILE,
+		AND, CLASS, ELSE, FALSE, FUN, FOR, EACH, IF, NULL, OR, PRINT, RETURN, SUPER, THIS, TRUE, WHILE,
 
 		EOF,
 		IGNORED     // token to represent unimportant text for compilation, i.e. remarks etc

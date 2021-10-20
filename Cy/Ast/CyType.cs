@@ -1,8 +1,8 @@
 ﻿namespace Cy.Ast {
-	public class CyType {
+	public class PropertyType {
 		public TokenType tokenType;
 
-		public CyType(TokenType tokenType) {
+		public PropertyType(TokenType tokenType) {
 			this.tokenType = tokenType;
 		}
 	}

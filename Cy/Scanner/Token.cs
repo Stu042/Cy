@@ -55,19 +55,27 @@ namespace Cy {
 		}
 		public bool IsAnyType() {
 			return tokenType switch {
-				TokenType.STR_LITERAL or TokenType.INT_LITERAL or TokenType.FLOAT_LITERAL or TokenType.INT or TokenType.INT8 or TokenType.INT16 or TokenType.INT32 or TokenType.INT64 or TokenType.INT128 or TokenType.FLOAT or TokenType.FLOAT16 or TokenType.FLOAT32 or TokenType.FLOAT64 or TokenType.FLOAT128 or TokenType.IDENTIFIER or TokenType.STR => true,
+				TokenType.STR_LITERAL or TokenType.INT_LITERAL or TokenType.FLOAT_LITERAL or
+				TokenType.INT or TokenType.INT8 or TokenType.INT16 or TokenType.INT32 or
+				TokenType.INT64 or TokenType.INT128 or TokenType.FLOAT or TokenType.FLOAT16
+				or TokenType.FLOAT32 or TokenType.FLOAT64 or TokenType.FLOAT128 or TokenType.IDENTIFIER
+				or TokenType.ASCII or TokenType.UTF8 or TokenType.VOID or TokenType.BOOL => true,
 				_ => false,
 			};
 		}
 		public bool IsBasicType() {
 			return tokenType switch {
-				TokenType.INT or TokenType.INT8 or TokenType.INT16 or TokenType.INT32 or TokenType.INT64 or TokenType.INT128 or TokenType.FLOAT or TokenType.FLOAT16 or TokenType.FLOAT32 or TokenType.FLOAT64 or TokenType.FLOAT128 or TokenType.STR => true,
+				TokenType.INT or TokenType.INT8 or TokenType.INT16 or TokenType.INT32 or TokenType.INT64
+				or TokenType.INT128 or TokenType.FLOAT or TokenType.FLOAT16 or TokenType.FLOAT32 or
+				TokenType.FLOAT64 or TokenType.FLOAT128 or TokenType.ASCII or TokenType.VOID or TokenType.UTF8 or TokenType.BOOL => true,
 				_ => false,
 			};
 		}
 		public bool IsNumericType() {
 			return tokenType switch {
-				TokenType.INT or TokenType.INT8 or TokenType.INT16 or TokenType.INT32 or TokenType.INT64 or TokenType.INT128 or TokenType.FLOAT or TokenType.FLOAT16 or TokenType.FLOAT32 or TokenType.FLOAT64 or TokenType.FLOAT128 => true,
+				TokenType.INT or TokenType.INT8 or TokenType.INT16 or TokenType.INT32 or TokenType.INT64 or
+				TokenType.INT128 or TokenType.FLOAT or TokenType.FLOAT16 or TokenType.FLOAT32 or TokenType.FLOAT64
+				or TokenType.FLOAT128 or TokenType.BOOL => true,
 				_ => false,
 			};
 		}

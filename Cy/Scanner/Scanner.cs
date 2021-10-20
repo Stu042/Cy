@@ -16,6 +16,7 @@ namespace Cy.Scanner {
 			{ "if", TokenType.IF },
 			{ "while", TokenType.WHILE },
 			{ "for", TokenType.FOR },
+			{ "each", TokenType.EACH },
 			{ "else", TokenType.ELSE },
 			{ "return", TokenType.RETURN },
 			{ "false", TokenType.FALSE },
@@ -38,17 +39,25 @@ namespace Cy.Scanner {
 			{ "float32", TokenType.FLOAT32 },
 			{ "float64", TokenType.FLOAT64 },
 			{ "float128", TokenType.FLOAT128 },
-			{ "str", TokenType.STR },
+			{ "ascii", TokenType.ASCII },
+			{ "utf8", TokenType.UTF8 },
+			{ "bool", TokenType.BOOL },
 			{ "void", TokenType.VOID },
 		};
 
+		IErrorDisplay display;
+
+		public Scanner(IErrorDisplay display) {
+			this.display = display;
+		}
+
 
 		public List<Token> ScanTokens(string filename, string alltext) {
+			tokens = new();
+			cursor = new();
 			this.filename = filename;
-			tokens = new List<Token>();
 			line = 1;
 			currentIndent = 0;
-			cursor = new Cursor();
 			cursor.NewFile(alltext);
 			while (!cursor.IsAtEnd()) {
 				cursor.Start();
@@ -75,10 +84,10 @@ namespace Cy.Scanner {
 					AddToken(TokenType.DOT);
 					break;
 				case '-':
-					AddToken(TokenType.MINUS);
+					AddToken(cursor.Match('-') ? TokenType.MINUSMINUS : TokenType.MINUS);
 					break;
 				case '+':
-					AddToken(TokenType.PLUS);
+					AddToken(cursor.Match('+') ? TokenType.PLUSPLUS : TokenType.PLUS);
 					break;
 				case ';':
 					AddToken(TokenType.SEMICOLON);
@@ -237,7 +246,7 @@ namespace Cy.Scanner {
 		}
 
 		void Error(string message) {
-			Display.Error(filename, line, cursor.Offset(), cursor.GetLineStr(), "Scanner error: " + message);
+			display.Error(filename, line, cursor.Offset(), cursor.GetLineStr(), "Scanner error. " + message);
 		}
 
 

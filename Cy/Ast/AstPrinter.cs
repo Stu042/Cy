@@ -4,13 +4,13 @@ using System.Text;
 
 
 namespace Cy.Ast {
-	class Printer : Expr.IVisitor, Stmt.IVisitor {
+	public class Printer : IExprVisitor, IStmtVisitor {
 
 		public void DisplayAllAsts(List<List<Stmt>> allFilesStmts) {
 			Console.WriteLine("\n\nAST:");
 			foreach (var stmts in allFilesStmts) {
 				foreach (var stmt in stmts) {
-					Console.WriteLine(new Ast.Printer().Print(stmt));
+					Console.WriteLine(new Printer().Print(stmt));
 				}
 			}
 		}
@@ -54,10 +54,11 @@ namespace Cy.Ast {
 		public object VisitFunctionStmt(Stmt.Function stmt, object options) {
 			StringBuilder builder = new();
 			string typestr;
-			if (stmt.returnType != null)
+			if (stmt.returnType != null) {
 				typestr = (string)stmt.returnType.Accept(this, null);
-			else
+			} else {
 				typestr = "void";
+			}
 			builder.Append($"({typestr} {stmt.token.lexeme}(");
 			foreach (var param in stmt.input) {
 				if (param != stmt.input[0]) {
@@ -66,8 +67,9 @@ namespace Cy.Ast {
 				builder.Append(param.Accept(this, null));
 			}
 			builder.Append(") ");
-			foreach (Stmt body in stmt.body)
+			foreach (Stmt body in stmt.body) {
 				builder.Append(body.Accept(this, null));
+			}
 			builder.Append(')');
 			return builder.ToString();
 		}
@@ -147,6 +149,11 @@ namespace Cy.Ast {
 		public object VisitWhileStmt(Stmt.While stmt, object options) {
 			throw new NotImplementedException();
 		}
+
+		public object VisitGroupingExpr(Expr.Grouping expr, object options) {
+			throw new NotImplementedException();
+		}
+
 
 
 

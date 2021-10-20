@@ -2,16 +2,15 @@
 using System.IO;
 using System.Collections.Generic;
 using Cocona;
-
-
 namespace Cy {
 	class Program {
 		private static Config config;
 		static int Main(string[] args) {
 			config = Config.Instance;
 			CoconaLiteApp.Run<Program>(args);
+			ErrorDisplay display = new();
 			var allFilesTokens = new List<List<Token>>();
-			var scanner = new Scanner.Scanner();
+			var scanner = new Scanner.Scanner(display);
 			foreach (var filename in config.FilesIn) {
 				if (Config.Instance.Verbose) {
 					Console.WriteLine($"Reading file: {filename}");
@@ -26,8 +25,8 @@ namespace Cy {
 
 			var allFilesStmts = new List<List<Ast.Stmt>>();
 			foreach (var tokens in allFilesTokens) {
-				var cursor = new Parser.Cursor(tokens);
-				var parser = new Parser.Parser(cursor);
+				Parser.Cursor cursor = new(tokens);
+				Parser.Parser parser = new(cursor, display);
 				var stmts = parser.Parse();
 				allFilesStmts.Add(stmts);
 			}
@@ -35,6 +34,14 @@ namespace Cy {
 				new Ast.Printer().DisplayAllAsts(allFilesStmts);
 			}
 
+			var createSymbolTable = new PreCompiler.CreateSymbolTable();
+			createSymbolTable.Parse(allFilesStmts);
+			var symbolTable = createSymbolTable.SymbolTable;
+			if (Config.Instance.DisplayPreCompileSymbols) {
+				Console.WriteLine("\nPre-Compilation Symbols:");
+				var displaySymbolTable = new PreCompiler.DisplaySymbolTable();
+				displaySymbolTable.DisplayTable(symbolTable);
+			}
 			return 0;
 		}
 
@@ -46,9 +53,10 @@ namespace Cy {
 			[Option('T', Description = "Display scanner generated tokens.")] bool tokens = false,
 			[Option('I', Description = "Includes to use.")] string[] includes = null,
 			[Option('o', Description = "Output file name.")] string output = "main.c",
-			[Option('s', Description = "Tab size (in spaces).")] int tabSize = 4
+			[Option('s', Description = "Tab size (in spaces).")] int tabSize = 4,
+			[Option('S', Description = "Display pre-compilation Symbol Table.")] bool preCompileSymbols = false
 		) {
-			Config.Instance.Init(includes, filesIn, output, tokens, verbose, ast, tabSize);
+			Config.Instance.Init(includes, filesIn, output, tokens, verbose, ast, tabSize, preCompileSymbols);
 		}
 	}
 }

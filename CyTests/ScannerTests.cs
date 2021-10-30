@@ -3,16 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using Cy;
 
+using FluentAssertions;
+
 using Xunit;
 
 
 
 namespace CyTests {
-	public class ScannerTest1 {
-		private static readonly string test1_Filename = "test1.cy";
+	public class ScannerTests {
+		static readonly string test1_Filename = "test1.cy";
 		ErrorDisplay errorDisplay;
 
-		private readonly List<Cy.Token> test1_ExpectedTokens = new() {
+		readonly List<Cy.Token> test1_ExpectedTokens = new() {
 			new Token(TokenType.INT, "int", null, 0, 1, 0, test1_Filename),
 			new Token(TokenType.IGNORED, " ", null, 0, 1, 3, test1_Filename),
 			new Token(TokenType.IDENTIFIER, "Main", null, 0, 1, 4, test1_Filename),
@@ -20,21 +22,21 @@ namespace CyTests {
 			new Token(TokenType.RIGHT_PAREN, ")", null, 0, 1, 9, test1_Filename),
 			new Token(TokenType.COLON, ":", null, 0, 1, 10, test1_Filename),
 			new Token(TokenType.IGNORED, "\r", null, 0, 1, 11, test1_Filename),
-			new Token(TokenType.NEWLINE, "\n", null, 0, 2, 0, test1_Filename),
+			new Token(TokenType.NEWLINE, "\n", null, 0, 1, 0, test1_Filename),
 			new Token(TokenType.RETURN, "return", null, 1, 2, 2, test1_Filename),
 			new Token(TokenType.IGNORED, " ", null, 1, 2, 8, test1_Filename),
 			new Token(TokenType.INT_LITERAL, "2", 2, 1, 2, 9, test1_Filename),
 			new Token(TokenType.IGNORED, "\r", null, 1, 2, 10, test1_Filename),
-			new Token(TokenType.NEWLINE, "\n", null, 1, 3, 0, test1_Filename),
-			new Token(TokenType.EOF, "\0", null, 0, 3, 0, test1_Filename)
+			new Token(TokenType.NEWLINE, "\n", null, 1, 2, 0, test1_Filename),
+			new Token(TokenType.EOF, "\n", null, 0, 3, 0, test1_Filename)
 		};
-		private static readonly string test1_Source =
+		static readonly string test1_Source =
 			@"int Main():
 	return 2
 ";
 
-		private static readonly string test2_Filename = "test2.cy";
-		private static readonly string test2_Source = @"Data:
+		static readonly string test2_Filename = "test2.cy";
+		static readonly string test2_Source = @"Data:
 	int a
 	int b
 
@@ -50,7 +52,7 @@ int Main():
 	//return d.a * d.b
 	return d.Mult()
 ";
-		private readonly List<Cy.Token> test2_ExpectedTokens = new() {
+		readonly List<Cy.Token> test2_ExpectedTokens = new() {
 			new Token(TokenType.IDENTIFIER, "Data", null, 0, 1, 0, test2_Filename),
 			new Token(TokenType.COLON, ":", null, 0, 1, 4, test2_Filename),
 			new Token(TokenType.IGNORED, "\r", null, 0, 1, 5, test2_Filename),
@@ -148,13 +150,13 @@ int Main():
 			new Token(TokenType.RIGHT_PAREN, ")", null, 1, 15, 16, test2_Filename),
 			new Token(TokenType.IGNORED, "\r", null, 1, 15, 17, test2_Filename),
 			new Token(TokenType.NEWLINE, "\n", null, 1, 15, 0, test2_Filename),
-			new Token(TokenType.EOF, "\0", null, 0, 16, 0, test2_Filename)
+			new Token(TokenType.EOF, "\n", null, 0, 16, 0, test2_Filename)
 		};
 
-		private readonly Cy.Scanner.Scanner scanner = null;
+		readonly Cy.Scanner.Scanner scanner = null;
 
 
-		public ScannerTest1() {
+		public ScannerTests() {
 			errorDisplay = new();
 			if (scanner == null) {
 				scanner = new Cy.Scanner.Scanner(errorDisplay);
@@ -166,14 +168,14 @@ int Main():
 		public void TestSourceToTokens1() {
 			var expected = test1_ExpectedTokens.Where(item => item.tokenType != Cy.TokenType.IGNORED).Select(item => item.Clone()).ToList();
 			var actualTokens = scanner.ScanTokens(test1_Filename, test1_Source).Where(item => item.tokenType != Cy.TokenType.IGNORED).ToList();
-			Assert.NotStrictEqual(expected, actualTokens);
+			expected.Should().BeEquivalentTo(actualTokens);
 		}
 
 		[Fact]
 		public void TestSourceToTokens2() {
 			var expected = test2_ExpectedTokens.Where(item => item.tokenType != Cy.TokenType.IGNORED).Select(item => item.Clone()).ToList();
 			var actualTokens = scanner.ScanTokens(test2_Filename, test2_Source).Where(item => item.tokenType != Cy.TokenType.IGNORED).ToList();
-			Assert.NotStrictEqual(expected, actualTokens);
+			expected.Should().BeEquivalentTo(actualTokens);
 		}
 	}
 }

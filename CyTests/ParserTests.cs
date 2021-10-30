@@ -12,9 +12,9 @@ using Xunit;
 
 
 namespace CyTests {
-	public class ParserTest1 {
-		private static readonly string test1_Filename = "test1.cy";
-		ErrorDisplay errorDisplay;
+	public class ParserTests {
+		static readonly string test1_Filename = "test1.cy";
+		readonly ErrorDisplay errorDisplay;
 
 		static readonly List<Cy.Token> ifTokens = new() {
 			new Token(TokenType.IF, "if", null, 0, 1, 0, test1_Filename),
@@ -126,7 +126,23 @@ namespace CyTests {
 		static readonly List<Cy.Ast.Stmt> unaryStatement = new() {
 			new Cy.Ast.Stmt.Expression(new Cy.Ast.Expr.Unary(unaryTokens[0], new Cy.Ast.Expr.Variable(unaryTokens[1])))
 		};
-		
+
+		static readonly List<Cy.Token> whileTokens = new() {
+			new Token(TokenType.WHILE, "while", null, 0, 1, 0, test1_Filename),
+			new Token(TokenType.IDENTIFIER, "a", null, 0, 1, 2, test1_Filename),
+			new Token(TokenType.EQUAL_EQUAL, "==", null, 0, 1, 2, test1_Filename),
+			new Token(TokenType.IDENTIFIER, "a", null, 0, 1, 2, test1_Filename),
+			new Token(TokenType.COLON, ":", null, 0, 0, 2, test1_Filename),
+			new Token(TokenType.NEWLINE, "\n", null, 0, 0, 3, test1_Filename),
+			new Token(TokenType.INT, "int", null, 1, 1, 1, test1_Filename),
+			new Token(TokenType.IDENTIFIER, "c", null, 1, 1, 5, test1_Filename),
+			new Token(TokenType.NEWLINE, "\n", null, 0, 1, 13, test1_Filename),
+			new Token(TokenType.EOF, "\0", null, 0, 1, 13, test1_Filename),
+		};
+		//static readonly List<Cy.Ast.Stmt> whileStatement = new() {
+		//	new Cy.Ast.Stmt.While(whileTokens[0], new Cy.Ast.Expr.Compare)
+		//};
+
 
 		public class ErrorDisplay : IErrorDisplay {
 			public void Error(Token token, string linestr, string message) { }
@@ -134,7 +150,7 @@ namespace CyTests {
 			public void Error(Token tok, string message) { }
 		}
 
-		public ParserTest1() {
+		public ParserTests() {
 			errorDisplay = new();
 		}
 

@@ -28,7 +28,7 @@ namespace CyTests {
 			new Token(TokenType.INT_LITERAL, "2", 2, 1, 2, 9, test1_Filename),
 			new Token(TokenType.IGNORED, "\r", null, 1, 2, 10, test1_Filename),
 			new Token(TokenType.NEWLINE, "\n", null, 1, 2, 0, test1_Filename),
-			new Token(TokenType.EOF, "\n", null, 0, 3, 0, test1_Filename)
+			new Token(TokenType.EOF, "\0", null, 0, 3, 0, test1_Filename)
 		};
 		static readonly string test1_Source =
 			@"int Main():
@@ -150,7 +150,7 @@ int Main():
 			new Token(TokenType.RIGHT_PAREN, ")", null, 1, 15, 16, test2_Filename),
 			new Token(TokenType.IGNORED, "\r", null, 1, 15, 17, test2_Filename),
 			new Token(TokenType.NEWLINE, "\n", null, 1, 15, 0, test2_Filename),
-			new Token(TokenType.EOF, "\n", null, 0, 16, 0, test2_Filename)
+			new Token(TokenType.EOF, "\0", null, 0, 16, 0, test2_Filename)
 		};
 
 		readonly Cy.Scanner.Scanner scanner = null;

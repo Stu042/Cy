@@ -51,7 +51,7 @@ User:
 		print("{name} says hi.\n")
 	
 	int NameLength():
-		return name.count	// str is an array of int8, arrays have a member named, count
+		return name.length	// str is an array of int8, arrays have a member named, length
 ```
 
 ### Resources
@@ -131,7 +131,14 @@ The above code will call the Factorial function with input of 10, will ask it to
 
 Called like this FactorialCallback() will be called, on the default thread (#0), with the result. Callbacks must always have only the output result as an input argument. but can be asked to run on a different thread by appending `#<thread number>`
 
-Functions can have no more than 255 input arguments, but it is highly recommended to stick to a lot less.
+### Example Function
+
+```cy
+int Factorial(int n):
+	if (n <= 1)
+		return 1
+	return n * Factorial(n-1)
+```
 
 ### Working With Threads
 
@@ -147,16 +154,44 @@ To help working with threads the below commands are available to help:
 
 The #set command must be placed in the global namespace and recommended to be first line of the file containing Main().
 
-
-
-### Example Function
+### Using Cy to add a - large - array of integers using multiple threads.
 
 ```cy
-int Factorial(int n):
-	if (n <= 1)
-		return 1
-    return n * Factorial(n-1)
+#set default																// allow runtime to calculate the best amount of threads to use
+
+int64 Main(str[] argv):
+	int[] values = int[argv.length - 1]										// create an uninitiliased array of ints
+	for (int idx = 1; idx < argv.length; idx++)								// loop over all input - except app name
+		values[idx - 1] = arg.ToInt()										// convert arg to an integer and add to array
+	int64 total = CalculateTotal(int[] values)								// total an int array
+	return total															// and the final result
+
+
+int64 CalculateTotal(int[] values):
+	int blockSize = values.length / #count									// calculate the amount of values each thread will use
+	int blockStart = 0
+	int64[] totals = int[#count]											// a place to store intermediate results
+	for (int thread = 1; thread < #count; thread++):						// for each thread
+		int blockEnd = blockStart + blockSize								// calculate end block index
+		totals[thread] = TotalValues(values[blockStart..blockEnd]) #thread	// total these values by calling TotalValues() on thread numbered thread
+		blockStart = blockEnd												// setup ready for next block
+	totals[0] = TotalValues(values[blockStart..])							// run final block on this thread - we would be waiting for results anyway
+	int64 total = 0															// declare final total
+	int64 aTotal = each totals:												// let aTotal equal each intermediate total value
+		total += aTotal														// add the intermediate totals
+	return total		
+
+
+int64 TotalValues(int[] values):
+	int64 total = 0
+	int value = each values:
+		total += value
+	return value
 ```
+
+The line `totals[thread] = TotalValues(values[blockStart..blockEnd]) #thread` will create a job for the thread pool to call `TotalValues` with a copy of the range of values.
+`totals[thread]` will have a mutex automatically added to prevent reading the value before it is ready.
+`totals[0]` in `totals[0] = TotalValues(values[blockStart..])` will not require a mutex as this is called on the same thread, although as it is part of an array that requires mutexes it can be created and ignored by the compiler.
 
 Statements end with a new line and not a semicolon. A function or object ends when the indentation is same or less than the definition or when the file ends.
 

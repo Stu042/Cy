@@ -63,7 +63,7 @@ namespace Cy.Scanner {
 				cursor.Start();
 				ScanToken();
 			}
-			AddToken(TokenType.EOF);
+			AddToken(TokenType.EOF, "\0");
 			return tokens;
 		}
 
@@ -239,6 +239,10 @@ namespace Cy.Scanner {
 
 		void AddToken(TokenType type) {
 			tokens.Add(new Token(type, cursor.ToString(), null, currentIndent, line, cursor.Offset(), filename));
+		}
+
+		void AddToken(TokenType type, string lexeme) {
+			tokens.Add(new Token(type, lexeme, null, currentIndent, line, cursor.Offset(), filename));
 		}
 
 		void AddToken(TokenType type, object literal) {

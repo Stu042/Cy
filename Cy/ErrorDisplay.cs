@@ -11,8 +11,8 @@ namespace Cy {
 
 		public void Error(string filename, int line, int offset, string lineText, string message) {
 			var infoText = BuildInfoText(line, offset, Config.Instance.TabSize);
-			var errorLine = BuildErrorLine(lineText, line, offset, Config.Instance.TabSize);
-			var pointerLine = BuildPointerLine(infoText + lineText, offset + infoText.Length, Config.Instance.TabSize);
+			var errorLine = BuildErrorLine(lineText, line, Config.Instance.TabSize);
+			var pointerLine = BuildPointerLine(infoText, lineText, offset + infoText.Length, Config.Instance.TabSize);
 			Console.WriteLine($"Error in {filename}. {message}");
 			Console.WriteLine(infoText + errorLine);
 			Console.WriteLine(pointerLine);
@@ -29,20 +29,21 @@ namespace Cy {
 		}
 
 		// i.e. "int Main():"
-		string BuildErrorLine(string lineText, int line, int offset, int tabSize) {
+		string BuildErrorLine(string lineText, int line, int tabSize) {
 			var tabstr = new string(' ', tabSize);
 			var fixedLineText = lineText.Replace("\t", tabstr);
 			return fixedLineText;
 		}
+
 		// i.e. "--------^"
-		string BuildPointerLine(string ErrorLine, int offset, int tabSize) {
-			if (offset > ErrorLine.Length) {
-				return "Error offset is greater than line length";
+		string BuildPointerLine(string infoText, string errorText, int offset, int tabSize) {
+			if (offset < 0 || offset >= errorText.Length) {
+				return $"Error offset is out of range, offset {offset}, line: {infoText + errorText}";
 			}
-			var output = new StringBuilder(ErrorLine.Length);
-			var firstPart = ErrorLine.Substring(0, offset);
+			var output = new StringBuilder(offset + infoText.Length);
+			var firstPart = errorText[..offset];
 			var tabcount = firstPart.Count(c => c == '\t');
-			output.Append(new string('-', tabcount * tabSize + offset - 1));
+			output.Append(new string('-', tabcount * tabSize - tabcount + offset + infoText.Length));
 			output.Append('^');
 			return output.ToString();
 		}

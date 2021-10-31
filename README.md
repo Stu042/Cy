@@ -157,36 +157,36 @@ The #set command must be placed in the global namespace and recommended to be fi
 ### Using Cy to add a - large - array of integers using multiple threads.
 
 ```cy
-#set default																// allow runtime to calculate the best amount of threads to use
+#set default                                                                // allow runtime to calculate the best amount of threads to use
 
 int64 Main(str[] argv):
-	int[] values = int[argv.length - 1]										// create an uninitiliased array of ints
-	for (int idx = 1; idx < argv.length; idx++)								// loop over all input - except app name
-		values[idx - 1] = arg.ToInt()										// convert arg to an integer and add to array
-	int64 total = CalculateTotal(int[] values)								// total an int array
-	return total															// and the final result
+    int[] values = int[argv.length - 1]                                     // create an uninitiliased array of ints
+    for (int idx = 1; idx < argv.length; idx++)                             // loop over all input - except app name
+        values[idx - 1] = arg.ToInt()                                       // convert arg to an integer and add to array
+    int64 total = CalculateTotal(int[] values)                              // total an int array
+    return total                                                            // and the final result
 
 
 int64 CalculateTotal(int[] values):
-	int blockSize = values.length / #count									// calculate the amount of values each thread will use
-	int blockStart = 0
-	int64[] totals = int[#count]											// a place to store intermediate results
-	for (int thread = 1; thread < #count; thread++):						// for each thread
-		int blockEnd = blockStart + blockSize								// calculate end block index
-		totals[thread] = TotalValues(values[blockStart..blockEnd]) #thread	// total these values by calling TotalValues() on thread numbered thread
-		blockStart = blockEnd												// setup ready for next block
-	totals[0] = TotalValues(values[blockStart..])							// run final block on this thread - we would be waiting for results anyway
-	int64 total = 0															// declare final total
-	int64 aTotal = each totals:												// let aTotal equal each intermediate total value
-		total += aTotal														// add the intermediate totals
-	return total		
+    int blockSize = values.length / #count                                  // calculate the amount of values each thread will use
+    int blockStart = 0
+    int64[] totals = int[#count]                                            // a place to store intermediate results
+    for (int thread = 1; thread < #count; thread++):                        // for each thread
+        int blockEnd = blockStart + blockSize                               // calculate end block index
+        totals[thread] = TotalValues(values[blockStart..blockEnd]) #thread  // total these values by calling TotalValues() on thread numbered thread
+        blockStart = blockEnd                                               // setup ready for next block
+    totals[0] = TotalValues(values[blockStart..])                           // run final block on this thread - we would be waiting for results anyway
+    int64 total = 0                                                         // declare final total
+    int64 aTotal = each totals:                                             // let aTotal equal each intermediate total value
+        total += aTotal                                                     // add the intermediate totals
+    return total		
 
 
 int64 TotalValues(int[] values):
-	int64 total = 0
-	int value = each values:
-		total += value
-	return value
+    int64 total = 0
+    int value = each values:
+        total += value
+    return value
 ```
 
 The line `totals[thread] = TotalValues(values[blockStart..blockEnd]) #thread` will create a job for the thread pool to call `TotalValues` with a copy of the range of values.

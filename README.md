@@ -11,47 +11,47 @@ The frontend compiler creates llvm ir which can be used with llvm to run immedia
 ```cy
 // the simplest program
 int Main():
-	return 42
+    return 42
 ```
 
 ```cy
 // Gotta have a hello world program, also shows the format of Mains input arguments
 int Main(str[] argv):
-	print("Hello world\n")
-	return 0
+    print("Hello world\n")
+    return 0
 ```
 
 ```cy
 // Recursion will be possible and sized types are shown here
 int32 Main():
-	return Factorial(42)
+    return Factorial(42)
 
 int32 Factorial(int32 num):
-	if (num > 1)
-		return num * Factorial(num - 1)
-	return num
+    if (num > 1)
+        return num * Factorial(num - 1)
+    return num
 ```
 
 ```cy
 // A simple class example
 int Main():
-	User user = User("Stu")
-	user.Hello()
-	print("User has {user.NameLength()} characters.\n")
-	return 0
+    User user = User("Stu")
+    user.Hello()
+    print("User has {user.NameLength()} characters.\n")
+    return 0
 
 
 User:
-	str name
+    str name
 	
-	User(str name):
-		this.name = name
+    User(str name):
+        this.name = name
 
-	void Hello():
-		print("{name} says hi.\n")
+    void Hello():
+        print("{name} says hi.\n")
 	
-	int NameLength():
-		return name.length	// str is an array of int8, arrays have a member named, length
+    int NameLength():
+        return name.length	// str is an array of int8, arrays have a member named, length
 ```
 
 ### Resources
@@ -135,9 +135,9 @@ Called like this FactorialCallback() will be called, on the default thread (#0),
 
 ```cy
 int Factorial(int n):
-	if (n <= 1)
-		return 1
-	return n * Factorial(n-1)
+    if (n <= 1)
+        return 1
+    return n * Factorial(n-1)
 ```
 
 ### Working With Threads
@@ -201,15 +201,15 @@ Indentation must be by tab, spaces are not counted.
 
 ```cy
 AnObject:
-	int a
-	float32 b
+    int a
+    float32 b
 
-	AnObject(int a, float32 bb):
-		this.a = a
-		b = bb
+    AnObject(int a, float32 bb):
+        this.a = a
+        b = bb
 
-	int Add():
-		return a + b
+    int Add():
+        return a + b
 
 ```
 

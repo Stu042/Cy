@@ -1,5 +1,4 @@
-﻿
-namespace Cy {
+﻿namespace Cy.Scanner {
 	public enum TokenType {
 		// Single-character tokens.
 		LEFT_PAREN, RIGHT_PAREN, LEFT_BRACE, RIGHT_BRACE,
@@ -20,7 +19,7 @@ namespace Cy {
 		STR_LITERAL, INT_LITERAL, FLOAT_LITERAL,
 
 		// Keywords.
-		AND, CLASS, ELSE, FALSE, FUN, FOR, EACH, IF, NULL, OR, PRINT, RETURN, SUPER, THIS, TRUE, WHILE,
+		AND, CLASS, ELSE, FALSE, FUN, FOR, EACH, IF, NULL, OR, RETURN, SUPER, THIS, TRUE, WHILE,
 
 		EOF,
 		IGNORED     // token to represent unimportant text for compilation, i.e. remarks etc

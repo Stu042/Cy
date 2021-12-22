@@ -1,6 +1,7 @@
-﻿using System;
+﻿
+using System;
 
-namespace Cy {
+namespace Cy.Common {
 
 	public sealed class Config {
 		private static readonly Lazy<Config> lazy =

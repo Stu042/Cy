@@ -1,5 +1,4 @@
-﻿
-namespace Cy.Ast {
+﻿namespace Cy.Common.Interfaces {
 	public interface IStmtVisitor {
 		/// <summary>A group of statements, i.e. multiple lines of code.</summary>
 		object VisitBlockStmt(Stmt.Block stmt, object options);

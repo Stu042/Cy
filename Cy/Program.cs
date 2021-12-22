@@ -2,6 +2,10 @@
 using System.IO;
 using System.Collections.Generic;
 using Cocona;
+using Cy.Common;
+using Cy.Scanner;
+using Cy.Compiler;
+
 namespace Cy {
 	class Program {
 		private static Config config;
@@ -23,7 +27,7 @@ namespace Cy {
 				scanner.DisplayAllTokens(allFilesTokens);
 			}
 
-			var allFilesStmts = new List<List<Ast.Stmt>>();
+			var allFilesStmts = new List<List<Stmt>>();
 			foreach (var tokens in allFilesTokens) {
 				Parser.Cursor cursor = new(tokens);
 				Parser.Parser parser = new(cursor, display);
@@ -34,12 +38,12 @@ namespace Cy {
 				new Ast.Printer().DisplayAllAsts(allFilesStmts);
 			}
 
-			var createSymbolTable = new PreCompiler.CreateSymbolTable();
+			var createSymbolTable = new CreateSymbolTable();
 			createSymbolTable.Parse(allFilesStmts);
 			var symbolTable = createSymbolTable.SymbolTable;
 			if (Config.Instance.DisplayPreCompileSymbols) {
 				Console.WriteLine("\nPre-Compilation Symbols:");
-				var displaySymbolTable = new PreCompiler.DisplaySymbolTable();
+				var displaySymbolTable = new DisplaySymbolTable();
 				displaySymbolTable.DisplayTable(symbolTable);
 			}
 			return 0;

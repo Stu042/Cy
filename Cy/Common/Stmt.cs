@@ -1,8 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using Cy.Common.Interfaces;
+using Cy.Scanner;
+
+using System.Collections.Generic;
 
 
 
-namespace Cy.Ast {
+namespace Cy.Common {
 	public abstract class Stmt {
 		public Token token;
 		public abstract object Accept(IStmtVisitor visitor, object options);
@@ -11,7 +14,7 @@ namespace Cy.Ast {
 		public class Block : Stmt {
 			public List<Stmt> statements;
 			public Block(List<Stmt> statements) {
-				this.token = statements[0].token;
+				token = statements[0].token;
 				this.statements = statements;
 			}
 			public override object Accept(IStmtVisitor visitor, object options) {
@@ -24,7 +27,7 @@ namespace Cy.Ast {
 		public class Expression : Stmt {
 			public Expr expression;
 			public Expression(Expr expression) {
-				this.token = expression.token;
+				token = expression.token;
 				this.expression = expression;
 			}
 			public override object Accept(IStmtVisitor visitor, object options) {
@@ -64,13 +67,13 @@ namespace Cy.Ast {
 
 		public class For : Stmt {
 			public Token forKeyword;
-			public Stmt.StmtType iteratorType;
+			public StmtType iteratorType;
 			public Token iterator;
 			public Expr condition;
 			public List<Stmt> body;
 
-			public For(Token forKeyword, Stmt.StmtType iteratorType, Token iterator, Expr condition, List<Stmt> body) {
-				this.token = forKeyword;
+			public For(Token forKeyword, StmtType iteratorType, Token iterator, Expr condition, List<Stmt> body) {
+				token = forKeyword;
 				this.iteratorType = iteratorType;
 				this.iterator = iterator;
 				this.condition = condition;
@@ -83,10 +86,10 @@ namespace Cy.Ast {
 
 		public class If : Stmt {
 			public Expr value;
-			public List<Ast.Stmt> body;
-			public List<Ast.Stmt> elseBody;
-			public If(Token ifKeyword, Expr value, List<Ast.Stmt> body, List<Ast.Stmt> elseBody) {
-				this.token = ifKeyword;
+			public List<Stmt> body;
+			public List<Stmt> elseBody;
+			public If(Token ifKeyword, Expr value, List<Stmt> body, List<Stmt> elseBody) {
+				token = ifKeyword;
 				this.value = value;
 				this.body = body;
 				this.elseBody = elseBody;
@@ -114,7 +117,7 @@ namespace Cy.Ast {
 			public StmtType stmtType;
 			public Expr initialiser;
 			public Var(Token typeToken, Token token, Expr initialiser) {
-				this.stmtType = new StmtType(new List<Token>() { typeToken });
+				stmtType = new StmtType(new List<Token>() { typeToken });
 				this.token = token;
 				this.initialiser = initialiser;
 			}
@@ -143,11 +146,11 @@ namespace Cy.Ast {
 		public class StmtType : Stmt {
 			public Token[] info;
 			public StmtType(List<Token> tokens) {
-				this.token = tokens[0];
+				token = tokens[0];
 				info = tokens.ToArray();
 			}
 			public StmtType() {
-				this.token = new Token(TokenType.VOID);
+				token = new Token(TokenType.VOID);
 				info = new Token[] { token };
 			}
 			public override object Accept(IStmtVisitor visitor, object options) {
@@ -160,7 +163,7 @@ namespace Cy.Ast {
 			public List<Stmt> body;
 
 			public While(Token whileKeyword, Expr condition, List<Stmt> body) {
-				this.token = whileKeyword;
+				token = whileKeyword;
 				this.condition = condition;
 				this.body = body;
 			}

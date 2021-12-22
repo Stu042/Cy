@@ -1,29 +1,30 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Cy.Ast;
 
+using Cy.Common;
+using Cy.Common.Interfaces;
+using Cy.Scanner;
 
-
-namespace Cy.PreCompiler {
+namespace Cy.Compiler {
 
 	/// <summary>Symbols for this block, starting with the global block.</summary>
-	public class TypeTable {
+	public class SymbolTable {
 		public string context;                              // name of this contect, i.e. "" global and "Main" for Main function
-		public TypeTable parent;
-		public List<TypeTable> scopes;
-		public readonly Dictionary<string, CyType> symbols;
+		public SymbolTable parent;
+		public List<SymbolTable> scopes;
+		public readonly Dictionary<string, Symbol> symbols;
 
-		public TypeTable(TypeTable parent, string context) {
+		public SymbolTable(SymbolTable parent, string context) {
 			this.parent = parent;
 			this.context = context;
-			scopes = new List<TypeTable>();
-			symbols = new Dictionary<string, CyType>();
+			scopes = new List<SymbolTable>();
+			symbols = new Dictionary<string, Symbol>();
 		}
-		public void Insert(CyType symbol) {
+		public void Insert(Symbol symbol) {
 			symbols.Add(symbol.sourceName, symbol);
 		}
-		public CyType LookUp(string symbolName) {
+		public Symbol LookUp(string symbolName) {
 			var symbolTable = this;
 			while (symbolTable != null) {
 				if (symbolTable.symbols.ContainsKey(symbolName)) {
@@ -37,7 +38,7 @@ namespace Cy.PreCompiler {
 
 
 	/// <summary>Info for an instance from source file.</summary>
-	public class CyType {
+	public class Symbol {
 		public enum Attribute {
 			Public,
 			Private,
@@ -51,7 +52,7 @@ namespace Cy.PreCompiler {
 		/// <summary>Type information.</summary>
 		public Token[] type;
 
-		public CyType(string sourceName, Attribute attribute = Attribute.Public, Token[] type = null) {
+		public Symbol(string sourceName, Attribute attribute = Attribute.Public, Token[] type = null) {
 			this.sourceName = sourceName;
 			this.attribute = attribute;
 			this.type = type;
@@ -59,13 +60,13 @@ namespace Cy.PreCompiler {
 
 		public override string ToString() {
 			var typeStrs = type.Select(t => t.lexeme).ToArray();
-			return $"{sourceName}, {attribute}, {String.Join('.', typeStrs)}";
+			return $"{sourceName}, {attribute}, {string.Join('.', typeStrs)}";
 		}
 	}
 
 
 	/// <summary>Write SymbolTable to console.</summary>
-	public class DisplayTypeTable {
+	public class DisplaySymbolTable {
 		public void DisplayTable(SymbolTable symbolTable) {
 			foreach (var symbol in symbolTable.symbols) {
 				Console.WriteLine(symbol.Value);
@@ -80,7 +81,7 @@ namespace Cy.PreCompiler {
 
 
 	/// <summary>Class to create the symbol table, given an AST.</summary>
-	public class CreateTypeTable : IExprVisitor, IStmtVisitor {
+	public class CreateSymbolTable : IExprVisitor, IStmtVisitor {
 		enum State {
 			InFunction,
 			InClass,
@@ -91,12 +92,12 @@ namespace Cy.PreCompiler {
 		public SymbolTable SymbolTable { get; private set; }
 		SymbolTable currentSymbolTable;
 
-		public CreateTypeTable() {
+		public CreateSymbolTable() {
 			SymbolTable = new SymbolTable(null, "");
 			currentSymbolTable = SymbolTable;
 		}
 
-		public void Parse(List<List<Ast.Stmt>> toplevel) {
+		public void Parse(List<List<Stmt>> toplevel) {
 			foreach (var stmt in toplevel) {
 				foreach (var s in stmt) {
 					s.Accept(this, null);
@@ -104,9 +105,6 @@ namespace Cy.PreCompiler {
 			}
 		}
 
-		public object VisitGroupingExpr(Expr.Grouping expr, object options) {
-			throw new NotImplementedException();
-		}
 
 		public object VisitAssignExpr(Expr.Assign expr, object options) {
 			return null;
@@ -230,6 +228,10 @@ namespace Cy.PreCompiler {
 
 		public object VisitWhileStmt(Stmt.While stmt, object options) {
 			return null;
+		}
+
+		public object VisitGroupingExpr(Expr.Grouping expr, object options) {
+			throw new NotImplementedException();
 		}
 
 

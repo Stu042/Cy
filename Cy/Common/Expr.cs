@@ -1,7 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using Cy.Common.Interfaces;
+using Cy.Scanner;
+
+using System.Collections.Generic;
 
 
-namespace Cy.Ast {
+namespace Cy.Common {
 	public abstract class Expr {
 		public Token token;
 

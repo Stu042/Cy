@@ -1,4 +1,6 @@
-﻿namespace Cy.Ast {
+﻿using Cy.Scanner;
+
+namespace Cy.Ast {
 	public class PropertyType {
 		public TokenType tokenType;
 

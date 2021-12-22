@@ -1,4 +1,8 @@
-﻿using System;
+﻿using Cy.Common;
+using Cy.Common.Interfaces;
+using Cy.Scanner;
+
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -83,7 +87,7 @@ namespace Cy.Ast {
 			}
 			builder.Append(Parenthesize2("members: ", memberStr.ToArray()));
 			List<string> methodStr = new();
-			foreach (Ast.Stmt.Function memb in obj.methods) {
+			foreach (Stmt.Function memb in obj.methods) {
 				methodStr.Add((string)memb.Accept(this, null));
 			}
 			builder.Append(Parenthesize2("methods:", methodStr.ToArray()));

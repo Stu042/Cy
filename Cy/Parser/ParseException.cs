@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Cy.Scanner;
+
+using System;
 
 namespace Cy.Parser {
 	class ParseException : Exception {

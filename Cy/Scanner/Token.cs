@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-
-
-namespace Cy {
+﻿namespace Cy.Scanner {
 	public class Token {
 		public TokenType tokenType; // type of token
 		public string lexeme;       // actual text of token from source
@@ -27,7 +19,7 @@ namespace Cy {
 			offset = 0;
 			filename = "";
 		}
-	public Token(TokenType type) {
+		public Token(TokenType type) {
 			tokenType = type;
 			lexeme = "";
 			literal = null;
@@ -38,7 +30,7 @@ namespace Cy {
 		}
 
 		public Token(TokenType type, string lexeme, object literal, int indent, int line, int offset, string filename) {
-			this.tokenType = type;
+			tokenType = type;
 			this.lexeme = lexeme;
 			this.literal = literal;
 			this.indent = indent;

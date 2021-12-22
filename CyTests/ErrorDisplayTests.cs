@@ -1,7 +1,11 @@
 using System;
 using System.Linq;
 using System.Reflection;
+
+using Cy.Common;
+
 using FluentAssertions;
+
 using Xunit;
 
 
@@ -15,7 +19,7 @@ namespace CyTests {
 		readonly MethodInfo buildInfoText;		// BuildInfoText(int line, int offset, int tabSize)
 
 		public ErrorDisplayTests() {
-			type = typeof(Cy.ErrorDisplay);
+			type = typeof(ErrorDisplay);
 			instance = Activator.CreateInstance(type);
 			buildErrorLine = type.GetMethods(BindingFlags.NonPublic | BindingFlags.Instance)
 				.Where(x => x.Name == "BuildErrorLine" && x.IsPrivate)

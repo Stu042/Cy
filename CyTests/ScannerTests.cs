@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Cy;
+
+using Cy.Common;
+using Cy.Scanner;
 
 using FluentAssertions;
 
@@ -14,7 +16,7 @@ namespace CyTests {
 		static readonly string test1_Filename = "test1.cy";
 		ErrorDisplay errorDisplay;
 
-		readonly List<Cy.Token> test1_ExpectedTokens = new() {
+		readonly List<Token> test1_ExpectedTokens = new() {
 			new Token(TokenType.INT, "int", null, 0, 1, 0, test1_Filename),
 			new Token(TokenType.IGNORED, " ", null, 0, 1, 3, test1_Filename),
 			new Token(TokenType.IDENTIFIER, "Main", null, 0, 1, 4, test1_Filename),
@@ -52,7 +54,7 @@ int Main():
 	//return d.a * d.b
 	return d.Mult()
 ";
-		readonly List<Cy.Token> test2_ExpectedTokens = new() {
+		readonly List<Token> test2_ExpectedTokens = new() {
 			new Token(TokenType.IDENTIFIER, "Data", null, 0, 1, 0, test2_Filename),
 			new Token(TokenType.COLON, ":", null, 0, 1, 4, test2_Filename),
 			new Token(TokenType.IGNORED, "\r", null, 0, 1, 5, test2_Filename),
@@ -166,15 +168,15 @@ int Main():
 
 		[Fact]
 		public void TestSourceToTokens1() {
-			var expected = test1_ExpectedTokens.Where(item => item.tokenType != Cy.TokenType.IGNORED).Select(item => item.Clone()).ToList();
-			var actualTokens = scanner.ScanTokens(test1_Filename, test1_Source).Where(item => item.tokenType != Cy.TokenType.IGNORED).ToList();
+			var expected = test1_ExpectedTokens.Where(item => item.tokenType != TokenType.IGNORED).Select(item => item.Clone()).ToList();
+			var actualTokens = scanner.ScanTokens(test1_Filename, test1_Source).Where(item => item.tokenType != TokenType.IGNORED).ToList();
 			expected.Should().BeEquivalentTo(actualTokens);
 		}
 
 		[Fact]
 		public void TestSourceToTokens2() {
-			var expected = test2_ExpectedTokens.Where(item => item.tokenType != Cy.TokenType.IGNORED).Select(item => item.Clone()).ToList();
-			var actualTokens = scanner.ScanTokens(test2_Filename, test2_Source).Where(item => item.tokenType != Cy.TokenType.IGNORED).ToList();
+			var expected = test2_ExpectedTokens.Where(item => item.tokenType != TokenType.IGNORED).Select(item => item.Clone()).ToList();
+			var actualTokens = scanner.ScanTokens(test2_Filename, test2_Source).Where(item => item.tokenType != TokenType.IGNORED).ToList();
 			expected.Should().BeEquivalentTo(actualTokens);
 		}
 	}

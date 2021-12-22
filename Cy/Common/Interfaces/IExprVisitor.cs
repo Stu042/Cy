@@ -1,4 +1,6 @@
-﻿namespace Cy.Ast {
+﻿using Cy.Common;
+
+namespace Cy.Common.Interfaces {
 	public interface IExprVisitor {
 		object VisitGroupingExpr(Expr.Grouping expr, object options);
 		object VisitAssignExpr(Expr.Assign expr, object options);

@@ -1,4 +1,8 @@
-﻿using System;
+﻿
+using Cy.Common;
+using Cy.Common.Interfaces;
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -22,7 +26,6 @@ namespace Cy.Scanner {
 			{ "false", TokenType.FALSE },
 			{ "true", TokenType.TRUE },
 			{ "null", TokenType.NULL },
-			{ "print", TokenType.PRINT },
 			{ "super", TokenType.SUPER },
 		};
 

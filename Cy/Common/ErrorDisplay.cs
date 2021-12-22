@@ -1,12 +1,18 @@
-﻿using System;
+﻿using Cy.Common.Interfaces;
+using Cy.Scanner;
+
+using System;
 using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace Cy {
+namespace Cy.Common {
 	public class ErrorDisplay : IErrorDisplay {
 		public void Error(Token token, string linestr, string message) {
 			Error(token.filename, token.line, token.offset, linestr, message);
+		}
+		public void Error(Token tok, string message) {
+			Error(tok.filename, tok.line, tok.offset, GetLine(tok.filename, tok.line), message);
 		}
 
 		public void Error(string filename, int line, int offset, string lineText, string message) {
@@ -18,9 +24,6 @@ namespace Cy {
 			Console.WriteLine(pointerLine);
 		}
 
-		public void Error(Token tok, string message) {
-			Error(tok.filename, tok.line, tok.offset, GetLine(tok.filename, tok.line), message);
-		}
 
 		// i.e. "    15|24 "
 		string BuildInfoText(int line, int offset, int tabSize) {

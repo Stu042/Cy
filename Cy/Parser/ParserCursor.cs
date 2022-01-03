@@ -56,7 +56,6 @@ namespace Cy.Parser {
 		public bool IsCheckAny(params TokenType[] allExpected) {
 			var tokenType = Peek().tokenType;
 			if (allExpected.Any(expected => expected == tokenType)) {
-				Advance();
 				return true;
 			}
 			return false;

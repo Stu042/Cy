@@ -11,7 +11,7 @@ namespace Cy.Ast {
 	public class Printer : IExprVisitor, IStmtVisitor {
 
 		public void DisplayAllAsts(List<List<Stmt>> allFilesStmts) {
-			Console.WriteLine("\n\nAST:");
+			Console.WriteLine("\nAST:");
 			foreach (var stmts in allFilesStmts) {
 				foreach (var stmt in stmts) {
 					Console.WriteLine(new Printer().Print(stmt));

@@ -52,20 +52,20 @@ namespace Cy.Parser {
 
 		bool IsFuncDeclaration() {
 			if (cursor.IsCheckAnyType() && cursor.IsCheckNext(TokenType.IDENTIFIER)) {
-				return IsFuncArgs(2);
+				return CheckIsFuncArgs(2);
 			}
 			return false;
 		}
 
 		bool IsContructorDeclaration() {
 			if (cursor.IsCheckAll(TokenType.IDENTIFIER, TokenType.LEFT_PAREN)) {
-				return IsFuncArgs(1);
+				return CheckIsFuncArgs();
 			}
 			return false;
 		}
 
-		/// <summary>matches: (<anything in here>):\n</summary>
-		bool IsFuncArgs(int idxtostart) {
+		/// <summary>matches: IDENTIFIER(<anything in here>):\n</summary>
+		bool CheckIsFuncArgs(int idxtostart = 1) {
 			int lparenCount = 0;
 			do {
 				TokenType toktype = cursor.PeekAt(idxtostart).tokenType;

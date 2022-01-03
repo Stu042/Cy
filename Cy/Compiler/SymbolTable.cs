@@ -10,7 +10,7 @@ namespace Cy.Compiler {
 
 	/// <summary>Symbols for this block, starting with the global block.</summary>
 	public class SymbolTable {
-		public string context;                              // name of this contect, i.e. "" global and "Main" for Main function
+		public string context;                              // name of this context, i.e. "" global and "Main" for Main function
 		public SymbolTable parent;
 		public List<SymbolTable> scopes;
 		public readonly Dictionary<string, Symbol> symbols;
@@ -50,17 +50,16 @@ namespace Cy.Compiler {
 		/// <summary>Is symbol Public, Private or Protected.</summary>
 		public Attribute attribute;
 		/// <summary>Type information.</summary>
-		public Token[] type;
+		public Token type;
 
-		public Symbol(string sourceName, Attribute attribute = Attribute.Public, Token[] type = null) {
+		public Symbol(string sourceName, Attribute attribute = Attribute.Public, Token type = null) {
 			this.sourceName = sourceName;
 			this.attribute = attribute;
 			this.type = type;
 		}
 
 		public override string ToString() {
-			var typeStrs = type.Select(t => t.lexeme).ToArray();
-			return $"{sourceName}, {attribute}, {string.Join('.', typeStrs)}";
+			return $"{sourceName}, {attribute}, {string.Join('.', type.lexeme)}";
 		}
 	}
 
@@ -133,17 +132,17 @@ namespace Cy.Compiler {
 
 
 		public object VisitInputVarStmt(Stmt.InputVar stmt, object options) {
-			var type = (List<Token>)stmt.type.Accept(this, null);
+			var type = (Token)stmt.type.Accept(this, null);
 			AddSymbol(stmt.token.lexeme, Symbol.Attribute.Private, type);
 			return null;
 		}
 
 		public object VisitFunctionStmt(Stmt.Function stmt, object options) {
-			Token[] type = null;
+			Token type = null;
 			if (stmt.returnType != null) {
-				type = (Token[])stmt.returnType.Accept(this, null);
+				type = (Token)stmt.returnType.Accept(this, null);
 			} else {
-				type = new Token[] { new Token(TokenType.VOID) };
+				type = new Token(TokenType.VOID);
 			}
 			AddSymbol(stmt.token.lexeme, Symbol.Attribute.Public, type);
 			var previousSymbolTable = currentSymbolTable;
@@ -159,9 +158,7 @@ namespace Cy.Compiler {
 		}
 
 		public object VisitClassStmt(Stmt.ClassDefinition stmt, object options) {
-			var type = new List<Token>() {
-				stmt.token
-			};
+			var type = stmt.token;
 			AddSymbol(stmt.token.lexeme, Symbol.Attribute.Public, type);
 			var previousSymbolTable = currentSymbolTable;
 			currentSymbolTable = new SymbolTable(currentSymbolTable, stmt.token.lexeme);
@@ -189,7 +186,7 @@ namespace Cy.Compiler {
 		}
 
 		public object VisitTypeStmt(Stmt.StmtType stmt, object options) {
-			return stmt.info;
+			return stmt.token;
 		}
 
 		public object VisitUnaryExpr(Expr.Unary expr, object options) {
@@ -201,7 +198,7 @@ namespace Cy.Compiler {
 		}
 
 		public object VisitVarStmt(Stmt.Var stmt, object options) {
-			var type = (Token[])stmt.stmtType.Accept(this, null);
+			var type = (Token)stmt.stmtType.Accept(this, null);
 			AddSymbol(stmt.token.lexeme, Symbol.Attribute.Public, type);
 			if (stmt.initialiser != null) {
 				stmt.initialiser.Accept(this, null);
@@ -222,7 +219,7 @@ namespace Cy.Compiler {
 		}
 
 		public object VisitForStmt(Stmt.For stmt, object options) {
-			AddSymbol(stmt.iterator.lexeme, Symbol.Attribute.Private, new Token[] { stmt.iteratorType.token });
+			AddSymbol(stmt.iterator.lexeme, Symbol.Attribute.Private, stmt.iteratorType.token);
 			return null;
 		}
 
@@ -235,12 +232,7 @@ namespace Cy.Compiler {
 		}
 
 
-		Symbol AddSymbol(string sourceName, Symbol.Attribute attribute = Symbol.Attribute.Public, List<Token> type = null) {
-			var sym = new Symbol(sourceName, attribute, type.ToArray());
-			currentSymbolTable.Insert(sym);
-			return sym;
-		}
-		Symbol AddSymbol(string sourceName, Symbol.Attribute attribute = Symbol.Attribute.Public, Token[] type = null) {
+		Symbol AddSymbol(string sourceName, Symbol.Attribute attribute = Symbol.Attribute.Public, Token type = null) {
 			var sym = new Symbol(sourceName, attribute, type);
 			currentSymbolTable.Insert(sym);
 			return sym;

@@ -38,6 +38,15 @@ namespace Cy {
 				new Ast.Printer().DisplayAllAsts(allFilesStmts);
 			}
 
+			var createTypeTable = new CreateTypeTable();
+			createTypeTable.Parse(allFilesStmts);
+			var typeTable = createTypeTable.TypeTable;
+			if (Config.Instance.DisplayPreCompileSymbols) {
+				Console.WriteLine("\nType Table:");
+				var displayTypeTable = new DisplayTypeTable();
+				displayTypeTable.DisplayTable(typeTable);
+			}
+
 			var createSymbolTable = new CreateSymbolTable();
 			createSymbolTable.Parse(allFilesStmts);
 			var symbolTable = createSymbolTable.SymbolTable;

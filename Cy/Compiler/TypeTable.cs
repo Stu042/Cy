@@ -226,7 +226,7 @@ namespace Cy.Compiler {
 		}
 
 		public object VisitTypeStmt(Stmt.StmtType stmt, object options) {
-			return stmt.info;
+			return stmt.token;
 		}
 
 		public object VisitUnaryExpr(Expr.Unary expr, object options) {

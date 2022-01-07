@@ -23,20 +23,19 @@ namespace Cy.Compiler {
 		/// <summary>Is symbol Public, Private or Protected.</summary>
 		public AccessModifier Modifier;
 		/// <summary>Token information.</summary>
-		public Token Token;
+		public Token[] Tokens;
 		/// <summary>Size (in bytes) of type.</summary>
 		public int Size;
 
-		public TypeDefinition(string nameInSource, int size, AccessModifier accessModifier = AccessModifier.Public, Token token = null) {
+		public TypeDefinition(string nameInSource, int size, AccessModifier accessModifier = AccessModifier.Public, Token[] token = null) {
 			NameInSource = nameInSource;
 			Modifier = accessModifier;
-			Token = token;
+			Tokens = token;
 			Size = size;
 		}
 
 		public override string ToString() {
-			//var typeStrs = Token.Select(t => t.lexeme).ToArray();
-			var typeStrs = Token.lexeme;
+			var typeStrs = Tokens.Select(t => t.lexeme).ToArray();
 			return $"{NameInSource}, {Modifier}, {string.Join('.', typeStrs)}";
 		}
 	}
@@ -107,19 +106,19 @@ namespace Cy.Compiler {
 
 
 		TypeDefinition[] standardTypes = new TypeDefinition[] {
-			new TypeDefinition("int", DEFAULT_INTSIZE, AccessModifier.Public, new Token(TokenType.INT, "int", null, 0,0,0, STDLIB_FILENAME)),
-			new TypeDefinition("int8", 1, AccessModifier.Public, new Token(TokenType.INT8, "int8", null, 0,0,0, STDLIB_FILENAME)),
-			new TypeDefinition("int16", 2, AccessModifier.Public, new Token(TokenType.INT16, "int16", null, 0,0,0, STDLIB_FILENAME)),
-			new TypeDefinition("int32", 4, AccessModifier.Public, new Token(TokenType.INT32, "int32", null, 0,0,0, STDLIB_FILENAME)),
-			new TypeDefinition("int64", 8, AccessModifier.Public, new Token(TokenType.INT64, "int64", null, 0,0,0, STDLIB_FILENAME)),
-			new TypeDefinition("int128", 16, AccessModifier.Public, new Token(TokenType.INT128, "int128", null, 0,0,0, STDLIB_FILENAME)),
-			new TypeDefinition("float", DEFAULT_FLOATSIZE, AccessModifier.Public, new Token(TokenType.FLOAT, "float", null, 0,0,0, STDLIB_FILENAME)),
-			new TypeDefinition("float16", 2, AccessModifier.Public, new Token(TokenType.FLOAT16, "float16", null, 0,0,0, STDLIB_FILENAME)),
-			new TypeDefinition("float32", 4, AccessModifier.Public, new Token(TokenType.FLOAT32, "float32", null, 0,0,0, STDLIB_FILENAME)),
-			new TypeDefinition("float64", 8, AccessModifier.Public, new Token(TokenType.FLOAT64, "float64", null, 0,0,0, STDLIB_FILENAME)),
-			new TypeDefinition("float128", 16, AccessModifier.Public, new Token(TokenType.FLOAT128, "float128", null, 0,0,0, STDLIB_FILENAME)),
-			new TypeDefinition("bool", 1, AccessModifier.Public, new Token(TokenType.BOOL, "bool", null, 0,0,0, STDLIB_FILENAME)),
-			new TypeDefinition("void", 0, AccessModifier.Public, new Token(TokenType.VOID, "void", null, 0,0,0, STDLIB_FILENAME))
+			new TypeDefinition("int", DEFAULT_INTSIZE, AccessModifier.Public, new Token[] { new Token(TokenType.INT, "int", null, 0,0,0, STDLIB_FILENAME) }),
+			new TypeDefinition("int8", 1, AccessModifier.Public, new Token[] { new Token(TokenType.INT8, "int8", null, 0,0,0, STDLIB_FILENAME) }),
+			new TypeDefinition("int16", 2, AccessModifier.Public, new Token[] { new Token(TokenType.INT16, "int16", null, 0,0,0, STDLIB_FILENAME) }),
+			new TypeDefinition("int32", 4, AccessModifier.Public, new Token[] { new Token(TokenType.INT32, "int32", null, 0,0,0, STDLIB_FILENAME) }),
+			new TypeDefinition("int64", 8, AccessModifier.Public, new Token[] { new Token(TokenType.INT64, "int64", null, 0,0,0, STDLIB_FILENAME) }),
+			new TypeDefinition("int128", 16, AccessModifier.Public, new Token[] { new Token(TokenType.INT128, "int128", null, 0,0,0, STDLIB_FILENAME) }),
+			new TypeDefinition("float", DEFAULT_FLOATSIZE, AccessModifier.Public, new Token[] { new Token(TokenType.FLOAT, "float", null, 0,0,0, STDLIB_FILENAME) }),
+			new TypeDefinition("float16", 2, AccessModifier.Public, new Token[] { new Token(TokenType.FLOAT16, "float16", null, 0,0,0, STDLIB_FILENAME) }),
+			new TypeDefinition("float32", 4, AccessModifier.Public, new Token[] { new Token(TokenType.FLOAT32, "float32", null, 0,0,0, STDLIB_FILENAME) }),
+			new TypeDefinition("float64", 8, AccessModifier.Public, new Token[] { new Token(TokenType.FLOAT64, "float64", null, 0,0,0, STDLIB_FILENAME) }),
+			new TypeDefinition("float128", 16, AccessModifier.Public, new Token[] { new Token(TokenType.FLOAT128, "float128", null, 0,0,0, STDLIB_FILENAME) }),
+			new TypeDefinition("bool", 1, AccessModifier.Public, new Token[] { new Token(TokenType.BOOL, "bool", null, 0,0,0, STDLIB_FILENAME) }),
+			new TypeDefinition("void", 0, AccessModifier.Public, new Token[] { new Token(TokenType.VOID, "void", null, 0,0,0, STDLIB_FILENAME) })
 		};
 
 		public CreateTypeTable() {
@@ -173,17 +172,17 @@ namespace Cy.Compiler {
 
 
 		public object VisitInputVarStmt(Stmt.InputVar stmt, object options) {
-			var type = (Token)stmt.type.Accept(this, null);
+			var type = (Token[])stmt.type.Accept(this, null);
 			AddTypeDefinition(stmt.token.lexeme, AccessModifier.Private, type);
 			return null;
 		}
 
 		public object VisitFunctionStmt(Stmt.Function stmt, object options) {
-			Token token;
+			Token[] token;
 			if (stmt.returnType != null) {
-				token = (Token)stmt.returnType.Accept(this, null);
+				token = (Token[])stmt.returnType.Accept(this, null);
 			} else {
-				token = new Token(TokenType.VOID);
+				token = new Token[] { new Token(TokenType.VOID) };
 			}
 			AddTypeDefinition(stmt.token.lexeme, AccessModifier.Public, token);
 			var previousTypeTable = currentTypeTable;
@@ -199,7 +198,7 @@ namespace Cy.Compiler {
 		}
 
 		public object VisitClassStmt(Stmt.ClassDefinition stmt, object options) {
-			AddTypeDefinition(stmt.token.lexeme, AccessModifier.Public, stmt.token);
+			AddTypeDefinition(stmt.token.lexeme, AccessModifier.Public, new Token[] { stmt.token });
 			var previousSymbolTable = currentTypeTable;
 			currentTypeTable = new TypeTable(currentTypeTable, stmt.token.lexeme);
 			foreach (Stmt.Var memb in stmt.members) {
@@ -226,7 +225,7 @@ namespace Cy.Compiler {
 		}
 
 		public object VisitTypeStmt(Stmt.StmtType stmt, object options) {
-			return stmt.token;
+			return stmt.info;
 		}
 
 		public object VisitUnaryExpr(Expr.Unary expr, object options) {
@@ -238,8 +237,8 @@ namespace Cy.Compiler {
 		}
 
 		public object VisitVarStmt(Stmt.Var stmt, object options) {
-			var token = (Token)stmt.stmtType.Accept(this, null);
-			AddTypeDefinition(stmt.token.lexeme, AccessModifier.Public, token);
+			var tokens = (Token[])stmt.stmtType.Accept(this, null);
+			AddTypeDefinition(stmt.token.lexeme, AccessModifier.Public, tokens);
 			if (stmt.initialiser != null) {
 				stmt.initialiser.Accept(this, null);
 			}
@@ -259,7 +258,7 @@ namespace Cy.Compiler {
 		}
 
 		public object VisitForStmt(Stmt.For stmt, object options) {
-			AddTypeDefinition(stmt.iterator.lexeme, AccessModifier.Private, stmt.iteratorType.token);
+			AddTypeDefinition(stmt.iterator.lexeme, AccessModifier.Private, new Token[] { stmt.iteratorType.token });
 			return null;
 		}
 
@@ -268,7 +267,7 @@ namespace Cy.Compiler {
 		}
 
 
-		void AddTypeDefinition(string sourceName, AccessModifier accessModifier = AccessModifier.Public, Token token = null) {
+		void AddTypeDefinition(string sourceName, AccessModifier accessModifier = AccessModifier.Public, Token[] token = null) {
 			var typedef = new TypeDefinition(sourceName, -1, accessModifier, token);
 			currentTypeTable.Insert(typedef);
 		}

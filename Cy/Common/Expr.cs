@@ -8,7 +8,7 @@ namespace Cy.Common {
 	public abstract class Expr {
 		public Token token;
 
-		public abstract object Accept(IExprVisitor visitor, object options);
+		public abstract object Accept(IExprVisitor visitor, object options = null);
 
 		public class Grouping : Expr {
 			public Expr expression;
@@ -16,7 +16,7 @@ namespace Cy.Common {
 				this.token = token;
 				expression = expr;
 			}
-			public override object Accept(IExprVisitor visitor, object options) {
+			public override object Accept(IExprVisitor visitor, object options = null) {
 				return visitor.VisitGroupingExpr(this, options);
 			}
 		}
@@ -28,7 +28,7 @@ namespace Cy.Common {
 				this.token = token;
 				this.value = value;
 			}
-			public override object Accept(IExprVisitor visitor, object options) {
+			public override object Accept(IExprVisitor visitor, object options = null) {
 				return visitor.VisitLiteralExpr(this, options);
 			}
 		}
@@ -42,7 +42,7 @@ namespace Cy.Common {
 				this.token = token;
 				this.value = value;
 			}
-			public override object Accept(IExprVisitor visitor, object options) {
+			public override object Accept(IExprVisitor visitor, object options = null) {
 				return visitor.VisitSetExpr(this, options);
 			}
 
@@ -56,7 +56,7 @@ namespace Cy.Common {
 				this.obj = obj;
 				this.token = token;
 			}
-			public override object Accept(IExprVisitor visitor, object options) {
+			public override object Accept(IExprVisitor visitor, object options = null) {
 				return visitor.VisitGetExpr(this, options);
 			}
 		}
@@ -71,7 +71,7 @@ namespace Cy.Common {
 				this.token = token;
 				this.right = right;
 			}
-			public override object Accept(IExprVisitor visitor, object options) {
+			public override object Accept(IExprVisitor visitor, object options = null) {
 				return visitor.VisitBinaryExpr(this, options);
 			}
 		}
@@ -85,7 +85,7 @@ namespace Cy.Common {
 				this.token = token;
 				this.arguments = arguments;
 			}
-			public override object Accept(IExprVisitor visitor, object options) {
+			public override object Accept(IExprVisitor visitor, object options = null) {
 				return visitor.VisitCallExpr(this, options);
 			}
 		}
@@ -98,7 +98,7 @@ namespace Cy.Common {
 				this.token = token;
 				this.value = value;
 			}
-			public override object Accept(IExprVisitor visitor, object options) {
+			public override object Accept(IExprVisitor visitor, object options = null) {
 				return visitor.VisitAssignExpr(this, options);
 			}
 		}
@@ -109,7 +109,7 @@ namespace Cy.Common {
 			public Variable(Token token) {
 				this.token = token;
 			}
-			public override object Accept(IExprVisitor visitor, object options) {
+			public override object Accept(IExprVisitor visitor, object options = null) {
 				return visitor.VisitVariableExpr(this, options);
 			}
 		}
@@ -123,7 +123,7 @@ namespace Cy.Common {
 				this.token = token;
 				this.right = right;
 			}
-			public override object Accept(IExprVisitor visitor, object options) {
+			public override object Accept(IExprVisitor visitor, object options = null) {
 				return visitor.VisitUnaryExpr(this, options);
 			}
 		}

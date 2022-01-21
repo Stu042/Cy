@@ -28,6 +28,15 @@
 			offset = 0;
 			filename = "";
 		}
+		public Token(string lexeme, TokenType type) {
+			tokenType = type;
+			this.lexeme = lexeme;
+			literal = null;
+			indent = 0;
+			line = 0;
+			offset = 0;
+			filename = "";
+		}
 
 		public Token(TokenType type, string lexeme, object literal, int indent, int line, int offset, string filename) {
 			tokenType = type;

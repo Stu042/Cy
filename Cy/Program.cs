@@ -38,23 +38,14 @@ namespace Cy {
 				new Ast.Printer().DisplayAllAsts(allFilesStmts);
 			}
 
-			var createTypeTable = new CreateTypeTable();
-			createTypeTable.Parse(allFilesStmts);
-			var typeTable = createTypeTable.TypeTable;
+			var createSymbolTable = new CreateSymbolTable();
+			var typeTable = createSymbolTable.Parse(allFilesStmts);
 			if (Config.Instance.DisplayPreCompileSymbols) {
-				Console.WriteLine("\nType Table:");
-				var displayTypeTable = new DisplayTypeTable();
+				Console.WriteLine("\nSymbol Table:");
+				var displayTypeTable = new DisplaySymbolTable();
 				displayTypeTable.DisplayTable(typeTable);
 			}
 
-			var createSymbolTable = new CreateSymbolTable();
-			createSymbolTable.Parse(allFilesStmts);
-			var symbolTable = createSymbolTable.SymbolTable;
-			if (Config.Instance.DisplayPreCompileSymbols) {
-				Console.WriteLine("\nPre-Compilation Symbols:");
-				var displaySymbolTable = new DisplaySymbolTable();
-				displaySymbolTable.DisplayTable(symbolTable);
-			}
 			return 0;
 		}
 

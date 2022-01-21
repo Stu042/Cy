@@ -7,4 +7,5 @@ AClass:
 	~AClass():
 		a=0
 int Main():
+	AClass aclass
 	return 2

@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace Cy.Scanner {
-	public partial class Scanner {
+	public class Scanner {
 		string filename;
 		List<Token> tokens;
 		int line;

@@ -143,10 +143,13 @@ namespace Cy.Parser {
 		Stmt.Function ConstructorDeclaration() {
 			Token name = cursor.Advance();
 			string structorType;
+			Stmt.StmtType returnType;
 			if (name.lexeme[0] == '~') {
 				structorType = "Destructor";
+				returnType = new Stmt.StmtType(new List<Token> { new Token("void", TokenType.VOID) });
 			} else {
 				structorType = "Constructor";
+				returnType = new Stmt.StmtType(new List<Token> { new Token("void", TokenType.VOID)/*new Token(name.lexeme, name.tokenType)*/ });
 			}
 			cursor.Consume(TokenType.LEFT_PAREN, $"Expect opening bracket after {structorType} name.");
 			List<Stmt.InputVar> parameters = new();
@@ -166,7 +169,7 @@ namespace Cy.Parser {
 			cursor.Consume(TokenType.COLON, $"Expect colon before {structorType} body.");
 			cursor.Consume(TokenType.NEWLINE, $"Expect 'newline' before {structorType} body.");
 			var body = Block();
-			return new Stmt.Function(null, name, parameters, body);
+			return new Stmt.Function(returnType, name, parameters, body);
 		}
 
 		Stmt Statement() {

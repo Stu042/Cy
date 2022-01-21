@@ -8,7 +8,7 @@ using System.Collections.Generic;
 namespace Cy.Common {
 	public abstract class Stmt {
 		public Token token;
-		public abstract object Accept(IStmtVisitor visitor, object options);
+		public abstract object Accept(IStmtVisitor visitor, object options = null);
 
 		/// <summary>A group of statements.</summary>
 		public class Block : Stmt {
@@ -17,7 +17,7 @@ namespace Cy.Common {
 				token = statements[0].token;
 				this.statements = statements;
 			}
-			public override object Accept(IStmtVisitor visitor, object options) {
+			public override object Accept(IStmtVisitor visitor, object options = null) {
 				return visitor.VisitBlockStmt(this, options);
 			}
 		}
@@ -30,7 +30,7 @@ namespace Cy.Common {
 				token = expression.token;
 				this.expression = expression;
 			}
-			public override object Accept(IStmtVisitor visitor, object options) {
+			public override object Accept(IStmtVisitor visitor, object options = null) {
 				return visitor.VisitExpressionStmt(this, options);
 			}
 		}
@@ -43,7 +43,7 @@ namespace Cy.Common {
 				this.type = type;
 				this.token = token;
 			}
-			public override object Accept(IStmtVisitor visitor, object options) {
+			public override object Accept(IStmtVisitor visitor, object options = null) {
 				return visitor.VisitInputVarStmt(this, options);
 			}
 		}
@@ -59,7 +59,7 @@ namespace Cy.Common {
 				this.input = input;
 				this.body = body;
 			}
-			public override object Accept(IStmtVisitor visitor, object options) {
+			public override object Accept(IStmtVisitor visitor, object options = null) {
 				return visitor.VisitFunctionStmt(this, options);
 			}
 		}
@@ -79,7 +79,7 @@ namespace Cy.Common {
 				this.condition = condition;
 				this.body = body;
 			}
-			public override object Accept(IStmtVisitor visitor, object options) {
+			public override object Accept(IStmtVisitor visitor, object options = null) {
 				return visitor.VisitForStmt(this, options);
 			}
 		}
@@ -94,7 +94,7 @@ namespace Cy.Common {
 				this.body = body;
 				this.elseBody = elseBody;
 			}
-			public override object Accept(IStmtVisitor visitor, object options) {
+			public override object Accept(IStmtVisitor visitor, object options = null) {
 				return visitor.VisitIfStmt(this, options);
 			}
 		}
@@ -106,7 +106,7 @@ namespace Cy.Common {
 				this.token = token;
 				this.value = value;
 			}
-			public override object Accept(IStmtVisitor visitor, object options) {
+			public override object Accept(IStmtVisitor visitor, object options = null) {
 				return visitor.VisitReturnStmt(this, options);
 			}
 		}
@@ -121,7 +121,7 @@ namespace Cy.Common {
 				this.token = token;
 				this.initialiser = initialiser;
 			}
-			public override object Accept(IStmtVisitor visitor, object options) {
+			public override object Accept(IStmtVisitor visitor, object options = null) {
 				return visitor.VisitVarStmt(this, options);
 			}
 		}
@@ -137,7 +137,7 @@ namespace Cy.Common {
 				this.methods = methods;
 				this.classes = classes;
 			}
-			public override object Accept(IStmtVisitor visitor, object options) {
+			public override object Accept(IStmtVisitor visitor, object options = null) {
 				return visitor.VisitClassStmt(this, options);
 			}
 		}
@@ -153,7 +153,7 @@ namespace Cy.Common {
 				token = new Token(TokenType.VOID);
 				info = new Token[] { token };
 			}
-			public override object Accept(IStmtVisitor visitor, object options) {
+			public override object Accept(IStmtVisitor visitor, object options = null) {
 				return visitor.VisitTypeStmt(this, options);
 			}
 		}
@@ -167,7 +167,7 @@ namespace Cy.Common {
 				this.condition = condition;
 				this.body = body;
 			}
-			public override object Accept(IStmtVisitor visitor, object options) {
+			public override object Accept(IStmtVisitor visitor, object options = null) {
 				return visitor.VisitWhileStmt(this, options);
 			}
 		}

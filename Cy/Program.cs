@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using Cocona;
 using Cy.Common;
 using Cy.Scanner;
-using Cy.Compiler;
+using Cy.PreCompile;
 
 namespace Cy {
 	class Program {

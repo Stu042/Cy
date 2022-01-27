@@ -7,8 +7,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
+using static Cy.Common.Stmt;
 
-namespace Cy.Compiler {
+namespace Cy.PreCompile {
 
 	public enum AccessModifier {
 		Public,
@@ -47,10 +48,9 @@ namespace Cy.Compiler {
 			Size = size;
 		}
 
-		public override string ToString() {
-			var isFunction = IsFunctional ? "()" : "";
-			return $"{Modifier}, {TypeName} {InstanceName}{isFunction}, {Size}";
-		}
+		public bool IsMethod { get { return IsFunctional; } }
+		public bool IsMember { get { return !IsFunctional; } }
+		public bool IsInstance { get { return InstanceName != null; } }
 
 		public string FullyQualifiedName() {
 			var nameParts = new List<string>();
@@ -60,7 +60,12 @@ namespace Cy.Compiler {
 				cur = cur.Parent;
 			}
 			nameParts.Reverse();
-			return String.Join('.', nameParts);
+			return string.Join('.', nameParts);
+		}
+
+		public override string ToString() {
+			var isFunction = IsFunctional ? "()" : "";
+			return $"{Modifier}, {TypeName} {InstanceName}{isFunction}, {Size}";
 		}
 	}
 
@@ -93,6 +98,7 @@ namespace Cy.Compiler {
 		}
 	}
 
+	
 
 
 	/// <summary>Class to create the symbol table, given an AST.</summary>
@@ -105,7 +111,7 @@ namespace Cy.Compiler {
 		static readonly int DEFAULT_FLOATSIZE = 8;
 
 		/// <summary>Current fully qualified name given in source code.</summary>
-		public SymbolTable TypeTable;
+		public SymbolTable SymbolTable;
 
 		SymbolDefinition[] standardTypes = new SymbolDefinition[] {
 			new SymbolDefinition("int", null, null, DEFAULT_INTSIZE, AccessModifier.Public, false, new Token[] { new Token(TokenType.INT, "int", null, 0,0,0, BUILTIN_FILENAME) }),
@@ -124,13 +130,13 @@ namespace Cy.Compiler {
 		};
 
 		public CreateSymbolTable() {
-			TypeTable = new SymbolTable();
+			SymbolTable = new SymbolTable();
 			PopulateStandardTypes();
 		}
 		void PopulateStandardTypes() {
 			foreach (var typedef in standardTypes) {
-				typedef.Parent = TypeTable.Types;
-				TypeTable.Types.Children.Add(typedef);
+				typedef.Parent = SymbolTable.Types;
+				SymbolTable.Types.Children.Add(typedef);
 			}
 		}
 
@@ -141,48 +147,19 @@ namespace Cy.Compiler {
 					section.Accept(this, null);
 				}
 			}
-			return TypeTable;
-		}
-		void CalcSizes() {
-			var typedef = TypeTable.Types;
-			foreach (var child in typedef.Children) {
-				var names = child.Tokens.Select(tok => tok.lexeme);
-				var name = String.Join('.', names);
-				LookUp(name, typedef);
+			var calcSizes = new CalculateSymbolSizes(SymbolTable);
+			while (!calcSizes.CheckAllSizesSet(SymbolTable.Types)) {
+				calcSizes.CalcSizes(SymbolTable.Types);
 			}
+			return SymbolTable;
 		}
-		void CalcSizes(SymbolDefinition typedef) {    // do until all set...
-			foreach (var child in typedef.Children) {
-				if (child.Size == -1) {
-					var names = child.Tokens.Select(tok => tok.lexeme);
-					var name = String.Join('.', names);
-					var type = LookUp(name, typedef);
-					child.Size = type.Size;
-				}
-				if (child.Children.Count > 0) {
-					CalcSizes(child);
-				}
-			}
-		}
-		SymbolDefinition LookUp(string typeName, SymbolDefinition currentType) {
-			var type = LookUpHere(typeName, TypeTable.Types);
-			if (type == null || type.Size == -1) {
-				type = LookUpHere(typeName, currentType);
-			}
-			return type;
-		}
-		SymbolDefinition LookUpHere(string typeName, SymbolDefinition currentType) {
-			var typeNameParts = typeName.Split('.');
-			foreach (var typeNamePart in typeNameParts) {
-				currentType = currentType.Children.Find(curr => curr.TypeName == typeNamePart);
-			}
-			return currentType;
-		}
+
+
 
 
 		SymbolDefinition AddSymbolDefinition(string sourceName, string instanceName, AccessModifier accessModifier, bool isFunctional, Token[] tokens) {
-			var typeDef = new SymbolDefinition(sourceName, instanceName, TypeTable.Types, -1, accessModifier, isFunctional, tokens);
-			TypeTable.Types.Children.Add(typeDef);
+			var typeDef = new SymbolDefinition(sourceName, instanceName, SymbolTable.Types, -1, accessModifier, isFunctional, tokens);
+			SymbolTable.Types.Children.Add(typeDef);
 			return typeDef;
 		}
 
@@ -203,12 +180,12 @@ namespace Cy.Compiler {
 		}
 
 		public object VisitBlockStmt(Stmt.Block stmt, object options = null) {
-			var previousTypeTableTypes = TypeTable.Types;
-			TypeTable.Types = AddSymbolDefinition("void", "", AccessModifier.Public, true, new Token[] { stmt.token });
+			var previousTypeTableTypes = SymbolTable.Types;
+			SymbolTable.Types = AddSymbolDefinition("void", stmt.token.lexeme, AccessModifier.Private, true, new Token[] { stmt.token });
 			foreach (Stmt statement in stmt.statements) {
 				statement.Accept(this);
 			}
-			TypeTable.Types = previousTypeTableTypes;
+			SymbolTable.Types = previousTypeTableTypes;
 			return null;
 		}
 
@@ -227,30 +204,30 @@ namespace Cy.Compiler {
 		public object VisitFunctionStmt(Stmt.Function stmt, object options = null) {
 			Token[] typeTokens;
 			typeTokens = (Token[])stmt.returnType.Accept(this);
-			var previousTypeTable = TypeTable.Types;
+			var previousTypeTable = SymbolTable.Types;
 			var tokLexemes = typeTokens.Select(tok => tok.lexeme);
-			var lexeme = String.Join(".", tokLexemes);
-			TypeTable.Types = AddSymbolDefinition(lexeme, stmt.token.lexeme, AccessModifier.Public, true, typeTokens);
+			var lexeme = string.Join(".", tokLexemes);
+			SymbolTable.Types = AddSymbolDefinition(lexeme, stmt.token.lexeme, AccessModifier.Public, true, typeTokens);
 			foreach (var param in stmt.input) {
 				param.Accept(this);
 			}
 			foreach (Stmt body in stmt.body) {
 				body.Accept(this);
 			}
-			TypeTable.Types = previousTypeTable;
+			SymbolTable.Types = previousTypeTable;
 			return null;
 		}
 
 		public object VisitClassStmt(Stmt.ClassDefinition stmt, object options = null) {
-			var previousTypeTable = TypeTable.Types;
-			TypeTable.Types = AddSymbolDefinition(stmt.token.lexeme, null, AccessModifier.Public, false, new Token[] { stmt.token });
+			var previousTypeTable = SymbolTable.Types;
+			SymbolTable.Types = AddSymbolDefinition(stmt.token.lexeme, null, AccessModifier.Public, false, new Token[] { stmt.token });
 			foreach (Stmt.Var memb in stmt.members) {
 				memb.Accept(this, new Options { InClassDefinition = true });
 			}
 			foreach (Stmt.Function method in stmt.methods) {
 				method.Accept(this, new Options { InClassDefinition = true });
 			}
-			TypeTable.Types = previousTypeTable;
+			SymbolTable.Types = previousTypeTable;
 			return null;
 		}
 
@@ -286,7 +263,7 @@ namespace Cy.Compiler {
 				AddSymbolDefinition(typeTokens[0].lexeme, stmt.token.lexeme, AccessModifier.Public, false, typeTokens);
 			} else {
 				var tokLexemes = typeTokens.Select(tok => tok.lexeme);
-				var lexeme = String.Join(".", tokLexemes);
+				var lexeme = string.Join(".", tokLexemes);
 				AddSymbolDefinition(lexeme, stmt.token.lexeme, AccessModifier.Public, false, typeTokens);
 			}
 			if (stmt.initialiser != null) {
@@ -326,6 +303,82 @@ namespace Cy.Compiler {
 				InClassDefinition = false
 			};
 		}
+
+
+
+		class CalculateSymbolSizes {
+			SymbolTable symbolTable;
+
+			public CalculateSymbolSizes(SymbolTable symbolTable) {
+				this.symbolTable = symbolTable;
+			}
+
+			public void CalcSizes(SymbolDefinition symbol) {    // repeat until all set...
+				foreach (var child in symbol.Children) {
+					if (child.Size == -1) {
+						if (child.Children.Count > 0) {
+							var total = CalcSize(child);
+							child.Size = total;
+						} else {
+							SetSize(child);
+						}
+					}
+				}
+			}
+			int CalcSize(SymbolDefinition symbol) {    // repeat until all set...
+				foreach (var child in symbol.Children) {
+					child.Size = SetSize(child);
+				}
+				var size = TotalOfChildSizes(symbol);
+				return size;
+			}
+			int SetSize(SymbolDefinition symbol) {
+				if (symbol.Size == -1) {
+					var names = symbol.Tokens.Select(tok => tok.lexeme);
+					var name = string.Join('.', names);
+					var type = LookUp(name, symbol);
+					return type.Size;
+				}
+				return -1;
+			}
+
+			public bool CheckAllSizesSet(SymbolDefinition symbol) {
+				if (!ChildSizesSet(symbol) || (symbol.TypeName != "" && symbol.Size == -1)) {
+					return false;
+				}
+				foreach (var child in symbol.Children) {
+					if (child.Children.Count > 0) {
+						return CheckAllSizesSet(child);
+					}
+				}
+				return true;
+			}
+
+			bool ChildSizesSet(SymbolDefinition symbol, bool onlyMembers = false) {
+				return symbol.Children.All(child => child.Size >= 0 || !onlyMembers || onlyMembers && child.IsMember);
+			}
+			int TotalOfChildSizes(SymbolDefinition symbol, bool onlyMembers = true) {
+				if (ChildSizesSet(symbol, onlyMembers)) {
+					return symbol.Children.Sum(child => child.Size >= 0 && (onlyMembers && child.IsMember || !onlyMembers) ? child.Size : 0);
+				}
+				return -1;
+			}
+
+			SymbolDefinition LookUp(string symbolName, SymbolDefinition symbol) {
+				var sym = LookUpHere(symbolName, symbolTable.Types);
+				if (sym == null || sym.Size == -1) {
+					sym = LookUpHere(symbolName, symbol);
+				}
+				return sym;
+			}
+			SymbolDefinition LookUpHere(string symbolName, SymbolDefinition currentType) {
+				var typeNameParts = symbolName.Split('.');
+				foreach (var typeNamePart in typeNameParts) {
+					currentType = currentType.Children.Find(curr => curr.TypeName == typeNamePart);
+				}
+				return currentType;
+			}
+		}
 	}
 
 
@@ -346,7 +399,7 @@ namespace Cy.Compiler {
 			}
 		}
 		string GetTabs(int tabCount) {
-			var oneTab = new String(' ', TAB_SIZE);
+			var oneTab = new string(' ', TAB_SIZE);
 			var tabs = new StringBuilder();
 			for (var i = 0; i < tabCount; i++) {
 				tabs.Append(oneTab);

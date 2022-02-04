@@ -2,10 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-using Cy.Common;
-using Cy.Common.Interfaces;
-using Cy.Parser;
-using Cy.Scanner;
+using Cy.Preprocesor;
+using Cy.Preprocesor.Interfaces;
 
 using FluentAssertions;
 
@@ -160,16 +158,16 @@ namespace CyTests {
 
 		[Fact]
 		public void Test_Tokens_To_Call_Ast() {
-			Cursor cursor = new(callTokens);
-			Parser parser = new(cursor, errorDisplay);
+			var cursor = new ParserCursor(callTokens);
+			var parser = new Parser(cursor, errorDisplay);
 			var returnedAst = parser.Parse();
-			Cy.Ast.Printer printer = new();
+			AstPrinter printer = new();
 			printer.DisplayAllAsts(new List<List<Stmt>>() { returnedAst });
 			callStatement.Should().BeEquivalentTo(returnedAst);
 		}
 		[Fact]
 		public void Test_Tokens_To_Call_With_Multiple_Args_Ast() {
-			Cursor cursor = new(callMultArgsTokens);
+			var cursor = new ParserCursor(callMultArgsTokens);
 			Parser parser = new(cursor, errorDisplay);
 			var returnedAst = parser.Parse();
 			callMultArgsStatement.Should().BeEquivalentTo(returnedAst);
@@ -179,7 +177,7 @@ namespace CyTests {
 		//		int b"
 		[Fact]
 		public void Test_Tokens_To_If_Ast() {
-			Cursor cursor = new(ifTokens);
+			var cursor = new ParserCursor(ifTokens);
 			Parser parser = new(cursor, errorDisplay);
 			var returnedAst = parser.Parse();
 			ifStatement.Should().BeEquivalentTo(returnedAst);
@@ -187,7 +185,7 @@ namespace CyTests {
 
 		[Fact]
 		public void Test_Tokens_To_Unary_Ast() {
-			var cursor = new Cursor(unaryTokens);
+			var cursor = new ParserCursor(unaryTokens);
 			var parser = new Parser(cursor, errorDisplay);
 			var returnedAst = parser.Parse();
 			unaryStatement.Should().BeEquivalentTo(returnedAst);

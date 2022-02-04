@@ -1,4 +1,4 @@
-﻿namespace Cy.Scanner {
+﻿namespace Cy.Preprocesor {
 	public class Token {
 		public TokenType tokenType; // type of token
 		public string lexeme;       // actual text of token from source

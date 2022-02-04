@@ -1,16 +1,14 @@
-﻿using Cy.Common;
-using Cy.Common.Interfaces;
-using Cy.Scanner;
+﻿using Cy.Preprocesor.Interfaces;
 
 using System.Collections.Generic;
 
 
-namespace Cy.Parser {
+namespace Cy.Preprocesor {
 	public class Parser {
-		readonly Cursor cursor;
+		readonly ParserCursor cursor;
 		readonly IErrorDisplay display;
 
-		public Parser(Cursor cursor, IErrorDisplay display) {
+		public Parser(ParserCursor cursor, IErrorDisplay display) {
 			this.cursor = cursor;
 			this.display = display;
 		}
@@ -23,7 +21,7 @@ namespace Cy.Parser {
 					if (s != null) {
 						statements.Add(s);
 					}
-				} catch (ParseException e) {
+				} catch (ParserException e) {
 					display.Error(e.token, "Parser error:" + e.Message);
 					Synchronise();
 				}
@@ -127,7 +125,7 @@ namespace Cy.Parser {
 					if (cursor.IsCheckAnyType()) {
 						typeTok = cursor.Advance();
 					} else {
-						throw new ParseException(cursor.Peek(), "Expect parameter type.");
+						throw new ParserException(cursor.Peek(), "Expect parameter type.");
 					}
 					Token id = cursor.Consume(TokenType.IDENTIFIER, "Expect parameter name.");
 					parameters.Add(new Stmt.InputVar(new Stmt.StmtType(new List<Token> { typeTok }), id));
@@ -159,7 +157,7 @@ namespace Cy.Parser {
 					if (cursor.IsCheckAnyType()) {
 						typeTok = cursor.Advance();
 					} else {
-						throw new ParseException(cursor.Peek(), "Expect parameter type.");
+						throw new ParserException(cursor.Peek(), "Expect parameter type.");
 					}
 					Token id = cursor.Consume(TokenType.IDENTIFIER, "Expect parameter name.");
 					parameters.Add(new Stmt.InputVar(new Stmt.StmtType(new List<Token> { typeTok }), id));
@@ -444,7 +442,7 @@ namespace Cy.Parser {
 				cursor.Consume(TokenType.RIGHT_PAREN, "Expect matching ')' after expression.");
 				return new Expr.Grouping(startToken, expr);
 			}
-			throw new ParseException(cursor.Peek(), "Expect expression.");
+			throw new ParserException(cursor.Peek(), "Expect expression.");
 		}
 
 		/// <summary>After encountering an error try find next sane position to continue parsing</summary>

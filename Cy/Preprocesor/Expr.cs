@@ -1,10 +1,9 @@
-﻿using Cy.Common.Interfaces;
-using Cy.Scanner;
+﻿using Cy.Preprocesor.Interfaces;
 
 using System.Collections.Generic;
 
 
-namespace Cy.Common {
+namespace Cy.Preprocesor {
 	public abstract class Expr {
 		public Token token;
 

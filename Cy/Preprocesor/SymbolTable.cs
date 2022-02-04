@@ -1,15 +1,13 @@
-﻿using Cy.Common;
-using Cy.Common.Interfaces;
-using Cy.Scanner;
+﻿using Cy.Preprocesor.Interfaces;
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-using static Cy.Common.Stmt;
+using static Cy.Preprocesor.Stmt;
 
-namespace Cy.PreCompile {
+namespace Cy.Preprocesor {
 
 	public enum AccessModifier {
 		Public,
@@ -65,7 +63,10 @@ namespace Cy.PreCompile {
 
 		public override string ToString() {
 			var isFunction = IsFunctional ? "()" : "";
-			return $"{Modifier}, {TypeName} {InstanceName}{isFunction}, {Size}";
+			if (IsInstance) {
+				return $"{Modifier}, {TypeName} {InstanceName}{isFunction}, {Size}";
+			}
+			return $"{Modifier}, {TypeName}, {Size}";
 		}
 	}
 
@@ -98,7 +99,7 @@ namespace Cy.PreCompile {
 		}
 	}
 
-	
+
 
 
 	/// <summary>Class to create the symbol table, given an AST.</summary>
@@ -179,7 +180,7 @@ namespace Cy.PreCompile {
 			return null;
 		}
 
-		public object VisitBlockStmt(Stmt.Block stmt, object options = null) {
+		public object VisitBlockStmt(Block stmt, object options = null) {
 			var previousTypeTableTypes = SymbolTable.Types;
 			SymbolTable.Types = AddSymbolDefinition("void", stmt.token.lexeme, AccessModifier.Private, true, new Token[] { stmt.token });
 			foreach (Stmt statement in stmt.statements) {
@@ -189,19 +190,19 @@ namespace Cy.PreCompile {
 			return null;
 		}
 
-		public object VisitExpressionStmt(Stmt.Expression stmt, object options = null) {
+		public object VisitExpressionStmt(Expression stmt, object options = null) {
 			stmt.expression.Accept(this);
 			return null;
 		}
 
 
-		public object VisitInputVarStmt(Stmt.InputVar stmt, object options = null) {
+		public object VisitInputVarStmt(InputVar stmt, object options = null) {
 			var tokens = (Token[])stmt.type.Accept(this);
 			AddSymbolDefinition(tokens[0].lexeme, stmt.token.lexeme, AccessModifier.Private, false, tokens);
 			return null;
 		}
 
-		public object VisitFunctionStmt(Stmt.Function stmt, object options = null) {
+		public object VisitFunctionStmt(Function stmt, object options = null) {
 			Token[] typeTokens;
 			typeTokens = (Token[])stmt.returnType.Accept(this);
 			var previousTypeTable = SymbolTable.Types;
@@ -218,13 +219,13 @@ namespace Cy.PreCompile {
 			return null;
 		}
 
-		public object VisitClassStmt(Stmt.ClassDefinition stmt, object options = null) {
+		public object VisitClassStmt(ClassDefinition stmt, object options = null) {
 			var previousTypeTable = SymbolTable.Types;
 			SymbolTable.Types = AddSymbolDefinition(stmt.token.lexeme, null, AccessModifier.Public, false, new Token[] { stmt.token });
-			foreach (Stmt.Var memb in stmt.members) {
+			foreach (Var memb in stmt.members) {
 				memb.Accept(this, new Options { InClassDefinition = true });
 			}
-			foreach (Stmt.Function method in stmt.methods) {
+			foreach (Function method in stmt.methods) {
 				method.Accept(this, new Options { InClassDefinition = true });
 			}
 			SymbolTable.Types = previousTypeTable;
@@ -240,11 +241,11 @@ namespace Cy.PreCompile {
 			return null;
 		}
 
-		public object VisitReturnStmt(Stmt.Return stmt, object options = null) {
+		public object VisitReturnStmt(Return stmt, object options = null) {
 			return null;
 		}
 
-		public object VisitTypeStmt(Stmt.StmtType stmt, object options = null) {
+		public object VisitTypeStmt(StmtType stmt, object options = null) {
 			return stmt.info;
 		}
 
@@ -256,7 +257,7 @@ namespace Cy.PreCompile {
 			return null;
 		}
 
-		public object VisitVarStmt(Stmt.Var stmt, object options = null) {
+		public object VisitVarStmt(Var stmt, object options = null) {
 			var typeTokens = (Token[])stmt.stmtType.Accept(this);
 			var opts = GetOptions(options);
 			if (opts.InClassDefinition) {
@@ -280,16 +281,16 @@ namespace Cy.PreCompile {
 			return null;
 		}
 
-		public object VisitIfStmt(Stmt.If stmt, object options = null) {
+		public object VisitIfStmt(If stmt, object options = null) {
 			return null;
 		}
 
-		public object VisitForStmt(Stmt.For stmt, object options = null) {
+		public object VisitForStmt(For stmt, object options = null) {
 			AddSymbolDefinition(stmt.iterator.lexeme, "", AccessModifier.Private, true, new Token[] { stmt.iteratorType.token });
 			return null;
 		}
 
-		public object VisitWhileStmt(Stmt.While stmt, object options = null) {
+		public object VisitWhileStmt(While stmt, object options = null) {
 			return null;
 		}
 
@@ -343,7 +344,7 @@ namespace Cy.PreCompile {
 			}
 
 			public bool CheckAllSizesSet(SymbolDefinition symbol) {
-				if (!ChildSizesSet(symbol) || (symbol.TypeName != "" && symbol.Size == -1)) {
+				if (!ChildSizesSet(symbol) || symbol.TypeName != "" && symbol.Size == -1) {
 					return false;
 				}
 				foreach (var child in symbol.Children) {

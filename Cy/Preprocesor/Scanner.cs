@@ -1,18 +1,20 @@
-﻿
-using Cy.Common;
-using Cy.Common.Interfaces;
+﻿using Cy.Preprocesor.Interfaces;
+using Cy.Setup;
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Cy.Scanner {
+namespace Cy.Preprocesor {
 	public class Scanner {
+		Config _config;
+		IErrorDisplay _display;
+		ScannerCursor _cursor;
+
 		string filename;
 		List<Token> tokens;
 		int line;
 		int currentIndent;
-		Cursor cursor;
 
 
 		static readonly Dictionary<string, TokenType> keywords = new Dictionary<string, TokenType> {
@@ -48,22 +50,22 @@ namespace Cy.Scanner {
 			{ "void", TokenType.VOID },
 		};
 
-		IErrorDisplay display;
 
-		public Scanner(IErrorDisplay display) {
-			this.display = display;
+		public Scanner(ScannerCursor cursor, Config config, IErrorDisplay display) {
+			_cursor = cursor;
+			_config = config;
+			_display = display;
 		}
 
 
 		public List<Token> ScanTokens(string filename, string alltext) {
 			tokens = new();
-			cursor = new();
 			this.filename = filename;
 			line = 1;
 			currentIndent = 0;
-			cursor.NewFile(alltext);
-			while (!cursor.IsAtEnd()) {
-				cursor.Start();
+			_cursor.NewFile(alltext);
+			while (!_cursor.IsAtEnd()) {
+				_cursor.Start();
 				ScanToken();
 			}
 			AddToken(TokenType.EOF, "\0");
@@ -72,7 +74,7 @@ namespace Cy.Scanner {
 
 
 		void ScanToken() {
-			char c = cursor.Advance();
+			char c = _cursor.Advance();
 			switch (c) {
 				case '(':
 					AddToken(TokenType.LEFT_PAREN);
@@ -87,10 +89,10 @@ namespace Cy.Scanner {
 					AddToken(TokenType.DOT);
 					break;
 				case '-':
-					AddToken(cursor.Match('-') ? TokenType.MINUSMINUS : TokenType.MINUS);
+					AddToken(_cursor.Match('-') ? TokenType.MINUSMINUS : TokenType.MINUS);
 					break;
 				case '+':
-					AddToken(cursor.Match('+') ? TokenType.PLUSPLUS : TokenType.PLUS);
+					AddToken(_cursor.Match('+') ? TokenType.PLUSPLUS : TokenType.PLUS);
 					break;
 				case ';':
 					AddToken(TokenType.SEMICOLON);
@@ -105,36 +107,36 @@ namespace Cy.Scanner {
 					AddToken(TokenType.HASH);
 					break;
 				case '!':
-					AddToken(cursor.Match('=') ? TokenType.BANG_EQUAL : TokenType.BANG);
+					AddToken(_cursor.Match('=') ? TokenType.BANG_EQUAL : TokenType.BANG);
 					break;
 				case '=':
-					AddToken(cursor.Match('=') ? TokenType.EQUAL_EQUAL : TokenType.EQUAL);
+					AddToken(_cursor.Match('=') ? TokenType.EQUAL_EQUAL : TokenType.EQUAL);
 					break;
 				case '<':
-					AddToken(cursor.Match('=') ? TokenType.LESS_EQUAL : TokenType.LESS);
+					AddToken(_cursor.Match('=') ? TokenType.LESS_EQUAL : TokenType.LESS);
 					break;
 				case '>':
-					AddToken(cursor.Match('=') ? TokenType.GREATER_EQUAL : TokenType.GREATER);
+					AddToken(_cursor.Match('=') ? TokenType.GREATER_EQUAL : TokenType.GREATER);
 					break;
 				case '/':
-					if (cursor.Match('/')) {            // if matching "//"
-						while (cursor.Peek() != '\n' && !cursor.IsAtEnd()) {
-							cursor.Advance();
+					if (_cursor.Match('/')) {            // if matching "//"
+						while (_cursor.Peek() != '\n' && !_cursor.IsAtEnd()) {
+							_cursor.Advance();
 						}
 						AddToken(TokenType.IGNORED);
-					} else if (cursor.Match('*')) {     // if matching "/*"
-						while (cursor.Peek() != '*' && cursor.PeekNext() != '/' && !cursor.IsAtEnd()) {
-							if (cursor.Peek() == '\n') {
+					} else if (_cursor.Match('*')) {     // if matching "/*"
+						while (_cursor.Peek() != '*' && _cursor.PeekNext() != '/' && !_cursor.IsAtEnd()) {
+							if (_cursor.Peek() == '\n') {
 								line++;
 							}
-							cursor.Advance();
+							_cursor.Advance();
 						}
-						if (cursor.IsAtEnd()) {
+						if (_cursor.IsAtEnd()) {
 							Error("Multiline comment not terminated.");
 							break;
 						} else {
-							cursor.Advance();
-							cursor.Advance();
+							_cursor.Advance();
+							_cursor.Advance();
 							AddToken(TokenType.IGNORED);
 						}
 					} else {
@@ -142,9 +144,9 @@ namespace Cy.Scanner {
 					}
 					break;
 				case '\\':  // carry on new line
-					cursor.Advance();
-					while (char.IsWhiteSpace(cursor.Peek())) {
-						if (cursor.Advance() == '\n') {
+					_cursor.Advance();
+					while (char.IsWhiteSpace(_cursor.Peek())) {
+						if (_cursor.Advance() == '\n') {
 							line++;
 						}
 					}
@@ -159,9 +161,9 @@ namespace Cy.Scanner {
 						AddToken(TokenType.NEWLINE);
 						line++;
 						currentIndent = 0;
-						while (cursor.Peek() == '\t' && !cursor.IsAtEnd()) {
+						while (_cursor.Peek() == '\t' && !_cursor.IsAtEnd()) {
 							currentIndent++;
-							cursor.Advance();
+							_cursor.Advance();
 						}
 					}
 					break;
@@ -182,10 +184,10 @@ namespace Cy.Scanner {
 
 
 		void Identifier() {
-			while (IsAlphaNumeric(cursor.Peek())) {
-				cursor.Advance();
+			while (IsAlphaNumeric(_cursor.Peek())) {
+				_cursor.Advance();
 			}
-			string text = new string(cursor.ToArray());
+			string text = new string(_cursor.ToArray());
 			TokenType type = TokenType.IDENTIFIER;
 			if (keywords.ContainsKey(text)) {
 				type = keywords[text];
@@ -197,33 +199,33 @@ namespace Cy.Scanner {
 
 
 		void Number() { // numbers can look like, 1, 12, 123 or 1.2, 1.23, 12.345, etc...
-			while (IsDigit(cursor.Peek()))
-				cursor.Advance();
-			if (cursor.Peek() == '.' && IsDigit(cursor.PeekNext())) {   // Look for a fractional part.
-				cursor.Advance();                                       // Consume the "."
-				while (IsDigit(cursor.Peek())) {
-					cursor.Advance();
+			while (IsDigit(_cursor.Peek()))
+				_cursor.Advance();
+			if (_cursor.Peek() == '.' && IsDigit(_cursor.PeekNext())) {   // Look for a fractional part.
+				_cursor.Advance();                                       // Consume the "."
+				while (IsDigit(_cursor.Peek())) {
+					_cursor.Advance();
 				}
-				AddToken(TokenType.FLOAT_LITERAL, double.Parse(cursor.ToString()));
+				AddToken(TokenType.FLOAT_LITERAL, double.Parse(_cursor.ToString()));
 			} else {
-				AddToken(TokenType.INT_LITERAL, int.Parse(cursor.ToString()));
+				AddToken(TokenType.INT_LITERAL, int.Parse(_cursor.ToString()));
 			}
 		}
 
 
 		void String() {
-			while (cursor.Peek() != '"' && !cursor.IsAtEnd()) {
-				if (cursor.Peek() == '\n') {
+			while (_cursor.Peek() != '"' && !_cursor.IsAtEnd()) {
+				if (_cursor.Peek() == '\n') {
 					line++;
 				}
-				cursor.Advance();
+				_cursor.Advance();
 			}
-			if (cursor.IsAtEnd()) {         // Unterminated string.
+			if (_cursor.IsAtEnd()) {         // Unterminated string.
 				Error("Unterminated string.");
 				return;
 			}
-			cursor.Advance();               // The closing ".
-			AddToken(TokenType.STR_LITERAL, new string(cursor.ToArray(1, -1)));         // Trim the surrounding quotes.
+			_cursor.Advance();               // The closing ".
+			AddToken(TokenType.STR_LITERAL, new string(_cursor.ToArray(1, -1)));         // Trim the surrounding quotes.
 		}
 
 
@@ -241,19 +243,19 @@ namespace Cy.Scanner {
 
 
 		void AddToken(TokenType type) {
-			tokens.Add(new Token(type, cursor.ToString(), null, currentIndent, line, cursor.Offset(), filename));
+			tokens.Add(new Token(type, _cursor.ToString(), null, currentIndent, line, _cursor.Offset(), filename));
 		}
 
 		void AddToken(TokenType type, string lexeme) {
-			tokens.Add(new Token(type, lexeme, null, currentIndent, line, cursor.Offset(), filename));
+			tokens.Add(new Token(type, lexeme, null, currentIndent, line, _cursor.Offset(), filename));
 		}
 
 		void AddToken(TokenType type, object literal) {
-			tokens.Add(new Token(type, cursor.ToString(), literal, currentIndent, line, cursor.Offset(), filename));
+			tokens.Add(new Token(type, _cursor.ToString(), literal, currentIndent, line, _cursor.Offset(), filename));
 		}
 
 		void Error(string message) {
-			display.Error(filename, line, cursor.Offset(), cursor.GetLineStr(), "Scanner error. " + message);
+			_display.Error(filename, line, _cursor.Offset(), _cursor.GetLineStr(), "Scanner error. " + message);
 		}
 
 
@@ -265,11 +267,11 @@ namespace Cy.Scanner {
 		}
 
 		public void DisplayAllTokens(List<List<Token>> allFilesTokens) {
-			if (Config.Instance.DisplayTokens) {
+			if (_config.DisplayTokens) {
 				var tokenCount = allFilesTokens.Sum(tokens => tokens.Count);
 				Console.WriteLine($"\n\n{tokenCount} Tokens:");
 				foreach (var tokens in allFilesTokens) {
-					this.Show(tokens);
+					Show(tokens);
 				}
 			}
 		}

@@ -1,29 +1,31 @@
-﻿using Cy.Common;
-using Cy.Common.Interfaces;
-using Cy.Scanner;
+﻿using Cy.Preprocesor.Interfaces;
 
 using System;
 using System.Collections.Generic;
 using System.Text;
 
 
-namespace Cy.Ast {
-	public class Printer : IExprVisitor, IStmtVisitor {
+namespace Cy.Preprocesor {
+	public class AstPrinter : IExprVisitor, IStmtVisitor {
 
 		public void DisplayAllAsts(List<List<Stmt>> allFilesStmts) {
 			Console.WriteLine("\nAST:");
 			foreach (var stmts in allFilesStmts) {
-				foreach (var stmt in stmts) {
-					Console.WriteLine(new Printer().Print(stmt));
-				}
+				DisplayAsts(stmts);
 			}
 		}
 
-		public string Print(Expr expr) {
+		public void DisplayAsts(List<Stmt> stmts) {
+			foreach (var stmt in stmts) {
+				Console.WriteLine(GetString(stmt));
+			}
+		}
+
+		public string GetString(Expr expr) {
 			return (string)expr.Accept(this, null);
 		}
 
-		public string Print(Stmt stmt) {
+		public string GetString(Stmt stmt) {
 			return (string)stmt.Accept(this, null);
 		}
 

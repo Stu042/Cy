@@ -1,19 +1,18 @@
 ﻿using System.Linq;
 using System.Collections.Generic;
-using Cy.Scanner;
 
-namespace Cy.Parser {
+namespace Cy.Preprocesor {
 
 	/// <summary>Control the point in the token list we are looking at.
 	/// Check - looks to see what TokenType is.
 	/// Match - if we get he TokenType we expect jump to its position.
 	/// Peek - return token at position.</summary>
-	public class Cursor {
-		public int current { get; private set; }
+	public class ParserCursor {
+		public int Current { get; private set; }
 		readonly List<Token> tokens;
 
 
-		public Cursor(List<Token> tokens) {
+		public ParserCursor(List<Token> tokens) {
 			var toks = tokens.FindAll(token => token.tokenType != TokenType.IGNORED);
 			this.tokens = new List<Token>(toks.Count);
 			bool lastWasNewline = true;
@@ -29,7 +28,7 @@ namespace Cy.Parser {
 					this.tokens.Add(token);
 				}
 			}
-			current = 0;
+			Current = 0;
 		}
 
 
@@ -38,7 +37,7 @@ namespace Cy.Parser {
 			if (IsAtEnd()) {
 				return false;
 			}
-			return tokens[current].tokenType == expected;
+			return tokens[Current].tokenType == expected;
 		}
 
 		/// <summary>Are allExpected token types next.</summary>
@@ -66,7 +65,7 @@ namespace Cy.Parser {
 			if (IsAtEnd(1)) {
 				return false;
 			}
-			return tokens[current + 1].tokenType == expected;
+			return tokens[Current + 1].tokenType == expected;
 		}
 
 		/// <summary>Is expected token type at current + offset.</summary>
@@ -74,12 +73,12 @@ namespace Cy.Parser {
 			if (IsAtEnd(offset)) {
 				return false;
 			}
-			return tokens[current + offset].tokenType == expected;
+			return tokens[Current + offset].tokenType == expected;
 		}
 
 		/// <summary>Matches any type, including IDENTIFIER for a user defined type.</summary>
 		public bool IsCheckAnyType() {
-			return tokens[current].IsAnyType();
+			return tokens[Current].IsAnyType();
 		}
 
 
@@ -107,46 +106,46 @@ namespace Cy.Parser {
 			if (IsCheck(expected)) {
 				return Advance();
 			}
-			throw new ParseException(Peek(), message);
+			throw new ParserException(Peek(), message);
 		}
 		public Token ConsumeAny(string message, params TokenType[] expecteds) {
 			if (IsCheckAny(expecteds)) {
 				return Advance();
 			}
-			throw new ParseException(Peek(), message);
+			throw new ParserException(Peek(), message);
 		}
 
 		public bool IsAtEnd(int offset = 0) {
-			return (current + offset) >= tokens.Count || (current + offset) < 0 || tokens[current + offset].tokenType == TokenType.EOF;
+			return Current + offset >= tokens.Count || Current + offset < 0 || tokens[Current + offset].tokenType == TokenType.EOF;
 		}
 
 		public Token Advance() {
-			return tokens[current++];
+			return tokens[Current++];
 		}
 
 		public Token Peek() {
 			if (IsAtEnd()) {
 				return Token.EOF;
 			}
-			return tokens[current];
+			return tokens[Current];
 		}
 
 		public Token PeekAt(int offset = 1) {
-			if ((current + offset) >= tokens.Count) {
+			if (Current + offset >= tokens.Count) {
 				return Token.EOF;
 			}
-			return tokens[current + offset];
+			return tokens[Current + offset];
 		}
 		public Token PeekNext() {
 			int offset = 1;
-			if ((current + offset) >= tokens.Count) {
+			if (Current + offset >= tokens.Count) {
 				return Token.EOF;
 			}
-			return tokens[current + offset];
+			return tokens[Current + offset];
 		}
 
 		public Token Previous() {
-			int index = current - 1;
+			int index = Current - 1;
 			if (index >= tokens.Count || index < 0) {
 				return Token.EOF;
 			}

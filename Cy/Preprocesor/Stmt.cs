@@ -1,11 +1,10 @@
-﻿using Cy.Common.Interfaces;
-using Cy.Scanner;
+﻿using Cy.Preprocesor.Interfaces;
 
 using System.Collections.Generic;
 
 
 
-namespace Cy.Common {
+namespace Cy.Preprocesor {
 	public abstract class Stmt {
 		public Token token;
 		public abstract object Accept(IStmtVisitor visitor, object options = null);

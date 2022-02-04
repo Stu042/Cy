@@ -2,8 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-using Cy.Common;
-using Cy.Scanner;
+using Cy.Preprocesor;
+using Cy.Preprocesor.Interfaces;
+using Cy.Setup;
 
 using FluentAssertions;
 
@@ -14,7 +15,7 @@ using Xunit;
 namespace CyTests {
 	public class ScannerTests {
 		static readonly string test1_Filename = "test1.cy";
-		ErrorDisplay errorDisplay;
+		IErrorDisplay errorDisplay;
 
 		readonly List<Token> test1_ExpectedTokens = new() {
 			new Token(TokenType.INT, "int", null, 0, 1, 0, test1_Filename),
@@ -155,13 +156,14 @@ int Main():
 			new Token(TokenType.EOF, "\0", null, 0, 16, 0, test2_Filename)
 		};
 
-		readonly Cy.Scanner.Scanner scanner = null;
+		readonly Scanner scanner = null;
 
 
 		public ScannerTests() {
-			errorDisplay = new();
+			var config = new Config();
+			errorDisplay = new ErrorDisplay(config);
 			if (scanner == null) {
-				scanner = new Cy.Scanner.Scanner(errorDisplay);
+				scanner = new Scanner(config, errorDisplay);
 			}
 		}
 

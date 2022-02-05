@@ -1,18 +1,18 @@
-﻿using Cy.Preprocesor.Interfaces;
+﻿using Cy.Enums;
+using Cy.Preprocesor.Interfaces;
 
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Cy.Preprocesor;
 
-/// <summary>Class to create the symbol table, given an AST.</summary>
+/// <summary>Create the symbol table, given an AST.</summary>
 public class SymbolTableCreate : IExprVisitor, IStmtVisitor {
 
 	readonly CalculateSymbolSizes _calculateSymbolSizes;
 	public class Options {
 		public bool InClassDefinition;
 	}
-	/// <summary>Current fully qualified name given in source code.</summary>
 	public SymbolTable SymbolTable;
 
 	static readonly string BUILTIN_FILENAME = "builtin";
@@ -53,7 +53,6 @@ public class SymbolTableCreate : IExprVisitor, IStmtVisitor {
 				section.Accept(this, null);
 			}
 		}
-		var _calculateSymbolSizes = new CalculateSymbolSizes();
 		_calculateSymbolSizes.SetSizes(SymbolTable);
 		return SymbolTable;
 	}
@@ -202,83 +201,71 @@ public class SymbolTableCreate : IExprVisitor, IStmtVisitor {
 			InClassDefinition = false
 		};
 	}
+}
 
 
-
-	public class CalculateSymbolSizes {
-		SymbolTable _symbolTable;
-
-		public void SetSizes(SymbolTable symbolTable) {
-			_symbolTable = symbolTable;
-			while (!CheckAllSizesSet(symbolTable.Types)) {
-				CalcSizes(symbolTable.Types);
-			}
+public class CalculateSymbolSizes {
+	public void SetSizes(SymbolTable symbolTable) {
+		while (!CheckAllSizesSet(symbolTable.Types)) {
+			CalcSizes(symbolTable.Types);
 		}
+	}
 
-		void CalcSizes(SymbolDefinition symbol) {    // repeat until all set...
-			foreach (var child in symbol.Children) {
-				if (child.Size == -1) {
-					if (child.Children.Count > 0) {
-						var total = CalcSize(child);
-						child.Size = total;
-					} else {
-						SetSize(child);
-					}
-				}
-			}
-		}
-		int CalcSize(SymbolDefinition symbol) {    // repeat until all set...
-			foreach (var child in symbol.Children) {
-				child.Size = SetSize(child);
-			}
-			var size = TotalOfChildSizes(symbol);
-			return size;
-		}
-		int SetSize(SymbolDefinition symbol) {
-			if (symbol.Size == -1) {
-				var names = symbol.Tokens.Select(tok => tok.lexeme);
-				var name = string.Join('.', names);
-				var type = LookUp(name, symbol);
-				return type.Size;
-			}
-			return -1;
-		}
-
-		bool CheckAllSizesSet(SymbolDefinition symbol) {
-			if (!ChildSizesSet(symbol) || symbol.TypeName != "" && symbol.Size == -1) {
-				return false;
-			}
-			foreach (var child in symbol.Children) {
+	void CalcSizes(SymbolDefinition symbol) {    // repeat until all set...
+		foreach (var child in symbol.Children) {
+			if (child.Size == -1) {
 				if (child.Children.Count > 0) {
-					return CheckAllSizesSet(child);
+					var total = CalcSize(child);
+					child.Size = total;
+				} else {
+					SetSize(child);
 				}
 			}
-			return true;
 		}
+	}
+	int CalcSize(SymbolDefinition symbol) {    // repeat until all set...
+		foreach (var child in symbol.Children) {
+			child.Size = SetSize(child);
+		}
+		var size = TotalOfChildSizes(symbol);
+		return size;
+	}
+	int SetSize(SymbolDefinition symbol) {
+		if (symbol.Size == -1) {
+			var names = symbol.Tokens.Select(tok => tok.lexeme);
+			var name = string.Join('.', names);
+			var type = symbol.LookUpType(name);
+			return type.Size;
+		}
+		return -1;
+	}
 
-		bool ChildSizesSet(SymbolDefinition symbol, bool onlyMembers = false) {
-			return symbol.Children.All(child => child.Size >= 0 || !onlyMembers || onlyMembers && child.IsMember);
+	bool CheckAllSizesSet(SymbolDefinition symbol) {
+		if (!ChildSizesSet(symbol) || symbol.TypeName != "" && symbol.Size == -1) {
+			return false;
 		}
-		int TotalOfChildSizes(SymbolDefinition symbol, bool onlyMembers = true) {
-			if (ChildSizesSet(symbol, onlyMembers)) {
-				return symbol.Children.Sum(child => child.Size >= 0 && (onlyMembers && child.IsMember || !onlyMembers) ? child.Size : 0);
+		foreach (var child in symbol.Children) {
+			if (child.Children.Count > 0) {
+				return CheckAllSizesSet(child);
 			}
-			return -1;
 		}
+		return true;
+	}
 
-		SymbolDefinition LookUp(string symbolName, SymbolDefinition symbol) {
-			var sym = LookUpHere(symbolName, _symbolTable.Types);
-			if (sym == null || sym.Size == -1) {
-				sym = LookUpHere(symbolName, symbol);
-			}
-			return sym;
+	bool ChildSizesSet(SymbolDefinition symbol, bool onlyMembers = false) {
+		return symbol.Children.All(child => child.Size >= 0 || !onlyMembers || onlyMembers && child.IsMember);
+	}
+	int TotalOfChildSizes(SymbolDefinition symbol, bool onlyMembers = true) {
+		if (ChildSizesSet(symbol, onlyMembers)) {
+			return symbol.Children.Sum(child => child.Size >= 0 && (onlyMembers && child.IsMember || !onlyMembers) ? child.Size : 0);
 		}
-		SymbolDefinition LookUpHere(string symbolName, SymbolDefinition currentType) {
-			var typeNameParts = symbolName.Split('.');
-			foreach (var typeNamePart in typeNameParts) {
-				currentType = currentType.Children.Find(curr => curr.TypeName == typeNamePart);
-			}
-			return currentType;
-		}
+		return -1;
+	}
+}
+
+public class CalculateSymbolOffsets { //TODO
+
+	public void ClaculateOffsets() {
+
 	}
 }

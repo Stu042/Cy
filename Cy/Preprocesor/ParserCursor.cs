@@ -10,10 +10,10 @@ namespace Cy.Preprocesor;
 /// Peek - return token at position.</summary>
 public class ParserCursor {
 	public int Current { get; private set; }
-	readonly List<Token> tokens;
+	List<Token> tokens;
 
 
-	public ParserCursor(List<Token> tokens) {
+	public void Init(List<Token> tokens) {
 		var toks = tokens.FindAll(token => token.tokenType != TokenType.IGNORED);
 		this.tokens = new List<Token>(toks.Count);
 		bool lastWasNewline = true;

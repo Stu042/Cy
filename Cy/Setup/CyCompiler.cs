@@ -1,5 +1,4 @@
 ﻿using Cy.Preprocesor;
-using Cy.Preprocesor.Interfaces;
 
 using System;
 using System.Collections.Generic;
@@ -9,13 +8,13 @@ using System.IO;
 namespace Cy.Setup;
 
 public class CyCompiler {
-	readonly SymbolTableCreate _createSymbolTable;
-	readonly Scanner _scanner;
-	readonly DisplaySymbolTable _displaySymbolTable;
 	readonly Config _config;
+	readonly Scanner _scanner;
 	readonly Parser _parser;
+	readonly SymbolTableCreate _createSymbolTable;
+	readonly SymbolTableDisplay _displaySymbolTable;
 
-	public CyCompiler(SymbolTableCreate createSymbolTable, Scanner scanner, DisplaySymbolTable displaySymbolTable, Config config, Parser parser) {
+	public CyCompiler(SymbolTableCreate createSymbolTable, Scanner scanner, SymbolTableDisplay displaySymbolTable, Config config, Parser parser) {
 		_createSymbolTable = createSymbolTable;
 		_scanner = scanner;
 		_displaySymbolTable = displaySymbolTable;
@@ -60,8 +59,7 @@ public class CyCompiler {
 	}
 
 	SymbolTable MapSymbols(List<List<Stmt>> allFilesStmts) {
-		var typeTable = new SymbolTable();
-		_createSymbolTable.Parse(allFilesStmts);
+		var typeTable = _createSymbolTable.Parse(allFilesStmts);
 		if (_config.DisplayPreCompileSymbols) {
 			_displaySymbolTable.DisplayTable(typeTable);
 		}

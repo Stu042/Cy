@@ -1,5 +1,4 @@
 ﻿using Cy.Preprocesor.Interfaces;
-using Cy.Setup;
 
 using System;
 using System.Collections.Generic;
@@ -27,9 +26,8 @@ public static class Tokens {
 
 
 public class Scanner {
-	Config _config;
-	IErrorDisplay _display;
-	ScannerCursor _cursor;
+	readonly IErrorDisplay _display;
+	readonly ScannerCursor _cursor;
 
 	string filename;
 	List<Token> tokens;
@@ -37,43 +35,42 @@ public class Scanner {
 	int currentIndent;
 
 
-	static readonly Dictionary<string, TokenType> keywords = new Dictionary<string, TokenType> {
-			{ "this", TokenType.THIS },
-			{ "if", TokenType.IF },
-			{ "while", TokenType.WHILE },
-			{ "for", TokenType.FOR },
-			{ "each", TokenType.EACH },
-			{ "else", TokenType.ELSE },
-			{ "return", TokenType.RETURN },
-			{ "false", TokenType.FALSE },
-			{ "true", TokenType.TRUE },
-			{ "null", TokenType.NULL },
-			{ "super", TokenType.SUPER },
-		};
+	static readonly Dictionary<string, TokenType> keywords = new() {
+		{ "this", TokenType.THIS },
+		{ "if", TokenType.IF },
+		{ "while", TokenType.WHILE },
+		{ "for", TokenType.FOR },
+		{ "each", TokenType.EACH },
+		{ "else", TokenType.ELSE },
+		{ "return", TokenType.RETURN },
+		{ "false", TokenType.FALSE },
+		{ "true", TokenType.TRUE },
+		{ "null", TokenType.NULL },
+		{ "super", TokenType.SUPER },
+	};
 
 
-	static readonly Dictionary<string, TokenType> baseTypes = new Dictionary<string, TokenType> {
-			{ "int", TokenType.INT },
-			{ "int8", TokenType.INT8 },
-			{ "int16", TokenType.INT16 },
-			{ "int32", TokenType.INT32 },
-			{ "int64", TokenType.INT64 },
-			{ "int128", TokenType.INT128 },
-			{ "float", TokenType.FLOAT },
-			{ "float16", TokenType.FLOAT16 },
-			{ "float32", TokenType.FLOAT32 },
-			{ "float64", TokenType.FLOAT64 },
-			{ "float128", TokenType.FLOAT128 },
-			{ "ascii", TokenType.ASCII },
-			{ "utf8", TokenType.UTF8 },
-			{ "bool", TokenType.BOOL },
-			{ "void", TokenType.VOID },
-		};
+	static readonly Dictionary<string, TokenType> baseTypes = new() {
+		{ "int", TokenType.INT },
+		{ "int8", TokenType.INT8 },
+		{ "int16", TokenType.INT16 },
+		{ "int32", TokenType.INT32 },
+		{ "int64", TokenType.INT64 },
+		{ "int128", TokenType.INT128 },
+		{ "float", TokenType.FLOAT },
+		{ "float16", TokenType.FLOAT16 },
+		{ "float32", TokenType.FLOAT32 },
+		{ "float64", TokenType.FLOAT64 },
+		{ "float128", TokenType.FLOAT128 },
+		{ "ascii", TokenType.ASCII },
+		{ "utf8", TokenType.UTF8 },
+		{ "bool", TokenType.BOOL },
+		{ "void", TokenType.VOID },
+	};
 
 
-	public Scanner(ScannerCursor cursor, Config config, IErrorDisplay display) {
+	public Scanner(ScannerCursor cursor, IErrorDisplay display) {
 		_cursor = cursor;
-		_config = config;
 		_display = display;
 	}
 
@@ -207,8 +204,8 @@ public class Scanner {
 		while (IsAlphaNumeric(_cursor.Peek())) {
 			_cursor.Advance();
 		}
-		string text = new string(_cursor.ToArray());
-		TokenType type = TokenType.IDENTIFIER;
+		var text = new string(_cursor.ToArray());
+		var type = TokenType.IDENTIFIER;
 		if (keywords.ContainsKey(text)) {
 			type = keywords[text];
 		} else if (baseTypes.ContainsKey(text)) {

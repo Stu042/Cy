@@ -9,17 +9,29 @@ using System.IO;
 namespace Cy.Setup;
 
 public class CyCompiler {
+	readonly SymbolTableCreate _createSymbolTable;
 	readonly Scanner _scanner;
+	readonly DisplaySymbolTable _displaySymbolTable;
 	readonly Config _config;
-	readonly IErrorDisplay _errorDisplay;
+	readonly Parser _parser;
 
-	public CyCompiler(Scanner scanner, Config config, IErrorDisplay errorDisplay) {
+	public CyCompiler(SymbolTableCreate createSymbolTable, Scanner scanner, DisplaySymbolTable displaySymbolTable, Config config, Parser parser) {
+		_createSymbolTable = createSymbolTable;
 		_scanner = scanner;
+		_displaySymbolTable = displaySymbolTable;
 		_config = config;
-		_errorDisplay = errorDisplay;
+		_parser = parser;
 	}
 
 	public int Compile() {
+		var allFilesTokens = ScanFiles();
+		var allFilesStmts = ParseTokens(allFilesTokens);
+		var symbolTable = MapSymbols(allFilesStmts);
+		return 0;
+	}
+
+
+	List<List<Token>> ScanFiles() {
 		var allFilesTokens = new List<List<Token>>();
 		foreach (var filename in _config.Input) {
 			if (_config.Verbose) {
@@ -30,68 +42,29 @@ public class CyCompiler {
 			allFilesTokens.Add(tokens);
 		}
 		if (_config.DisplayTokens) {
-			_scanner.DisplayAllTokens(allFilesTokens);
+			Tokens.DisplayAllTokens(allFilesTokens);
 		}
+		return allFilesTokens;
+	}
 
+	List<List<Stmt>> ParseTokens(List<List<Token>> allFilesTokens) {
 		var allFilesStmts = new List<List<Stmt>>();
 		foreach (var tokens in allFilesTokens) {
-			var cursor = new ParserCursor(tokens);
-			var parser = new Parser(cursor, _errorDisplay);
-			var stmts = parser.Parse();
+			var stmts = _parser.Parse(tokens);
 			allFilesStmts.Add(stmts);
 		}
 		if (_config.DisplayAsts) {
-			new AstPrinter().DisplayAllAsts(allFilesStmts);
+			Asts.Display(allFilesStmts);
 		}
+		return allFilesStmts;
+	}
 
-		var createSymbolTable = new CreateSymbolTable();
-		var typeTable = createSymbolTable.Parse(allFilesStmts);
+	SymbolTable MapSymbols(List<List<Stmt>> allFilesStmts) {
+		var typeTable = new SymbolTable();
+		_createSymbolTable.Parse(allFilesStmts);
 		if (_config.DisplayPreCompileSymbols) {
-			Console.WriteLine("\nSymbol Table:");
-			var displayTypeTable = new DisplaySymbolTable();
-			displayTypeTable.DisplayTable(typeTable);
+			_displaySymbolTable.DisplayTable(typeTable);
 		}
-		return 0;
+		return typeTable;
 	}
 }
-
-
-/*
-class Program
-{
-    public Program(ILogger<Program> logger)
-    {
-        logger.LogInformation("Create Instance");
-    }
-
-    static void Main(string[] args)
-    {
-        CoconaApp.Create()
-            .ConfigureServices(services =>
-            {
-                services.AddTransient<MyService>();
-            })
-            .Run<Program>(args);
-    }
-
-    public void Hello([FromService]MyService myService)
-    {
-        myService.Hello("Hello Konnichiwa!");
-    }
-}
-
-class MyService
-{
-    private readonly ILogger _logger;
-
-    public MyService(ILogger<MyService> logger)
-    {
-        _logger = logger;
-    }
-
-    public void Hello(string message)
-    {
-        _logger.LogInformation(message);
-    }
-}
-*/

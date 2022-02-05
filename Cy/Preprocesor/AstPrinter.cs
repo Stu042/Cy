@@ -5,8 +5,14 @@ using System.Collections.Generic;
 using System.Text;
 
 
-namespace Cy.Preprocesor {
-	public class AstPrinter : IExprVisitor, IStmtVisitor {
+namespace Cy.Preprocesor;
+
+public static class Asts {
+	public static void Display(List<List<Stmt>> allFilesStmts) {
+		new AstPrinter().DisplayAllAsts(allFilesStmts);
+	}
+
+	protected class AstPrinter : IExprVisitor, IStmtVisitor {
 
 		public void DisplayAllAsts(List<List<Stmt>> allFilesStmts) {
 			Console.WriteLine("\nAST:");
@@ -161,8 +167,6 @@ namespace Cy.Preprocesor {
 		}
 
 
-
-
 		string Parenthesize(string name, params Expr[] exprs) {
 			StringBuilder builder = new();
 			builder.Append('(').Append(name);
@@ -173,7 +177,6 @@ namespace Cy.Preprocesor {
 			builder.Append(')');
 			return builder.ToString();
 		}
-
 
 		string Parenthesize2(string name, params object[] parts) {
 			StringBuilder builder = new();
@@ -194,4 +197,5 @@ namespace Cy.Preprocesor {
 			return builder.ToString();
 		}
 	}
+
 }

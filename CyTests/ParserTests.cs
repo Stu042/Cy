@@ -161,8 +161,7 @@ namespace CyTests {
 			var cursor = new ParserCursor(callTokens);
 			var parser = new Parser(cursor, errorDisplay);
 			var returnedAst = parser.Parse();
-			AstPrinter printer = new();
-			printer.DisplayAllAsts(new List<List<Stmt>>() { returnedAst });
+			Asts.Display(new List<List<Stmt>>() { returnedAst });
 			callStatement.Should().BeEquivalentTo(returnedAst);
 		}
 		[Fact]

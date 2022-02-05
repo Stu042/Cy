@@ -5,6 +5,7 @@ using Cy.Preprocesor.Interfaces;
 
 using Microsoft.Extensions.DependencyInjection;
 
+using static Cy.Preprocesor.SymbolTableCreate;
 
 namespace Cy.Setup;
 class Program {
@@ -28,9 +29,12 @@ class Program {
 	static void ConfigureServices(IServiceCollection services) {
 		services.AddSingleton<Config, Config>();
 		services.AddScoped<IErrorDisplay, ErrorDisplay>();
-        services.AddScoped<Scanner, Scanner>();
-        services.AddScoped<AstPrinter, AstPrinter>();
-        services.AddScoped<ScannerCursor, ScannerCursor>();
+		services.AddScoped<Scanner, Scanner>();
+		services.AddScoped<ScannerCursor, ScannerCursor>();
+        services.AddScoped<DisplaySymbolTable, DisplaySymbolTable>();
+        services.AddScoped<CalculateSymbolSizes, CalculateSymbolSizes>();
+        services.AddScoped<SymbolTableCreate, SymbolTableCreate>();
+        services.AddScoped<Parser, Parser>();
     }
 }
 

@@ -20,7 +20,6 @@ public abstract class Expr {
 		}
 	}
 
-	/// <summary>A hardcoded value, i.e. a number.</summary>
 	public class Literal : Expr {
 		public object value;
 		public Literal(Token token, object value) {
@@ -61,7 +60,6 @@ public abstract class Expr {
 	}
 
 
-	/// <summary>Multiply, add, subtract, etc...</summary>
 	public class Binary : Expr {
 		public Expr left;
 		public Expr right;
@@ -75,7 +73,6 @@ public abstract class Expr {
 		}
 	}
 
-	/// <summary>Call a method/function.</summary>
 	public class Call : Expr {          // token is end of function call - rparen
 		public Expr callee;             // function we are calling (might be a constructor with no function body as yet)
 		public List<Expr> arguments;    // input args
@@ -90,7 +87,6 @@ public abstract class Expr {
 	}
 
 
-	/// <summary>Get a value from Expr to assign to a variable.</summary>
 	public class Assign : Expr {
 		public Expr value;
 		public Assign(Token token, Expr value) {
@@ -103,7 +99,6 @@ public abstract class Expr {
 	}
 
 
-	/// <summary>Simply a variable.</summary>
 	public class Variable : Expr {
 		public Variable(Token token) {
 			this.token = token;
@@ -115,7 +110,6 @@ public abstract class Expr {
 
 
 	// todo add pre -- and ++
-	/// <summary>Minus and not (!)</summary>
 	public class Unary : Expr {
 		public Expr right;
 		public Unary(Token token, Expr right) {

@@ -238,7 +238,7 @@ public class CalculateSymbolSizes {
 			var names = symbol.Tokens.Select(tok => tok.lexeme);
 			var name = string.Join('.', names);
 			var type = symbol.LookUpType(name);
-			return type.Size;
+			return type.Size;	// todo display error if not found
 		}
 		return -1;
 	}

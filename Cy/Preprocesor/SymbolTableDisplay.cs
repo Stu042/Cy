@@ -19,7 +19,7 @@ public class SymbolTableDisplay {
 		}
 	}
 	void DisplayType(SymbolDefinition typedef, int tabCount = 0) {
-		Console.WriteLine(GetTabs(tabCount) + typedef);
+		Console.WriteLine(GetTabs(tabCount) + typedef.UiString());
 		foreach (var child in typedef.Children) {
 			DisplayType(child, tabCount + 1);
 		}

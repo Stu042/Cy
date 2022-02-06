@@ -10,6 +10,7 @@ namespace Cy.Preprocesor;
 public class SymbolTableCreate : IExprVisitor, IStmtVisitor {
 
 	readonly CalculateSymbolSizes _calculateSymbolSizes;
+	readonly CalculateSymbolOffsets _calculateSymbolOffsets;
 	public class Options {
 		public bool InClassDefinition;
 	}
@@ -35,8 +36,9 @@ public class SymbolTableCreate : IExprVisitor, IStmtVisitor {
 		new SymbolDefinition("void", null, null, 0, AccessModifier.Public, false, new Token[] { new Token(TokenType.VOID, "void", null, 0,0,0, BUILTIN_FILENAME) })
 	};
 
-	public SymbolTableCreate(CalculateSymbolSizes calculateSymbolSizes) {
+	public SymbolTableCreate(CalculateSymbolSizes calculateSymbolSizes, CalculateSymbolOffsets calculateSymbolOffsets) {
 		_calculateSymbolSizes = calculateSymbolSizes;
+		_calculateSymbolOffsets = calculateSymbolOffsets;
 		SymbolTable = new SymbolTable();
 		PopulateStandardTypes();
 	}
@@ -54,6 +56,7 @@ public class SymbolTableCreate : IExprVisitor, IStmtVisitor {
 			}
 		}
 		_calculateSymbolSizes.SetSizes(SymbolTable);
+		_calculateSymbolOffsets.CalculateOffsets(SymbolTable);
 		return SymbolTable;
 	}
 
@@ -253,7 +256,7 @@ public class CalculateSymbolSizes {
 	}
 
 	bool ChildSizesSet(SymbolDefinition symbol, bool onlyMembers = false) {
-		return symbol.Children.All(child => child.Size >= 0 || !onlyMembers || onlyMembers && child.IsMember);
+		return symbol.Children.All(child => (child.Size >= 0) || !onlyMembers || (onlyMembers && child.IsMember));
 	}
 	int TotalOfChildSizes(SymbolDefinition symbol, bool onlyMembers = true) {
 		if (ChildSizesSet(symbol, onlyMembers)) {
@@ -263,9 +266,21 @@ public class CalculateSymbolSizes {
 	}
 }
 
-public class CalculateSymbolOffsets { //TODO
+public class CalculateSymbolOffsets {
+	public void CalculateOffsets(SymbolTable symbolTable) {
+		foreach (var child in symbolTable.Types.Children) {
+			CalcChildOffsets(child);
+		}
+	}
 
-	public void ClaculateOffsets() {
-
+	void CalcChildOffsets(SymbolDefinition symbol) {
+		int offset = 0;
+		foreach(var child in symbol.Children) {
+			if (child.IsMember) {
+				child.Offset = offset;
+				offset += child.Size;
+				CalcChildOffsets(child);
+			}
+		}
 	}
 }

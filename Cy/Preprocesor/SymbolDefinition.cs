@@ -75,11 +75,11 @@ public class SymbolDefinition {
 		return currentType;
 	}
 
-	public override string ToString() {
+	public string UiString() {
 		var isFunction = IsFunctional ? "()" : "";
 		if (IsInstance) {
-			return $"{Modifier}, {TypeName} {InstanceName}{isFunction}, {Size}";
+			return $"{Modifier}, {TypeName} {InstanceName}{isFunction}, {Offset} {Size}";
 		}
-		return $"{Modifier}, {TypeName}, {Size}";
+		return $"{Modifier}, {TypeName}, {Offset} {Size}";
 	}
 }

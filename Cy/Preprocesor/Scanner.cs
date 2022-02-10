@@ -223,9 +223,9 @@ public class Scanner {
 			while (IsDigit(_cursor.Peek())) {
 				_cursor.Advance();
 			}
-			AddToken(TokenType.FLOAT_LITERAL, double.Parse(_cursor.ToString()));
+			AddToken(TokenType.FLOAT_LITERAL, double.Parse(_cursor.LexemeString()));
 		} else {
-			AddToken(TokenType.INT_LITERAL, int.Parse(_cursor.ToString()));
+			AddToken(TokenType.INT_LITERAL, int.Parse(_cursor.LexemeString()));
 		}
 	}
 
@@ -258,9 +258,8 @@ public class Scanner {
 		return char.IsDigit(c);
 	}
 
-
 	void AddToken(TokenType type) {
-		tokens.Add(new Token(type, _cursor.ToString(), null, currentIndent, line, _cursor.Offset(), filename));
+		tokens.Add(new Token(type, _cursor.LexemeString(), null, currentIndent, line, _cursor.Offset(), filename));
 	}
 
 	void AddToken(TokenType type, string lexeme) {
@@ -268,7 +267,7 @@ public class Scanner {
 	}
 
 	void AddToken(TokenType type, object literal) {
-		tokens.Add(new Token(type, _cursor.ToString(), literal, currentIndent, line, _cursor.Offset(), filename));
+		tokens.Add(new Token(type, _cursor.LexemeString(), literal, currentIndent, line, _cursor.Offset(), filename));
 	}
 
 	void Error(string message) {

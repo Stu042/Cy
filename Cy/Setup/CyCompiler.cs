@@ -1,4 +1,5 @@
-﻿using Cy.Preprocesor;
+﻿using Cy.CodeGen;
+using Cy.Preprocesor;
 
 using System;
 using System.Collections.Generic;
@@ -11,10 +12,12 @@ public class CyCompiler {
 	readonly Config _config;
 	readonly Scanner _scanner;
 	readonly Parser _parser;
-	readonly SymbolTableCreate _createSymbolTable;
-	readonly SymbolTableDisplay _displaySymbolTable;
+	readonly DefinitionTableCreate _createSymbolTable;
+	readonly TypeDefinitionDisplay _displaySymbolTable;
+	readonly GenIr _compiler;
 
-	public CyCompiler(SymbolTableCreate createSymbolTable, Scanner scanner, SymbolTableDisplay displaySymbolTable, Config config, Parser parser) {
+	public CyCompiler(GenIr compiler, DefinitionTableCreate createSymbolTable, Scanner scanner, TypeDefinitionDisplay displaySymbolTable, Config config, Parser parser) {
+		_compiler = compiler;
 		_createSymbolTable = createSymbolTable;
 		_scanner = scanner;
 		_displaySymbolTable = displaySymbolTable;
@@ -26,6 +29,10 @@ public class CyCompiler {
 		var allFilesTokens = ScanFiles();
 		var allFilesStmts = ParseTokens(allFilesTokens);
 		var symbolTable = MapSymbols(allFilesStmts);
+		var code = _compiler.GenerateLlvmIr(allFilesStmts, symbolTable);
+		if (_config.DisplayIr) {
+			Console.WriteLine("\nIR:\n" + code);
+		}
 		return 0;
 	}
 
@@ -58,7 +65,7 @@ public class CyCompiler {
 		return allFilesStmts;
 	}
 
-	SymbolTable MapSymbols(List<List<Stmt>> allFilesStmts) {
+	DefinitionTable MapSymbols(List<List<Stmt>> allFilesStmts) {
 		var typeTable = _createSymbolTable.Parse(allFilesStmts);
 		if (_config.DisplayPreCompileSymbols) {
 			_displaySymbolTable.DisplayTable(typeTable);

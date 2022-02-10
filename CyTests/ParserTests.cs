@@ -158,17 +158,17 @@ namespace CyTests {
 
 		[Fact]
 		public void Test_Tokens_To_Call_Ast() {
-			var cursor = new ParserCursor(callTokens);
+			var cursor = new ParserCursor();
 			var parser = new Parser(cursor, errorDisplay);
-			var returnedAst = parser.Parse();
+			var returnedAst = parser.Parse(callTokens);
 			Asts.Display(new List<List<Stmt>>() { returnedAst });
 			callStatement.Should().BeEquivalentTo(returnedAst);
 		}
 		[Fact]
 		public void Test_Tokens_To_Call_With_Multiple_Args_Ast() {
-			var cursor = new ParserCursor(callMultArgsTokens);
+			var cursor = new ParserCursor();
 			Parser parser = new(cursor, errorDisplay);
-			var returnedAst = parser.Parse();
+			var returnedAst = parser.Parse(callMultArgsTokens);
 			callMultArgsStatement.Should().BeEquivalentTo(returnedAst);
 		}
 
@@ -176,17 +176,17 @@ namespace CyTests {
 		//		int b"
 		[Fact]
 		public void Test_Tokens_To_If_Ast() {
-			var cursor = new ParserCursor(ifTokens);
+			var cursor = new ParserCursor();
 			Parser parser = new(cursor, errorDisplay);
-			var returnedAst = parser.Parse();
+			var returnedAst = parser.Parse(ifTokens);
 			ifStatement.Should().BeEquivalentTo(returnedAst);
 		}
 
 		[Fact]
 		public void Test_Tokens_To_Unary_Ast() {
-			var cursor = new ParserCursor(unaryTokens);
+			var cursor = new ParserCursor();
 			var parser = new Parser(cursor, errorDisplay);
-			var returnedAst = parser.Parse();
+			var returnedAst = parser.Parse(unaryTokens);
 			unaryStatement.Should().BeEquivalentTo(returnedAst);
 		}
 

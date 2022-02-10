@@ -86,7 +86,7 @@ public class ScannerCursor {
 	}
 
 
-	public override string ToString() {
+	public string LexemeString() {
 		return new string(ToArray());
 	}
 }

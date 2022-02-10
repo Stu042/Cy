@@ -5,20 +5,20 @@ using System.Text;
 
 namespace Cy.Preprocesor;
 
-/// <summary>Write SymbolTable to console.</summary>
-public class SymbolTableDisplay {
+/// <summary>Write TypeDefinitionTable to console.</summary>
+public class TypeDefinitionDisplay {
 	readonly Config _config;
 
-	public SymbolTableDisplay(Config config) {
+	public TypeDefinitionDisplay(Config config) {
 		_config = config;
 	}
-	public void DisplayTable(SymbolTable typeTable) {
+	public void DisplayTable(DefinitionTable typeTable) {
 		Console.WriteLine("\nSymbol Table:");
 		foreach (var typedef in typeTable.Types.Children) {
 			DisplayType(typedef);
 		}
 	}
-	void DisplayType(SymbolDefinition typedef, int tabCount = 0) {
+	void DisplayType(TypeDefinition typedef, int tabCount = 0) {
 		Console.WriteLine(GetTabs(tabCount) + typedef.UiString());
 		foreach (var child in typedef.Children) {
 			DisplayType(child, tabCount + 1);

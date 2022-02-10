@@ -6,14 +6,14 @@ namespace Cy.Preprocesor;
 
 /// <summary>Info for a type/namespace/object/method (an object).
 /// Global type table must have a null parent and be named "".</summary>
-public class SymbolDefinition {
+public class TypeDefinition {
 	/// <summary>Name given in source code, last part of fully qualified name.</summary>
 	public string TypeName;
 	/// <summary>Name given in source code for this instance.</summary>
 	public string InstanceName;
 	/// <summary>Namespace this belongs to, or null if this is the global namespace.</summary>
-	public SymbolDefinition Parent;
-	public List<SymbolDefinition> Children;
+	public TypeDefinition Parent;
+	public List<TypeDefinition> Children;
 	/// <summary>Is symbol Public, Private or Protected.</summary>
 	public AccessModifier Modifier;
 	/// <summary>Is this object a functional object.</summary>
@@ -28,11 +28,11 @@ public class SymbolDefinition {
 	public bool IsInstance { get { return InstanceName != null; } }
 
 
-	public SymbolDefinition(string typeName, string instanceName, SymbolDefinition parent, int size, AccessModifier accessModifier, bool isFunctional, Token[] tokens) {
+	public TypeDefinition(string typeName, string instanceName, TypeDefinition parent, int size, AccessModifier accessModifier, bool isFunctional, Token[] tokens) {
 		TypeName = typeName;
 		InstanceName = instanceName;
 		Parent = parent;
-		Children = new List<SymbolDefinition>();
+		Children = new List<TypeDefinition>();
 		Modifier = accessModifier;
 		IsFunctional = isFunctional;
 		Tokens = tokens;
@@ -50,7 +50,7 @@ public class SymbolDefinition {
 		return string.Join('.', nameParts);
 	}
 
-	public SymbolDefinition GetGlobalNamespace() {
+	public TypeDefinition GetGlobalNamespace() {
 		var currentType = this;
 		while (currentType.Parent != null) {
 			currentType = currentType.Parent;
@@ -58,7 +58,7 @@ public class SymbolDefinition {
 		return currentType;
 	}
 
-	public SymbolDefinition LookUpType(string typeName) {
+	public TypeDefinition LookUpType(string typeName) {
 		var type = LookUpTypeHere(typeName);
 		if (type == null) {
 			var globalType = GetGlobalNamespace();
@@ -66,8 +66,8 @@ public class SymbolDefinition {
 		}
 		return type;
 	}
-	public SymbolDefinition LookUpTypeHere(string typeName) {
-		SymbolDefinition currentType = this;
+	public TypeDefinition LookUpTypeHere(string typeName) {
+		TypeDefinition currentType = this;
 		var typeNameParts = typeName.Split('.');
 		foreach (var typeNamePart in typeNameParts) {
 			currentType = currentType.Children.Find(curr => curr.TypeName == typeNamePart);

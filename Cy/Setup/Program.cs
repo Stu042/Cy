@@ -1,5 +1,7 @@
 ﻿using Cocona;
 
+using Cy.CodeGen;
+using Cy.CodeGen.Llvm;
 using Cy.Preprocesor;
 using Cy.Preprocesor.Interfaces;
 
@@ -31,9 +33,12 @@ class Program {
 		services.AddScoped<ScannerCursor, ScannerCursor>();
 		services.AddScoped<Parser, Parser>();
 		services.AddScoped<ParserCursor, ParserCursor>();
-		services.AddScoped<SymbolTableCreate, SymbolTableCreate>();
-		services.AddScoped<CalculateSymbolSizes, CalculateSymbolSizes>();
-		services.AddScoped<CalculateSymbolOffsets, CalculateSymbolOffsets>();
-		services.AddScoped<SymbolTableDisplay, SymbolTableDisplay>();
-    }
+		services.AddScoped<DefinitionTableCreate, DefinitionTableCreate>();
+		services.AddScoped<CalculateTypeDefinitionSizes, CalculateTypeDefinitionSizes>();
+		services.AddScoped<CalculateTypeDefinitionOffsets, CalculateTypeDefinitionOffsets>();
+		services.AddScoped<TypeDefinitionDisplay, TypeDefinitionDisplay>();
+		services.AddScoped<Foundation, Foundation>();
+		services.AddScoped<CodeGenVisitor, CodeGenVisitor>();
+		services.AddScoped<GenIr, GenIr>();
+	}
 }

@@ -1,4 +1,6 @@
-﻿namespace Cy.Preprocesor;
+﻿using System;
+
+namespace Cy.Preprocesor;
 
 public class Token {
 	public TokenType tokenType; // type of token
@@ -79,40 +81,24 @@ public class Token {
 			TokenType.INT128 or TokenType.FLOAT or TokenType.FLOAT16 or TokenType.FLOAT32 or TokenType.FLOAT64
 			or TokenType.FLOAT128 or TokenType.BOOL => true,
 			_ => false,
-		};
-	}
+};
+}
 
 	public string ToFormattedString() {
 		string lexemeStr = lexeme;
 		string literalStr = literal?.ToString();
 		if (tokenType == TokenType.NEWLINE) {
 			lexemeStr = "\\n";
-		}
-		if (tokenType == TokenType.EOF) {
+		} else if (tokenType == TokenType.EOF) {
 			lexemeStr = "\\0";
-		}
-		if (lexeme == "\r") {
+		} else if (lexeme == "\r") {
 			lexemeStr = "\\r";
 		}
-		return $"{lexemeStr,-10} {tokenType,-20} {literalStr,-20} Indent:{indent,2} Line:{line,4} Offset:{offset,3}";
-	}
-	public override string ToString() {
-		string lexemeStr = lexeme;
-		string literalStr = literal?.ToString();
-		if (tokenType == TokenType.NEWLINE) {
-			lexemeStr = "\\n";
-		}
-		if (tokenType == TokenType.EOF) {
-			lexemeStr = "\\0";
-		}
-		if (lexeme == "\r") {
-			lexemeStr = "\\r";
-		}
-		return $"Lexeme: {lexemeStr}, Type: {tokenType}, Literal: {literalStr}, Indent:{indent}, Line:{line}, Offset:{offset}";
+		return $"{lexemeStr,-10} {tokenType,-12} {literalStr,-10} Indent:{indent,2} Line:{line,4} Offset:{offset,3}";
 	}
 
 	public Token Clone() {
-		var tok = new Token {
+		var token = new Token {
 			tokenType = tokenType,
 			lexeme = lexeme,
 			literal = literal,
@@ -121,6 +107,6 @@ public class Token {
 			offset = offset,
 			filename = filename
 		};
-		return tok;
+		return token;
 	}
 }

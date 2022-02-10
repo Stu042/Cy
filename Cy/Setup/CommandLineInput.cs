@@ -17,11 +17,12 @@ public sealed class CommandLineInput {
 	public bool DisplayAsts { get; set; }
 	public int TabSize { get; set; }
 	public bool DisplayPreCompileSymbols { get; set; }
+	public bool DisplayIr { get; set; }
 
 	public static CommandLineInput Instance { get { return lazy.Value; } }
 
 	private CommandLineInput() { }
-	public void Init(string[] includes, string[] filesIn, string output, bool tokens, bool verbose, bool ast, int tabSize, bool displayPreCompileSymbols) {
+	public void Init(string[] includes, string[] filesIn, string output, bool tokens, bool verbose, bool ast, int tabSize, bool displayPreCompileSymbols, bool displayIr) {
 		Includes = includes;
 		Input = filesIn;
 		FileOut = output;
@@ -30,5 +31,6 @@ public sealed class CommandLineInput {
 		DisplayAsts = ast;
 		TabSize = tabSize;
 		DisplayPreCompileSymbols = displayPreCompileSymbols;
+		DisplayIr = displayIr;
 	}
 }

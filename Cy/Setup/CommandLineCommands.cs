@@ -13,48 +13,9 @@ public class CommandLineCommands {
 		[Option('I', Description = "Includes to use.")] string[] includes = null,
 		[Option('o', Description = "Output file name.")] string output = "main.c",
 		[Option('s', Description = "Tab size (in spaces).")] int tabSize = 4,
-		[Option('S', Description = "Display Symbol Table.")] bool preCompileSymbols = false) {
-		CommandLineInput.Instance.Init(includes, input, output, tokens, verbose, ast, tabSize, preCompileSymbols);
+		[Option('S', Description = "Display Symbol Table.")] bool preCompileSymbols = false,
+		[Option('r', Description = "Display Intermediate code.")] bool displayIr = false
+		) {
+		CommandLineInput.Instance.Init(includes, input, output, tokens, verbose, ast, tabSize, preCompileSymbols, displayIr);
 	}
 }
-
-
-/*
-class Program
-{
-    public Program(ILogger<Program> logger)
-    {
-        logger.LogInformation("Create Instance");
-    }
-
-    static void Main(string[] args)
-    {
-        CoconaApp.Create()
-            .ConfigureServices(services =>
-            {
-                services.AddTransient<MyService>();
-            })
-            .Run<Program>(args);
-    }
-
-    public void Hello([FromService]MyService myService)
-    {
-        myService.Hello("Hello Konnichiwa!");
-    }
-}
-
-class MyService
-{
-    private readonly ILogger _logger;
-
-    public MyService(ILogger<MyService> logger)
-    {
-        _logger = logger;
-    }
-
-    public void Hello(string message)
-    {
-        _logger.LogInformation(message);
-    }
-}
-*/

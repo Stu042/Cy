@@ -14,22 +14,14 @@ public class TypeDefinitionDisplay {
 	}
 	public void DisplayTable(DefinitionTable typeTable) {
 		Console.WriteLine("\nSymbol Table:");
-		foreach (var typedef in typeTable.Types.Children) {
+		foreach (var typedef in typeTable.Global.Children) {
 			DisplayType(typedef);
 		}
 	}
 	void DisplayType(TypeDefinition typedef, int tabCount = 0) {
-		Console.WriteLine(GetTabs(tabCount) + typedef.UiString());
+		Console.WriteLine(new string(' ', _config.TabSize * tabCount) + typedef.UiString());
 		foreach (var child in typedef.Children) {
 			DisplayType(child, tabCount + 1);
 		}
-	}
-	string GetTabs(int tabCount) {
-		var oneTab = new string(' ', _config.TabSize);
-		var tabs = new StringBuilder();
-		for (var i = 0; i < tabCount; i++) {
-			tabs.Append(oneTab);
-		}
-		return tabs.ToString();
 	}
 }

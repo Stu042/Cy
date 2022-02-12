@@ -44,8 +44,8 @@ public class DefinitionTableCreate : IExprVisitor, IStmtVisitor {
 	}
 	void PopulateStandardTypes() {
 		foreach (var typedef in standardTypes) {
-			typedef.Parent = SymbolTable.Types;
-			SymbolTable.Types.Children.Add(typedef);
+			typedef.Parent = SymbolTable.Global;
+			SymbolTable.Global.Children.Add(typedef);
 		}
 	}
 
@@ -61,8 +61,8 @@ public class DefinitionTableCreate : IExprVisitor, IStmtVisitor {
 	}
 
 	TypeDefinition AddSymbolDefinition(string sourceName, string instanceName, AccessModifier accessModifier, bool isFunctional, Token[] tokens) {
-		var typeDef = new TypeDefinition(sourceName, instanceName, SymbolTable.Types, -1, accessModifier, isFunctional, tokens);
-		SymbolTable.Types.Children.Add(typeDef);
+		var typeDef = new TypeDefinition(sourceName, instanceName, SymbolTable.Global, -1, accessModifier, isFunctional, tokens);
+		SymbolTable.Global.Children.Add(typeDef);
 		return typeDef;
 	}
 
@@ -82,12 +82,12 @@ public class DefinitionTableCreate : IExprVisitor, IStmtVisitor {
 	}
 
 	public object VisitBlockStmt(Stmt.Block stmt, object options = null) {
-		var previousTypeTableTypes = SymbolTable.Types;
-		SymbolTable.Types = AddSymbolDefinition("void", stmt.token.lexeme, AccessModifier.Private, true, new Token[] { stmt.token });
+		var previousTypeTableTypes = SymbolTable.Global;
+		SymbolTable.Global = AddSymbolDefinition("void", stmt.token.lexeme, AccessModifier.Private, true, new Token[] { stmt.token });
 		foreach (Stmt statement in stmt.statements) {
 			statement.Accept(this);
 		}
-		SymbolTable.Types = previousTypeTableTypes;
+		SymbolTable.Global = previousTypeTableTypes;
 		return null;
 	}
 
@@ -106,30 +106,30 @@ public class DefinitionTableCreate : IExprVisitor, IStmtVisitor {
 	public object VisitFunctionStmt(Stmt.Function stmt, object options = null) {
 		Token[] typeTokens;
 		typeTokens = (Token[])stmt.returnType.Accept(this);
-		var previousTypeTable = SymbolTable.Types;
+		var previousTypeTable = SymbolTable.Global;
 		var tokLexemes = typeTokens.Select(tok => tok.lexeme);
 		var lexeme = string.Join(".", tokLexemes);
-		SymbolTable.Types = AddSymbolDefinition(lexeme, stmt.token.lexeme, AccessModifier.Public, true, typeTokens);
+		SymbolTable.Global = AddSymbolDefinition(lexeme, stmt.token.lexeme, AccessModifier.Public, true, typeTokens);
 		foreach (var param in stmt.input) {
 			param.Accept(this);
 		}
 		foreach (Stmt body in stmt.body) {
 			body.Accept(this);
 		}
-		SymbolTable.Types = previousTypeTable;
+		SymbolTable.Global = previousTypeTable;
 		return null;
 	}
 
 	public object VisitClassStmt(Stmt.ClassDefinition stmt, object options = null) {
-		var previousTypeTable = SymbolTable.Types;
-		SymbolTable.Types = AddSymbolDefinition(stmt.token.lexeme, null, AccessModifier.Public, false, new Token[] { stmt.token });
+		var previousTypeTable = SymbolTable.Global;
+		SymbolTable.Global = AddSymbolDefinition(stmt.token.lexeme, null, AccessModifier.Public, false, new Token[] { stmt.token });
 		foreach (Stmt.Var memb in stmt.members) {
 			memb.Accept(this, new Options { InClassDefinition = true });
 		}
 		foreach (Stmt.Function method in stmt.methods) {
 			method.Accept(this, new Options { InClassDefinition = true });
 		}
-		SymbolTable.Types = previousTypeTable;
+		SymbolTable.Global = previousTypeTable;
 		return null;
 	}
 
@@ -210,8 +210,8 @@ public class DefinitionTableCreate : IExprVisitor, IStmtVisitor {
 
 public class CalculateTypeDefinitionSizes {
 	public void SetSizes(DefinitionTable symbolTable) {
-		while (!CheckAllSizesSet(symbolTable.Types)) {
-			CalcSizes(symbolTable.Types);
+		while (!CheckAllSizesSet(symbolTable.Global)) {
+			CalcSizes(symbolTable.Global);
 		}
 	}
 
@@ -270,7 +270,7 @@ public class CalculateTypeDefinitionSizes {
 
 public class CalculateTypeDefinitionOffsets {
 	public void CalculateOffsets(DefinitionTable symbolTable) {
-		foreach (var child in symbolTable.Types.Children) {
+		foreach (var child in symbolTable.Global.Children) {
 			CalcChildOffsets(child);
 		}
 	}

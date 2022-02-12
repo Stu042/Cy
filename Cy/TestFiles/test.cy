@@ -1,3 +1,2 @@
-
 int Main():
-	return 2
+	return 7 + 3

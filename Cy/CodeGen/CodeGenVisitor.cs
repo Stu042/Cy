@@ -8,33 +8,16 @@ using System.Text;
 namespace Cy.CodeGen;
 
 
-public class CodeGenVisitor : IExprVisitor, IStmtVisitor {
-	public string Run(List<List<Stmt>> toplevel) {
-		var bob = new StringBuilder();
+
+public partial class CodeGenVisitor : IExprVisitor, IStmtVisitor {
+	public string Run(List<List<Stmt>> toplevel, LlvmTypes llvmTypes) {
+		var text = new List<string>();
 		foreach (var stmt in toplevel) {
 			foreach (var section in stmt) {
-				bob.Append(section.Accept(this, new Options()));
+				text.Add((string)section.Accept(this, new Options(llvmTypes)));
 			}
 		}
-		return bob.ToString();
-	}
-
-	public class Options {
-		public int CurrentTab;
-		public Options() {
-			CurrentTab = 0;
-		}
-
-		public string Tabs { get => new(' ', CurrentTab * 2); }
-		public void IncTab() {
-			CurrentTab++;
-		}
-		public void DecTab() {
-			--CurrentTab;
-		}
-		public static Options GetOptions(object obj) {
-			return (Options)obj;
-		}
+		return String.Join('\n', text);
 	}
 
 
@@ -43,7 +26,60 @@ public class CodeGenVisitor : IExprVisitor, IStmtVisitor {
 	}
 
 	public object VisitBinaryExpr(Expr.Binary expr, object options) {
-		throw new NotImplementedException();
+		var opts = Options.GetOptions(options);
+		var bob = new StringBuilder();
+		var left = (ExpressionValue)expr.left.Accept(this, options);
+		var right = (ExpressionValue)expr.right.Accept(this, options);
+		switch (expr.token.tokenType) {
+			case TokenType.PLUS: {
+					if (left.IsLiteral && right.IsLiteral) {
+						return new ExpressionValue {
+							IsLiteral = true,
+							TextValue = ExpressionValue.AddLiteral(left, right),
+							Value = null,
+							ValueType = ExpressionValue.GetType(left, right)
+						};
+					}
+				}
+				break;
+			case TokenType.MINUS: {
+					if (left.IsLiteral && right.IsLiteral) {
+						return new ExpressionValue {
+							IsLiteral = true,
+							TextValue = ExpressionValue.SubLiteral(left, right),
+							Value = null,
+							ValueType = ExpressionValue.GetType(left, right)
+						};
+					}
+				}
+				break;
+			case TokenType.STAR: {
+					if (left.IsLiteral && right.IsLiteral) {
+						return new ExpressionValue {
+							IsLiteral = true,
+							TextValue = ExpressionValue.MultLiteral(left, right),
+							Value = null,
+							ValueType = ExpressionValue.GetType(left, right)
+						};
+					}
+				}
+				break;
+			case TokenType.SLASH: {
+					if (left.IsLiteral && right.IsLiteral) {
+						return new ExpressionValue {
+							IsLiteral = true,
+							TextValue = ExpressionValue.DivLiteral(left, right),
+							Value = null,
+							ValueType = ExpressionValue.GetType(left, right)
+						};
+					}
+				}
+				break;
+			default:
+				// error
+				break;
+		}
+		return bob.ToString();
 	}
 
 	public object VisitBlockStmt(Stmt.Block stmt, object options) {
@@ -69,13 +105,19 @@ public class CodeGenVisitor : IExprVisitor, IStmtVisitor {
 	public object VisitFunctionStmt(Stmt.Function stmt, object options) {
 		var opts = Options.GetOptions(options);
 		var info = stmt.returnType.info;
-		var bob = new StringBuilder(opts.Tabs + "define dso_local i32 @" + stmt.token.lexeme + "() #0 {\n");
+		var returnType = opts.TypesToLlvm.GetType(stmt.returnType.info);
+		opts.ReturnType.Push(returnType);
+		var bob = new StringBuilder(opts.Tabs + "define dso_local " + returnType.LlvmTypeName + " @" + stmt.token.lexeme + "() #0 {\n");
 		opts.IncTab();
 		foreach (var body in stmt.body) {
 			var line = body.Accept(this, opts);
 			bob.Append(line);
 		}
+		var poppedType = opts.ReturnType.Pop();
 		opts.DecTab();
+		if (poppedType != returnType) {
+			// error, wrong type
+		}
 		bob.AppendLine("}");
 		return bob.ToString();
 	}
@@ -98,19 +140,27 @@ public class CodeGenVisitor : IExprVisitor, IStmtVisitor {
 
 	public object VisitLiteralExpr(Expr.Literal expr, object options) {
 		var opts = Options.GetOptions(options);
-		string value = expr.token.tokenType switch {
-			TokenType.INT_LITERAL or TokenType.FLOAT_LITERAL => expr.value.ToString(),
-			TokenType.STR_LITERAL => "\"" + expr.value.ToString() + "\"",
-			_ => expr.value.ToString(),
+		return new ExpressionValue {
+			TextValue = expr.token.tokenType switch {
+				TokenType.INT_LITERAL or TokenType.FLOAT_LITERAL => expr.value.ToString(),
+				TokenType.STR_LITERAL => "\"" + expr.value.ToString() + "\"",
+				_ => expr.value.ToString()
+			},
+			IsLiteral = true,
+			Value = expr.value,
+			ValueType = expr.token.tokenType switch {
+				TokenType.INT_LITERAL => ExpressionValue.Type.INT,
+				TokenType.FLOAT_LITERAL => ExpressionValue.Type.FLOAT,
+				TokenType.STR_LITERAL => ExpressionValue.Type.STRING,
+				_ => ExpressionValue.Type.UNKNOWN
+			}
 		};
-		return value;
 	}
 
 	public object VisitReturnStmt(Stmt.Return stmt, object options) {
 		var opts = Options.GetOptions(options);
-		var bob = new StringBuilder(opts.Tabs + "ret ");
-		bob.Append(stmt.value.Accept(this, opts) + "\n");
-		return bob.ToString();
+		var expressionValue = (ExpressionValue)stmt.value.Accept(this, opts);
+		return $"{opts.Tabs}ret {opts.ReturnType.Peek().LlvmTypeName} {expressionValue.TextValue}\n";
 	}
 
 	public object VisitSetExpr(Expr.Set expr, object options) {

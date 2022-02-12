@@ -2,6 +2,7 @@
 using Cy.Setup;
 
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 
 namespace Cy.CodeGen;
@@ -13,9 +14,9 @@ public class GenIr {
 	readonly Config _config;
 	
 	readonly string filename;
-	StringBuilder preCode;
-	StringBuilder postCode;
-	StringBuilder code;
+	readonly StringBuilder preCode;
+	readonly StringBuilder postCode;
+	readonly StringBuilder code;
 
 	public GenIr(CodeGenVisitor codeGenVisitor, Llvm.Foundation foundation, Config config){
 		_codeGenVisitor = codeGenVisitor;
@@ -28,11 +29,13 @@ public class GenIr {
 	}
 
 	public string GenerateLlvmIr(List<List<Stmt>> toplevel, DefinitionTable definitionTable) {
+		var llvmTypes = new LlvmTypes(definitionTable);
 		preCode.Append(_foundation.GetPreLLVMCode());
-		code.Append(_codeGenVisitor.Run(toplevel));
+		code.Append(_codeGenVisitor.Run(toplevel, llvmTypes));
 		postCode.Append(_foundation.GetPostLLVMCode());
 		preCode.Append(code);
 		preCode.Append(postCode);
+		File.WriteAllText(filename, preCode.ToString());
 		return preCode.ToString();
 	}
 }

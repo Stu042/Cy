@@ -123,6 +123,9 @@ public class Scanner {
 			case '#':
 				AddToken(TokenType.HASH);
 				break;
+			case '%':
+				AddToken(TokenType.PERCENT);
+				break;
 			case '!':
 				AddToken(_cursor.Match('=') ? TokenType.BANG_EQUAL : TokenType.BANG);
 				break;

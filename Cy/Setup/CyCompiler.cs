@@ -12,11 +12,11 @@ public class CyCompiler {
 	readonly Config _config;
 	readonly Scanner _scanner;
 	readonly Parser _parser;
-	readonly DefinitionTableCreate _createSymbolTable;
+	readonly TypeDefinitionTableCreate _createSymbolTable;
 	readonly TypeDefinitionDisplay _displaySymbolTable;
 	readonly GenIr _compiler;
 
-	public CyCompiler(GenIr compiler, DefinitionTableCreate createSymbolTable, Scanner scanner, TypeDefinitionDisplay displaySymbolTable, Config config, Parser parser) {
+	public CyCompiler(GenIr compiler, TypeDefinitionTableCreate createSymbolTable, Scanner scanner, TypeDefinitionDisplay displaySymbolTable, Config config, Parser parser) {
 		_compiler = compiler;
 		_createSymbolTable = createSymbolTable;
 		_scanner = scanner;
@@ -65,7 +65,7 @@ public class CyCompiler {
 		return allFilesStmts;
 	}
 
-	DefinitionTable MapSymbols(List<List<Stmt>> allFilesStmts) {
+	TypeDefinitionTable MapSymbols(List<List<Stmt>> allFilesStmts) {
 		var typeTable = _createSymbolTable.Parse(allFilesStmts);
 		if (_config.DisplayPreCompileSymbols) {
 			_displaySymbolTable.DisplayTable(typeTable);

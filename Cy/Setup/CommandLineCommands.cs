@@ -11,7 +11,7 @@ public class CommandLineCommands {
 		[Option('v', Description = "Verbose output.")] bool verbose = false,
 		[Option('T', Description = "Display scanner generated tokens.")] bool tokens = false,
 		[Option('I', Description = "Includes to use.")] string[] includes = null,
-		[Option('o', Description = "Output file name.")] string output = "main.c",
+		[Option('o', Description = "Output file name.")] string output = "main.ll",
 		[Option('s', Description = "Tab size (in spaces).")] int tabSize = 4,
 		[Option('S', Description = "Display Symbol Table.")] bool preCompileSymbols = false,
 		[Option('r', Description = "Display Intermediate code.")] bool displayIr = false

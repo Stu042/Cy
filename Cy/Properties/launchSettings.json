@@ -1,9 +1,9 @@
 {
   "profiles": {
     "Cy": {
-      "commandName": "Project",
-      "commandLineArgs": "-STAvr -o temp.c -i test.cy",
-      "workingDirectory": "E:\\src\\cs\\Cy-vs2022\\Cy\\TestFiles"
+        "commandName": "Project",
+        "commandLineArgs": "-STAvr -o test.ll -i test.cy",
+        "workingDirectory": "E:\\src\\cs\\Cy-vs2022\\Cy\\TestFiles"
     }
   }
 }

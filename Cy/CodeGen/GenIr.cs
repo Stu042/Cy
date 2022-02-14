@@ -28,7 +28,7 @@ public class GenIr {
 		code = new StringBuilder();
 	}
 
-	public string GenerateLlvmIr(List<List<Stmt>> toplevel, DefinitionTable definitionTable) {
+	public string GenerateLlvmIr(List<List<Stmt>> toplevel, TypeDefinitionTable definitionTable) {
 		var llvmTypes = new LlvmTypes(definitionTable);
 		preCode.Append(_foundation.GetPreLLVMCode());
 		code.Append(_codeGenVisitor.Run(toplevel, llvmTypes));

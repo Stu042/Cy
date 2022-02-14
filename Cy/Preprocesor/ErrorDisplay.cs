@@ -24,7 +24,7 @@ public class ErrorDisplay : IErrorDisplay {
 	public void Error(string filename, int line, int offset, string lineText, string message) {
 		var infoText = BuildInfoText(line, offset, _config.TabSize);
 		var errorLine = BuildErrorLine(lineText, line, _config.TabSize);
-		var pointerLine = BuildPointerLine(infoText, lineText, offset + infoText.Length, _config.TabSize);
+		var pointerLine = BuildPointerLine(infoText, lineText, offset /*+ infoText.Length*/, _config.TabSize);
 		Console.WriteLine($"Error in {filename}. {message}");
 		Console.WriteLine(infoText + errorLine);
 		Console.WriteLine(pointerLine);
@@ -46,13 +46,13 @@ public class ErrorDisplay : IErrorDisplay {
 
 	// i.e. "--------^"
 	string BuildPointerLine(string infoText, string errorText, int offset, int tabSize) {
-		if (offset < 0 || offset >= errorText.Length) {
-			return $"Error offset is out of range, offset {offset}, line: {infoText + errorText}";
+		if (offset < 0 || offset > errorText.Length) {
+			return $"Compiler Error: offset is out of range, offset {offset}, line: {infoText + errorText}";
 		}
 		var output = new StringBuilder(offset + infoText.Length);
 		var firstPart = errorText[..offset];
 		var tabcount = firstPart.Count(c => c == '\t');
-		output.Append(new string('-', tabcount * tabSize - tabcount + offset + infoText.Length));
+		output.Append(new string('-', tabcount * tabSize - tabcount + (offset-1) + infoText.Length));
 		output.Append('^');
 		return output.ToString();
 	}

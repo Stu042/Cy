@@ -12,7 +12,7 @@ public class TypeDefinitionDisplay {
 	public TypeDefinitionDisplay(Config config) {
 		_config = config;
 	}
-	public void DisplayTable(DefinitionTable typeTable) {
+	public void DisplayTable(TypeDefinitionTable typeTable) {
 		Console.WriteLine("\nSymbol Table:");
 		foreach (var typedef in typeTable.Global.Children) {
 			DisplayType(typedef);

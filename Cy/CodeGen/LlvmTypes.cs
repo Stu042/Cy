@@ -10,7 +10,7 @@ public class LlvmTypes {
 
 	/// <summary>FQTypeName points to LlvmType.</summary>
 	Dictionary<string, LlvmType> TypeLookup;
-	public LlvmTypes(DefinitionTable definitionTable) {
+	public LlvmTypes(TypeDefinitionTable definitionTable) {
 		TypeLookup = new Dictionary<string, LlvmType>();
 		AddChildrenToTable(definitionTable.Global);
 	}

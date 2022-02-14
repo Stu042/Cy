@@ -1,4 +1,5 @@
-﻿using Cy.Preprocesor;
+﻿using Cy.Enums;
+using Cy.Preprocesor;
 using Cy.Preprocesor.Interfaces;
 
 using System;
@@ -27,59 +28,22 @@ public partial class CodeGenVisitor : IExprVisitor, IStmtVisitor {
 
 	public object VisitBinaryExpr(Expr.Binary expr, object options) {
 		var opts = Options.GetOptions(options);
-		var bob = new StringBuilder();
 		var left = (ExpressionValue)expr.left.Accept(this, options);
 		var right = (ExpressionValue)expr.right.Accept(this, options);
-		switch (expr.token.tokenType) {
-			case TokenType.PLUS: {
-					if (left.IsLiteral && right.IsLiteral) {
-						return new ExpressionValue {
-							IsLiteral = true,
-							TextValue = ExpressionValue.AddLiteral(left, right),
-							Value = null,
-							ValueType = ExpressionValue.GetType(left, right)
-						};
-					}
-				}
-				break;
-			case TokenType.MINUS: {
-					if (left.IsLiteral && right.IsLiteral) {
-						return new ExpressionValue {
-							IsLiteral = true,
-							TextValue = ExpressionValue.SubLiteral(left, right),
-							Value = null,
-							ValueType = ExpressionValue.GetType(left, right)
-						};
-					}
-				}
-				break;
-			case TokenType.STAR: {
-					if (left.IsLiteral && right.IsLiteral) {
-						return new ExpressionValue {
-							IsLiteral = true,
-							TextValue = ExpressionValue.MultLiteral(left, right),
-							Value = null,
-							ValueType = ExpressionValue.GetType(left, right)
-						};
-					}
-				}
-				break;
-			case TokenType.SLASH: {
-					if (left.IsLiteral && right.IsLiteral) {
-						return new ExpressionValue {
-							IsLiteral = true,
-							TextValue = ExpressionValue.DivLiteral(left, right),
-							Value = null,
-							ValueType = ExpressionValue.GetType(left, right)
-						};
-					}
-				}
-				break;
-			default:
-				// error
-				break;
-		}
-		return bob.ToString();
+		var value = expr.token.tokenType switch {
+			TokenType.PLUS => (left.IsLiteral && right.IsLiteral) ? ExpressionValue.AddLiteral(left, right) : "",
+			TokenType.MINUS => (left.IsLiteral && right.IsLiteral) ? ExpressionValue.SubLiteral(left, right) : "",
+			TokenType.STAR => (left.IsLiteral && right.IsLiteral) ? ExpressionValue.MultLiteral(left, right) : "",
+			TokenType.SLASH => (left.IsLiteral && right.IsLiteral) ? ExpressionValue.DivLiteral(left, right) : "",
+			TokenType.PERCENT => (left.IsLiteral && right.IsLiteral) ? ExpressionValue.ModLiteral(left, right) : "",
+			_ => ""
+		};
+		return new ExpressionValue {
+			IsLiteral = left.IsLiteral && right.IsLiteral,
+			TextValue = value.ToString(),
+			Value = value,
+			ValueType = ExpressionValue.GetType(left, right)
+		};
 	}
 
 	public object VisitBlockStmt(Stmt.Block stmt, object options) {
@@ -104,7 +68,6 @@ public partial class CodeGenVisitor : IExprVisitor, IStmtVisitor {
 
 	public object VisitFunctionStmt(Stmt.Function stmt, object options) {
 		var opts = Options.GetOptions(options);
-		var info = stmt.returnType.info;
 		var returnType = opts.TypesToLlvm.GetType(stmt.returnType.info);
 		opts.ReturnType.Push(returnType);
 		var bob = new StringBuilder(opts.Tabs + "define dso_local " + returnType.LlvmTypeName + " @" + stmt.token.lexeme + "() #0 {\n");
@@ -149,10 +112,10 @@ public partial class CodeGenVisitor : IExprVisitor, IStmtVisitor {
 			IsLiteral = true,
 			Value = expr.value,
 			ValueType = expr.token.tokenType switch {
-				TokenType.INT_LITERAL => ExpressionValue.Type.INT,
-				TokenType.FLOAT_LITERAL => ExpressionValue.Type.FLOAT,
-				TokenType.STR_LITERAL => ExpressionValue.Type.STRING,
-				_ => ExpressionValue.Type.UNKNOWN
+				TokenType.INT_LITERAL => BaseType.INT,
+				TokenType.FLOAT_LITERAL => BaseType.FLOAT,
+				TokenType.STR_LITERAL => BaseType.STRING,
+				_ => BaseType.UNKNOWN
 			}
 		};
 	}
@@ -160,6 +123,7 @@ public partial class CodeGenVisitor : IExprVisitor, IStmtVisitor {
 	public object VisitReturnStmt(Stmt.Return stmt, object options) {
 		var opts = Options.GetOptions(options);
 		var expressionValue = (ExpressionValue)stmt.value.Accept(this, opts);
+		expressionValue = ExpressionValue.CastLiteral(expressionValue, opts.ReturnType.Peek().TypeDef.BaseType);
 		return $"{opts.Tabs}ret {opts.ReturnType.Peek().LlvmTypeName} {expressionValue.TextValue}\n";
 	}
 

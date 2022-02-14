@@ -33,7 +33,7 @@ class Program {
 		services.AddScoped<ScannerCursor, ScannerCursor>();
 		services.AddScoped<Parser, Parser>();
 		services.AddScoped<ParserCursor, ParserCursor>();
-		services.AddScoped<DefinitionTableCreate, DefinitionTableCreate>();
+		services.AddScoped<TypeDefinitionTableCreate, TypeDefinitionTableCreate>();
 		services.AddScoped<CalculateTypeDefinitionSizes, CalculateTypeDefinitionSizes>();
 		services.AddScoped<CalculateTypeDefinitionOffsets, CalculateTypeDefinitionOffsets>();
 		services.AddScoped<TypeDefinitionDisplay, TypeDefinitionDisplay>();

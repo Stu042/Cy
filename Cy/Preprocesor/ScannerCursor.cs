@@ -70,19 +70,18 @@ public class ScannerCursor {
 	/// Get the string for this line.
 	/// </summary>
 	public string GetLineStr() {
-		int s = start;
-		int l = s;
-		while (source[s] != '\n' && s > 0) {
-			s--;
-			l++;
+		int beginning = start;
+		int end = start;
+		while (source[beginning] != '\n' && beginning > 0) {
+			beginning--;
 		}
-		s++;
-		while (source[l] != '\n' && l < source.Length) {
-			l++;
+		if (source[beginning] == '\n') {
+			beginning++;
 		}
-		char[] res = new char[l];
-		Array.Copy(source, s, res, 0, l - s);
-		return new string(res);
+		while (source[end] != '\n' && source[end] != '\r' && end < source.Length) {
+			end++;
+		}
+		return new String(source.AsSpan(beginning, end - beginning));
 	}
 
 

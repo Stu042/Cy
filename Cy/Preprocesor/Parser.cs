@@ -364,10 +364,10 @@ public class Parser {
 		return expr;
 	}
 
-	/// <summary>Expression is a multiplication or division.</summary>
+	/// <summary>Expression is a multiplication, division or modulus.</summary>
 	Expr Multiplication() {
 		Expr expr = Unary();
-		while (_parserCursor.IsMatchAny(TokenType.SLASH, TokenType.STAR)) {
+		while (_parserCursor.IsMatchAny(TokenType.SLASH, TokenType.STAR, TokenType.PERCENT)) {
 			Token op = _parserCursor.Previous();
 			Expr right = Unary();
 			expr = new Expr.Binary(expr, op, right);

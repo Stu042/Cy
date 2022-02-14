@@ -16,6 +16,8 @@ public class TypeDefinition {
 	public List<TypeDefinition> Children;
 	/// <summary>Is symbol Public, Private or Protected.</summary>
 	public AccessModifier Modifier;
+	/// <summary>Type with no sizing information, i.e. int, float, void etc....</summary>
+	public BaseType BaseType;
 	/// <summary>Is this object a functional object.</summary>
 	public bool IsFunctional;
 	/// <summary>Size (in bytes) of type.</summary>
@@ -28,12 +30,13 @@ public class TypeDefinition {
 	public bool IsInstance { get { return InstanceName != null; } }
 
 
-	public TypeDefinition(string typeName, string instanceName, TypeDefinition parent, int size, AccessModifier accessModifier, bool isFunctional, Token[] tokens) {
+	public TypeDefinition(string typeName, string instanceName, TypeDefinition parent, int size, AccessModifier accessModifier, BaseType baseType, bool isFunctional, Token[] tokens) {
 		TypeName = typeName;
 		InstanceName = instanceName;
 		Parent = parent;
 		Children = new List<TypeDefinition>();
 		Modifier = accessModifier;
+		BaseType = baseType;
 		IsFunctional = isFunctional;
 		Tokens = tokens;
 		Size = size;

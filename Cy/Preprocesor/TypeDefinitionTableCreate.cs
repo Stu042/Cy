@@ -7,39 +7,39 @@ using System.Linq;
 namespace Cy.Preprocesor;
 
 /// <summary>Create the symbol table, given an AST.</summary>
-public class DefinitionTableCreate : IExprVisitor, IStmtVisitor {
+public class TypeDefinitionTableCreate : IExprVisitor, IStmtVisitor {
 
 	readonly CalculateTypeDefinitionSizes _calculateSymbolSizes;
 	readonly CalculateTypeDefinitionOffsets _calculateSymbolOffsets;
 	public class Options {
 		public bool InClassDefinition;
 	}
-	public DefinitionTable SymbolTable;
+	public TypeDefinitionTable SymbolTable;
 
 	static readonly string BUILTIN_FILENAME = "builtin";
 	static readonly int DEFAULT_INTSIZE = 4;
 	static readonly int DEFAULT_FLOATSIZE = 8;
 
 	readonly TypeDefinition[] standardTypes = new TypeDefinition[] {
-		new TypeDefinition("int", null, null, DEFAULT_INTSIZE, AccessModifier.Public, false, new Token[] { new Token(TokenType.INT, "int", null, 0,0,0, BUILTIN_FILENAME) }),
-		new TypeDefinition("int8", null, null, 1, AccessModifier.Public, false, new Token[] { new Token(TokenType.INT8, "int8", null, 0,0,0, BUILTIN_FILENAME) }),
-		new TypeDefinition("int16", null, null, 2, AccessModifier.Public, false, new Token[] { new Token(TokenType.INT16, "int16", null, 0,0,0, BUILTIN_FILENAME) }),
-		new TypeDefinition("int32", null, null, 4, AccessModifier.Public, false, new Token[] { new Token(TokenType.INT32, "int32", null, 0,0,0, BUILTIN_FILENAME) }),
-		new TypeDefinition("int64", null, null, 8, AccessModifier.Public, false, new Token[] { new Token(TokenType.INT64, "int64", null, 0,0,0, BUILTIN_FILENAME) }),
-		new TypeDefinition("int128", null, null, 16, AccessModifier.Public, false, new Token[] { new Token(TokenType.INT128, "int128", null, 0,0,0, BUILTIN_FILENAME) }),
-		new TypeDefinition("float", null, null, DEFAULT_FLOATSIZE, AccessModifier.Public, false, new Token[] { new Token(TokenType.FLOAT, "float", null, 0,0,0, BUILTIN_FILENAME) }),
-		new TypeDefinition("float16", null, null, 2, AccessModifier.Public, false, new Token[] { new Token(TokenType.FLOAT16, "float16", null, 0,0,0, BUILTIN_FILENAME) }),
-		new TypeDefinition("float32", null, null, 4, AccessModifier.Public, false, new Token[] { new Token(TokenType.FLOAT32, "float32", null, 0,0,0, BUILTIN_FILENAME) }),
-		new TypeDefinition("float64", null, null, 8, AccessModifier.Public, false, new Token[] { new Token(TokenType.FLOAT64, "float64", null, 0,0,0, BUILTIN_FILENAME) }),
-		new TypeDefinition("float128", null, null, 16, AccessModifier.Public, false, new Token[] { new Token(TokenType.FLOAT128, "float128", null, 0,0,0, BUILTIN_FILENAME) }),
-		new TypeDefinition("bool", null, null, 1, AccessModifier.Public, false, new Token[] { new Token(TokenType.BOOL, "bool", null, 0,0,0, BUILTIN_FILENAME) }),
-		new TypeDefinition("void", null, null, 0, AccessModifier.Public, false, new Token[] { new Token(TokenType.VOID, "void", null, 0,0,0, BUILTIN_FILENAME) })
+		new TypeDefinition("int", null, null, DEFAULT_INTSIZE, AccessModifier.Public, BaseType.INT, false, new Token[] { new Token(TokenType.INT, "int", null, 0,0,0, BUILTIN_FILENAME) }),
+		new TypeDefinition("int8", null, null, 1, AccessModifier.Public, BaseType.INT, false, new Token[] { new Token(TokenType.INT8, "int8", null, 0,0,0, BUILTIN_FILENAME) }),
+		new TypeDefinition("int16", null, null, 2, AccessModifier.Public, BaseType.INT, false, new Token[] { new Token(TokenType.INT16, "int16", null, 0,0,0, BUILTIN_FILENAME) }),
+		new TypeDefinition("int32", null, null, 4, AccessModifier.Public, BaseType.INT, false, new Token[] { new Token(TokenType.INT32, "int32", null, 0,0,0, BUILTIN_FILENAME) }),
+		new TypeDefinition("int64", null, null, 8, AccessModifier.Public, BaseType.INT, false, new Token[] { new Token(TokenType.INT64, "int64", null, 0,0,0, BUILTIN_FILENAME) }),
+		new TypeDefinition("int128", null, null, 16, AccessModifier.Public, BaseType.INT, false, new Token[] { new Token(TokenType.INT128, "int128", null, 0,0,0, BUILTIN_FILENAME) }),
+		new TypeDefinition("float", null, null, DEFAULT_FLOATSIZE, AccessModifier.Public, BaseType.FLOAT, false, new Token[] { new Token(TokenType.FLOAT, "float", null, 0,0,0, BUILTIN_FILENAME) }),
+		new TypeDefinition("float16", null, null, 2, AccessModifier.Public, BaseType.FLOAT, false, new Token[] { new Token(TokenType.FLOAT16, "float16", null, 0,0,0, BUILTIN_FILENAME) }),
+		new TypeDefinition("float32", null, null, 4, AccessModifier.Public, BaseType.FLOAT, false, new Token[] { new Token(TokenType.FLOAT32, "float32", null, 0,0,0, BUILTIN_FILENAME) }),
+		new TypeDefinition("float64", null, null, 8, AccessModifier.Public, BaseType.FLOAT, false, new Token[] { new Token(TokenType.FLOAT64, "float64", null, 0,0,0, BUILTIN_FILENAME) }),
+		new TypeDefinition("float128", null, null, 16, AccessModifier.Public, BaseType.FLOAT, false, new Token[] { new Token(TokenType.FLOAT128, "float128", null, 0,0,0, BUILTIN_FILENAME) }),
+		new TypeDefinition("bool", null, null, 1, AccessModifier.Public, BaseType.INT, false, new Token[] { new Token(TokenType.BOOL, "bool", null, 0,0,0, BUILTIN_FILENAME) }),
+		new TypeDefinition("void", null, null, 0, AccessModifier.Public, BaseType.VOID, false, new Token[] { new Token(TokenType.VOID, "void", null, 0,0,0, BUILTIN_FILENAME) })
 	};
 
-	public DefinitionTableCreate(CalculateTypeDefinitionSizes calculateSymbolSizes, CalculateTypeDefinitionOffsets calculateSymbolOffsets) {
+	public TypeDefinitionTableCreate(CalculateTypeDefinitionSizes calculateSymbolSizes, CalculateTypeDefinitionOffsets calculateSymbolOffsets) {
 		_calculateSymbolSizes = calculateSymbolSizes;
 		_calculateSymbolOffsets = calculateSymbolOffsets;
-		SymbolTable = new DefinitionTable();
+		SymbolTable = new TypeDefinitionTable();
 		PopulateStandardTypes();
 	}
 	void PopulateStandardTypes() {
@@ -49,7 +49,7 @@ public class DefinitionTableCreate : IExprVisitor, IStmtVisitor {
 		}
 	}
 
-	public DefinitionTable Parse(List<List<Stmt>> toplevel) {
+	public TypeDefinitionTable Parse(List<List<Stmt>> toplevel) {
 		foreach (var stmt in toplevel) {
 			foreach (var section in stmt) {
 				section.Accept(this, null);
@@ -61,7 +61,7 @@ public class DefinitionTableCreate : IExprVisitor, IStmtVisitor {
 	}
 
 	TypeDefinition AddSymbolDefinition(string sourceName, string instanceName, AccessModifier accessModifier, bool isFunctional, Token[] tokens) {
-		var typeDef = new TypeDefinition(sourceName, instanceName, SymbolTable.Global, -1, accessModifier, isFunctional, tokens);
+		var typeDef = new TypeDefinition(sourceName, instanceName, SymbolTable.Global, -1, accessModifier, BaseType.VOID, isFunctional, tokens);
 		SymbolTable.Global.Children.Add(typeDef);
 		return typeDef;
 	}
@@ -165,9 +165,9 @@ public class DefinitionTableCreate : IExprVisitor, IStmtVisitor {
 			AddSymbolDefinition(typeTokens[0].lexeme, stmt.token.lexeme, AccessModifier.Public, false, typeTokens);
 		}
 		//else {
-			//var tokLexemes = typeTokens.Select(tok => tok.lexeme);
-			//var lexeme = string.Join(".", tokLexemes);
-			//AddSymbolDefinition(lexeme, stmt.token.lexeme, AccessModifier.Public, false, typeTokens);
+		//var tokLexemes = typeTokens.Select(tok => tok.lexeme);
+		//var lexeme = string.Join(".", tokLexemes);
+		//AddSymbolDefinition(lexeme, stmt.token.lexeme, AccessModifier.Public, false, typeTokens);
 		//}
 		if (stmt.initialiser != null) {
 			stmt.initialiser.Accept(this);
@@ -209,7 +209,7 @@ public class DefinitionTableCreate : IExprVisitor, IStmtVisitor {
 
 
 public class CalculateTypeDefinitionSizes {
-	public void SetSizes(DefinitionTable symbolTable) {
+	public void SetSizes(TypeDefinitionTable symbolTable) {
 		while (!CheckAllSizesSet(symbolTable.Global)) {
 			CalcSizes(symbolTable.Global);
 		}
@@ -269,7 +269,7 @@ public class CalculateTypeDefinitionSizes {
 }
 
 public class CalculateTypeDefinitionOffsets {
-	public void CalculateOffsets(DefinitionTable symbolTable) {
+	public void CalculateOffsets(TypeDefinitionTable symbolTable) {
 		foreach (var child in symbolTable.Global.Children) {
 			CalcChildOffsets(child);
 		}
@@ -277,7 +277,7 @@ public class CalculateTypeDefinitionOffsets {
 
 	void CalcChildOffsets(TypeDefinition symbol) {
 		int offset = 0;
-		foreach(var child in symbol.Children) {
+		foreach (var child in symbol.Children) {
 			if (child.IsMember) {
 				child.Offset = offset;
 				offset += child.Size;

@@ -1,7 +1,8 @@
-﻿using System;
+﻿
+using System;
 
 
-namespace Cy.Preprocesor;
+namespace Cy.TokenGenerator;
 
 public class ScannerCursor {
 	char[] source;
@@ -81,7 +82,7 @@ public class ScannerCursor {
 		while (source[end] != '\n' && source[end] != '\r' && end < source.Length) {
 			end++;
 		}
-		return new String(source.AsSpan(beginning, end - beginning));
+		return new string(source.AsSpan(beginning, end - beginning));
 	}
 
 

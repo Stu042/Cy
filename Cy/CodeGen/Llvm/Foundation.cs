@@ -1,6 +1,6 @@
 ﻿using Cy.Setup;
+using Cy.Utils;
 
-using System.Diagnostics;
 using System.IO;
 using System.Text;
 
@@ -18,13 +18,13 @@ public class Foundation {
 		using (StreamWriter sw = File.CreateText(cfilename)) {
 			sw.WriteLine(string.Empty);
 		}
-		RunCmd(_config.ClangExe, $"{cfilename} -S -emit-llvm");
+		Command.Run(_config.ClangExe, $"{cfilename} -S -emit-llvm");
 		fullPreCodeSections = File.ReadAllLines(llfileName);
 		for (var idx = 0; idx < fullPreCodeSections.Length; idx++) {
 			fullPreCodeSections[idx] = fullPreCodeSections[idx].Replace(cfilename, _config.Input[0]);
 		}
-		RunCmd("cmd.exe", $" /C del /f {cfilename}");
-		RunCmd("cmd.exe", $" /C del /f {llfileName}");
+		Command.Run("cmd.exe", $" /C del /f {cfilename}");
+		Command.Run("cmd.exe", $" /C del /f {llfileName}");
 	}
 
 	public string GetPreLLVMCode() {
@@ -49,19 +49,6 @@ public class Foundation {
 			"!1 = !{i32 7, !\"PIC Level\", i32 2}\n" +
 			"!2 = !{!\"cy version " + _config.Version + "\"}\n\n" +
 			"attributes #0 = { noinline nounwind optnone uwtable \"correctly-rounded-divide-sqrt-fp-math\"=\"false\" \"disable-tail-calls\"=\"false\" \"frame-pointer\"=\"none\" \"less-precise-fpmad\"=\"false\" \"min-legal-vector-width\"=\"0\" \"no-infs-fp-math\"=\"false\" \"no-jump-tables\"=\"false\" \"no-nans-fp-math\"=\"false\" \"no-signed-zeros-fp-math\"=\"false\" \"no-trapping-math\"=\"false\" \"stack-protector-buffer-size\"=\"8\" \"target-cpu\"=\"x86-64\" \"target-features\"=\"+cx8,+fxsr,+mmx,+sse,+sse2,+x87\" \"unsafe-fp-math\"=\"false\" \"use-soft-float\"=\"false\" }\n";
-	}
-
-
-	void RunCmd(string command, string args) {
-		var process = new Process {
-			StartInfo = new ProcessStartInfo {
-				WindowStyle = ProcessWindowStyle.Hidden,
-				FileName = command,
-				Arguments = args
-			}
-		};
-		process.Start();
-		process.WaitForExit();
 	}
 
 	string FindSection(string needle) {

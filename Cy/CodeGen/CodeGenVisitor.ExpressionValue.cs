@@ -53,6 +53,7 @@ public partial class CodeGenVisitor {
 									var total = (int)left.Value + (string)right.Value;
 									return total;
 								}
+							case BaseType.VOID:
 							case BaseType.UNKNOWN:
 							default:
 								// error
@@ -73,6 +74,7 @@ public partial class CodeGenVisitor {
 									var total = (double)left.Value + (string)right.Value;
 									return total;
 								}
+							case BaseType.VOID:
 							case BaseType.UNKNOWN:
 							default:
 								// error
@@ -93,6 +95,7 @@ public partial class CodeGenVisitor {
 									var total = (string)left.Value + (string)right.Value;
 									return total;
 								}
+							case BaseType.VOID:
 							case BaseType.UNKNOWN:
 							default:
 								// error
@@ -123,6 +126,7 @@ public partial class CodeGenVisitor {
 							case BaseType.STRING:
 								// error
 								break;
+							case BaseType.VOID:
 							case BaseType.UNKNOWN:
 							default:
 								// error
@@ -142,12 +146,14 @@ public partial class CodeGenVisitor {
 							case BaseType.STRING:
 								// error
 								break;
+							case BaseType.VOID:
 							case BaseType.UNKNOWN:
 							default:
 								// error
 								break;
 						}
 						break;
+					case BaseType.VOID:
 					case BaseType.STRING:
 						// error
 						break;
@@ -173,6 +179,7 @@ public partial class CodeGenVisitor {
 							case BaseType.STRING:
 								// error
 								break;
+							case BaseType.VOID:
 							case BaseType.UNKNOWN:
 							default:
 								// error
@@ -190,12 +197,14 @@ public partial class CodeGenVisitor {
 							case BaseType.STRING:
 								// error
 								break;
+							case BaseType.VOID:
 							case BaseType.UNKNOWN:
 							default:
 								// error
 								break;
 						}
 						break;
+					case BaseType.VOID:
 					case BaseType.STRING:
 						// error
 						break;
@@ -221,6 +230,7 @@ public partial class CodeGenVisitor {
 							case BaseType.STRING:
 								// error
 								break;
+							case BaseType.VOID:
 							case BaseType.UNKNOWN:
 							default:
 								// error
@@ -238,12 +248,14 @@ public partial class CodeGenVisitor {
 							case BaseType.STRING:
 								// error
 								break;
+							case BaseType.VOID:
 							case BaseType.UNKNOWN:
 							default:
 								// error
 								break;
 						}
 						break;
+					case BaseType.VOID:
 					case BaseType.STRING:
 						// error
 						break;
@@ -269,6 +281,7 @@ public partial class CodeGenVisitor {
 							case BaseType.STRING:
 								// error
 								break;
+							case BaseType.VOID:
 							case BaseType.UNKNOWN:
 							default:
 								// error
@@ -286,12 +299,14 @@ public partial class CodeGenVisitor {
 							case BaseType.STRING:
 								// error
 								break;
+							case BaseType.VOID:
 							case BaseType.UNKNOWN:
 							default:
 								// error
 								break;
 						}
 						break;
+					case BaseType.VOID:
 					case BaseType.STRING:
 						// error
 						break;
@@ -325,6 +340,7 @@ public partial class CodeGenVisitor {
 								Value = intValue.ToString(),
 								ValueType = BaseType.STRING
 							};
+						case BaseType.VOID:
 						case BaseType.UNKNOWN:
 						default:
 							// error
@@ -339,7 +355,7 @@ public partial class CodeGenVisitor {
 								IsLiteral = true,
 								TextValue = ((int)floatValue).ToString(),
 								Value = (int)floatValue,
-								ValueType = BaseType.FLOAT
+								ValueType = BaseType.INT
 							};
 						case BaseType.FLOAT:
 							return value;
@@ -350,12 +366,14 @@ public partial class CodeGenVisitor {
 								Value = floatValue.ToString(),
 								ValueType = BaseType.STRING
 							};
+						case BaseType.VOID:
 						case BaseType.UNKNOWN:
 						default:
 							// error
 							break;
 					}
 					break;
+				case BaseType.VOID:
 				case BaseType.STRING:
 					// error
 					break;

@@ -1,6 +1,7 @@
-﻿using System;
+﻿
+using System;
 
-namespace Cy.Preprocesor;
+namespace Cy.TokenGenerator;
 
 public class Token {
 	public TokenType tokenType; // type of token
@@ -81,8 +82,8 @@ public class Token {
 			TokenType.INT128 or TokenType.FLOAT or TokenType.FLOAT16 or TokenType.FLOAT32 or TokenType.FLOAT64
 			or TokenType.FLOAT128 or TokenType.BOOL => true,
 			_ => false,
-};
-}
+		};
+	}
 
 	public string ToFormattedString() {
 		string lexemeStr = lexeme;

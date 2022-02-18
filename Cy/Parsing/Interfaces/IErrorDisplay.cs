@@ -1,4 +1,6 @@
-﻿namespace Cy.Preprocesor.Interfaces;
+﻿using Cy.TokenGenerator;
+
+namespace Cy.Parsing.Interfaces;
 
 public interface IErrorDisplay {
 	public void Error(string filename, int line, int offset, string lineText, string message);

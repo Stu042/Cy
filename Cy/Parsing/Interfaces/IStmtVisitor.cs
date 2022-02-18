@@ -1,4 +1,6 @@
-﻿namespace Cy.Preprocesor.Interfaces;
+﻿using Cy.Parsing;
+
+namespace Cy.Parsing.Interfaces;
 
 public interface IStmtVisitor {
 	/// <summary>A group of statements, i.e. multiple lines of code.</summary>

@@ -2,8 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-using Cy.Preprocesor;
-using Cy.Preprocesor.Interfaces;
+using Cy.Parsing;
+using Cy.Parsing.Interfaces;
+using Cy.TokenGenerator;
 
 using FluentAssertions;
 

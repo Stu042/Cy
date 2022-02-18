@@ -4,7 +4,7 @@
 namespace Cy.Setup;
 
 public class CommandLineCommands {
-	// -STAv -o temp.c -i test.cy
+	// example command to use for debuging: -STAvr -o temp.c -i test.cy
 	public void Cy(
 		[Option('i', Description = "Input files to compile.")] string[] input,
 		[Option('A', Description = "Display parser generated ASTs.")] bool ast = false,

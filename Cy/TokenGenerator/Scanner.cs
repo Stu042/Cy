@@ -1,10 +1,10 @@
-﻿using Cy.Preprocesor.Interfaces;
+﻿using Cy.Parsing.Interfaces;
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Cy.Preprocesor;
+namespace Cy.TokenGenerator;
 
 
 // Write tokens to console

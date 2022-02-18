@@ -1,4 +1,4 @@
-﻿namespace Cy.Preprocesor.Interfaces;
+﻿namespace Cy.Parsing.Interfaces;
 
 public interface IExprVisitor {
 	/// <summary>Deal with brackets, i.e. (x+y).</summary>

@@ -1,2 +1,4 @@
 int Main():
-	return 2.1 * 7 + 3
+	int a = 5
+	return a * 7
+

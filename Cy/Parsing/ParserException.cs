@@ -1,7 +1,8 @@
-﻿
+﻿using Cy.TokenGenerator;
+
 using System;
 
-namespace Cy.Preprocesor;
+namespace Cy.Parsing;
 class ParserException : Exception {
 	public Token token;
 

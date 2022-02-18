@@ -1,12 +1,13 @@
-﻿using Cy.Preprocesor.Interfaces;
+﻿using Cy.Parsing.Interfaces;
 using Cy.Setup;
+using Cy.TokenGenerator;
 
 using System;
 using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace Cy.Preprocesor;
+namespace Cy.Utils;
 public class ErrorDisplay : IErrorDisplay {
 	readonly Config _config;
 
@@ -52,7 +53,7 @@ public class ErrorDisplay : IErrorDisplay {
 		var output = new StringBuilder(offset + infoText.Length);
 		var firstPart = errorText[..offset];
 		var tabcount = firstPart.Count(c => c == '\t');
-		output.Append(new string('-', tabcount * tabSize - tabcount + (offset-1) + infoText.Length));
+		output.Append(new string('-', tabcount * tabSize - tabcount + (offset - 1) + infoText.Length));
 		output.Append('^');
 		return output.ToString();
 	}

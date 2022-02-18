@@ -1,5 +1,6 @@
-﻿using Cy.Preprocesor;
+﻿using Cy.Parsing;
 using Cy.Setup;
+using Cy.Types;
 
 using System.Collections.Generic;
 using System.IO;
@@ -31,7 +32,8 @@ public class GenIr {
 	public string GenerateLlvmIr(List<List<Stmt>> toplevel, TypeDefinitionTable definitionTable) {
 		var llvmTypes = new LlvmTypes(definitionTable);
 		preCode.Append(_foundation.GetPreLLVMCode());
-		code.Append(_codeGenVisitor.Run(toplevel, llvmTypes));
+		var generatedCode = _codeGenVisitor.Run(toplevel, llvmTypes);
+		code.Append(generatedCode);
 		postCode.Append(_foundation.GetPostLLVMCode());
 		preCode.Append(code);
 		preCode.Append(postCode);

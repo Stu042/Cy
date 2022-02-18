@@ -1,5 +1,7 @@
 ﻿using Cy.CodeGen;
-using Cy.Preprocesor;
+using Cy.Parsing;
+using Cy.TokenGenerator;
+using Cy.Types;
 
 using System;
 using System.Collections.Generic;
@@ -28,8 +30,8 @@ public class CyCompiler {
 	public int Compile() {
 		var allFilesTokens = ScanFiles();
 		var allFilesStmts = ParseTokens(allFilesTokens);
-		var symbolTable = MapSymbols(allFilesStmts);
-		var code = _compiler.GenerateLlvmIr(allFilesStmts, symbolTable);
+		var typeTable = MapTypes(allFilesStmts);
+		var code = _compiler.GenerateLlvmIr(allFilesStmts, typeTable);
 		if (_config.DisplayIr) {
 			Console.WriteLine("\nIR:\n" + code);
 		}
@@ -65,7 +67,7 @@ public class CyCompiler {
 		return allFilesStmts;
 	}
 
-	TypeDefinitionTable MapSymbols(List<List<Stmt>> allFilesStmts) {
+	TypeDefinitionTable MapTypes(List<List<Stmt>> allFilesStmts) {
 		var typeTable = _createSymbolTable.Parse(allFilesStmts);
 		if (_config.DisplayPreCompileSymbols) {
 			_displaySymbolTable.DisplayTable(typeTable);

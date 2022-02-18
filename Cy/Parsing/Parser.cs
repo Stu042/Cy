@@ -1,9 +1,10 @@
-﻿using Cy.Preprocesor.Interfaces;
+﻿using Cy.Parsing.Interfaces;
+using Cy.TokenGenerator;
 
 using System.Collections.Generic;
 
 
-namespace Cy.Preprocesor;
+namespace Cy.Parsing;
 
 public class Parser {
 	readonly IErrorDisplay _display;

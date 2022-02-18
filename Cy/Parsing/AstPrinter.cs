@@ -1,11 +1,12 @@
-﻿using Cy.Preprocesor.Interfaces;
+﻿using Cy.Parsing.Interfaces;
+using Cy.TokenGenerator;
 
 using System;
 using System.Collections.Generic;
 using System.Text;
 
 
-namespace Cy.Preprocesor;
+namespace Cy.Parsing;
 
 public static class Asts {
 	public static void Display(List<List<Stmt>> allFilesStmts) {

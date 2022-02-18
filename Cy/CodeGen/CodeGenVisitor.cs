@@ -1,6 +1,7 @@
 ﻿using Cy.Enums;
-using Cy.Preprocesor;
-using Cy.Preprocesor.Interfaces;
+using Cy.Parsing;
+using Cy.Parsing.Interfaces;
+using Cy.TokenGenerator;
 
 using System;
 using System.Collections.Generic;
@@ -12,13 +13,13 @@ namespace Cy.CodeGen;
 
 public partial class CodeGenVisitor : IExprVisitor, IStmtVisitor {
 	public string Run(List<List<Stmt>> toplevel, LlvmTypes llvmTypes) {
-		var text = new List<string>();
+		var opts = new Options(llvmTypes);
 		foreach (var stmt in toplevel) {
 			foreach (var section in stmt) {
-				text.Add((string)section.Accept(this, new Options(llvmTypes)));
+				section.Accept(this, opts);
 			}
 		}
-		return String.Join('\n', text);
+		return opts.Code.Code();
 	}
 
 
@@ -27,7 +28,6 @@ public partial class CodeGenVisitor : IExprVisitor, IStmtVisitor {
 	}
 
 	public object VisitBinaryExpr(Expr.Binary expr, object options) {
-		var opts = Options.GetOptions(options);
 		var left = (ExpressionValue)expr.left.Accept(this, options);
 		var right = (ExpressionValue)expr.right.Accept(this, options);
 		var value = expr.token.tokenType switch {
@@ -68,21 +68,23 @@ public partial class CodeGenVisitor : IExprVisitor, IStmtVisitor {
 
 	public object VisitFunctionStmt(Stmt.Function stmt, object options) {
 		var opts = Options.GetOptions(options);
+		opts.Code.NewFunction();
 		var returnType = opts.TypesToLlvm.GetType(stmt.returnType.info);
 		opts.ReturnType.Push(returnType);
-		var bob = new StringBuilder(opts.Tabs + "define dso_local " + returnType.LlvmTypeName + " @" + stmt.token.lexeme + "() #0 {\n");
-		opts.IncTab();
+		opts.Code.Allocate(opts.Tab.Show + "define dso_local " + returnType.LlvmTypeName + " @" + stmt.token.lexeme + "() #0 {");
+		opts.Tab.Inc();
 		foreach (var body in stmt.body) {
-			var line = body.Accept(this, opts);
-			bob.Append(line);
+			var line = (string)body.Accept(this, opts);
+			opts.Code.Build(line);
 		}
 		var poppedType = opts.ReturnType.Pop();
-		opts.DecTab();
+		opts.Tab.Dec();
 		if (poppedType != returnType) {
 			// error, wrong type
 		}
-		bob.AppendLine("}");
-		return bob.ToString();
+		opts.Code.Build("}");
+		opts.Code.EndFunction();
+		return opts;
 	}
 
 	public object VisitGetExpr(Expr.Get obj, object options) {
@@ -102,7 +104,6 @@ public partial class CodeGenVisitor : IExprVisitor, IStmtVisitor {
 	}
 
 	public object VisitLiteralExpr(Expr.Literal expr, object options) {
-		var opts = Options.GetOptions(options);
 		return new ExpressionValue {
 			TextValue = expr.token.tokenType switch {
 				TokenType.INT_LITERAL or TokenType.FLOAT_LITERAL => expr.value.ToString(),
@@ -124,7 +125,8 @@ public partial class CodeGenVisitor : IExprVisitor, IStmtVisitor {
 		var opts = Options.GetOptions(options);
 		var expressionValue = (ExpressionValue)stmt.value.Accept(this, opts);
 		expressionValue = ExpressionValue.CastLiteral(expressionValue, opts.ReturnType.Peek().TypeDef.BaseType);
-		return $"{opts.Tabs}ret {opts.ReturnType.Peek().LlvmTypeName} {expressionValue.TextValue}\n";
+		opts.Code.Build($"{opts.Tab.Show}ret {opts.ReturnType.Peek().LlvmTypeName} {expressionValue.TextValue}");
+		return opts;
 	}
 
 	public object VisitSetExpr(Expr.Set expr, object options) {
@@ -132,7 +134,9 @@ public partial class CodeGenVisitor : IExprVisitor, IStmtVisitor {
 	}
 
 	public object VisitTypeStmt(Stmt.StmtType stmt, object options) {
-		throw new NotImplementedException();
+		var opts = Options.GetOptions(options);
+		var llvmType = opts.TypesToLlvm.GetType(stmt.info);
+		return llvmType;
 	}
 
 	public object VisitUnaryExpr(Expr.Unary expr, object options) {
@@ -140,10 +144,15 @@ public partial class CodeGenVisitor : IExprVisitor, IStmtVisitor {
 	}
 
 	public object VisitVariableExpr(Expr.Variable var, object options) {
+
 		throw new NotImplementedException();
 	}
 
 	public object VisitVarStmt(Stmt.Var stmt, object options) {
+		var opts = Options.GetOptions(options);
+		var stmtType = (LlvmType)stmt.stmtType.Accept(this, options);
+		var exprValue = (ExpressionValue)stmt.initialiser.Accept(this, options);
+		// create new instance of type stmtType equal to exprValue
 		throw new NotImplementedException();
 	}
 

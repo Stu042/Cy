@@ -3,7 +3,7 @@
 using System;
 using System.Text;
 
-namespace Cy.Preprocesor;
+namespace Cy.Types;
 
 /// <summary>Write TypeDefinitionTable to console.</summary>
 public class TypeDefinitionDisplay {

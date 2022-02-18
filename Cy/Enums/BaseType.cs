@@ -5,5 +5,7 @@ public enum BaseType {
 	INT,
 	FLOAT,
 	STRING,
-	VOID
+	VOID,
+	OBJECT,
+	FUNCTION
 }

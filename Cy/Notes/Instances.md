@@ -19,9 +19,15 @@ Scopped, when we leave a scope all instances belonging to that scope are removed
 		* Size in bytes
 		* Size in bits
 		* Base of this type, no sizing information
+		* Is a pointer
 		* Tokens defining this type, if any
 		* Offset in this scope, used for members of objects
 		* Access modifier, public, private, etc
 		* Parent type (all types are linked)
 		* Child types
 
+## LLVMIR Code Generation
+
+During code generation we need to be able to allocate space for an instance and access this instance llvm name, range and size based on the source code name.
+
+To do this we need to get the TypeDefinition of an instance declared in source and remember the instance assigned to this. This will give enough information to alocate instance and to be able to use the instance in future.

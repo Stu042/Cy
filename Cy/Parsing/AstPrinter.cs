@@ -9,20 +9,20 @@ using System.Text;
 namespace Cy.Parsing;
 
 public static class Asts {
-	public static void Display(List<List<Stmt>> allFilesStmts) {
+	public static void Display(Stmt[][] allFilesStmts) {
 		new AstPrinter().DisplayAllAsts(allFilesStmts);
 	}
 
 	protected class AstPrinter : IExprVisitor, IStmtVisitor {
 
-		public void DisplayAllAsts(List<List<Stmt>> allFilesStmts) {
+		public void DisplayAllAsts(Stmt[][] allFilesStmts) {
 			Console.WriteLine("\nAST:");
 			foreach (var stmts in allFilesStmts) {
 				DisplayAsts(stmts);
 			}
 		}
 
-		public void DisplayAsts(List<Stmt> stmts) {
+		public void DisplayAsts(Stmt[] stmts) {
 			foreach (var stmt in stmts) {
 				Console.WriteLine(GetString(stmt));
 			}

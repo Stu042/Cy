@@ -8,10 +8,11 @@ public class TypeDefinitionTable {
 	public TypeDefinition Global;
 
 	public TypeDefinitionTable() {
-		Global = new TypeDefinition("", null, null, -1, AccessModifier.Public, BaseType.VOID, null);
+		Global = new TypeDefinition("", null, null, -1, -1, AccessModifier.Public, BaseType.VOID, null);
 	}
-	public TypeDefinition LookTypeUp(string typeName, string currentTypeName) {
-		var currentType = Global.LookUpTypeHere(currentTypeName);
-		return currentType.LookUpType(typeName);
+	public TypeDefinition LookTypeUp(string typeName/*, string currentTypeName*/) {
+		//var currentType = Global.LookUpTypeHere(currentTypeName);
+		//return currentType.LookUpType(typeName);
+		return Global.LookUpType(typeName);
 	}
 }

@@ -15,7 +15,7 @@ public class Parser {
 		_display = display;
 	}
 
-	public List<Stmt> Parse(List<Token> tokens) {
+	public Stmt[] Parse(Token[] tokens) {
 		_parserCursor.Init(tokens);
 		var statements = new List<Stmt>();
 		while (!_parserCursor.IsAtEnd()) {
@@ -29,7 +29,7 @@ public class Parser {
 				Synchronise();
 			}
 		}
-		return statements;
+		return statements.ToArray();
 	}
 
 	// <summary>Check for class definitions, function definition - including constructors and destructors and variable declaration.</summary>

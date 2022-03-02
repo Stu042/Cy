@@ -23,19 +23,19 @@ public class TypeDefinitionTableCreate : IExprVisitor, IStmtVisitor {
 	static readonly int DEFAULT_FLOATSIZE = 8;
 
 	readonly TypeDefinition[] standardTypes = new TypeDefinition[] {
-		new TypeDefinition("int", null, null, DEFAULT_INTSIZE, AccessModifier.Public, BaseType.INT, new Token[] { new Token(TokenType.INT, "int", null, 0,0,0, BUILTIN_FILENAME) }),
-		new TypeDefinition("int8", null, null, 1, AccessModifier.Public, BaseType.INT, new Token[] { new Token(TokenType.INT8, "int8", null, 0,0,0, BUILTIN_FILENAME) }),
-		new TypeDefinition("int16", null, null, 2, AccessModifier.Public, BaseType.INT, new Token[] { new Token(TokenType.INT16, "int16", null, 0,0,0, BUILTIN_FILENAME) }),
-		new TypeDefinition("int32", null, null, 4, AccessModifier.Public, BaseType.INT, new Token[] { new Token(TokenType.INT32, "int32", null, 0,0,0, BUILTIN_FILENAME) }),
-		new TypeDefinition("int64", null, null, 8, AccessModifier.Public, BaseType.INT, new Token[] { new Token(TokenType.INT64, "int64", null, 0,0,0, BUILTIN_FILENAME) }),
-		new TypeDefinition("int128", null, null, 16, AccessModifier.Public, BaseType.INT, new Token[] { new Token(TokenType.INT128, "int128", null, 0,0,0, BUILTIN_FILENAME) }),
-		new TypeDefinition("float", null, null, DEFAULT_FLOATSIZE, AccessModifier.Public, BaseType.FLOAT, new Token[] { new Token(TokenType.FLOAT, "float", null, 0,0,0, BUILTIN_FILENAME) }),
-		new TypeDefinition("float16", null, null, 2, AccessModifier.Public, BaseType.FLOAT, new Token[] { new Token(TokenType.FLOAT16, "float16", null, 0,0,0, BUILTIN_FILENAME) }),
-		new TypeDefinition("float32", null, null, 4, AccessModifier.Public, BaseType.FLOAT, new Token[] { new Token(TokenType.FLOAT32, "float32", null, 0,0,0, BUILTIN_FILENAME) }),
-		new TypeDefinition("float64", null, null, 8, AccessModifier.Public, BaseType.FLOAT, new Token[] { new Token(TokenType.FLOAT64, "float64", null, 0,0,0, BUILTIN_FILENAME) }),
-		new TypeDefinition("float128", null, null, 16, AccessModifier.Public, BaseType.FLOAT, new Token[] { new Token(TokenType.FLOAT128, "float128", null, 0,0,0, BUILTIN_FILENAME) }),
-		new TypeDefinition("bool", null, null, 1, AccessModifier.Public, BaseType.INT, new Token[] { new Token(TokenType.BOOL, "bool", null, 0,0,0, BUILTIN_FILENAME) }),
-		new TypeDefinition("void", null, null, 0, AccessModifier.Public, BaseType.VOID, new Token[] { new Token(TokenType.VOID, "void", null, 0,0,0, BUILTIN_FILENAME) })
+		new TypeDefinition("int", null, null, DEFAULT_INTSIZE * 8, DEFAULT_INTSIZE, AccessModifier.Public, BaseType.INT, new Token[] { new Token(TokenType.INT, "int", null, 0,0,0, BUILTIN_FILENAME) }),
+		new TypeDefinition("int8", null, null, 8, 1, AccessModifier.Public, BaseType.INT, new Token[] { new Token(TokenType.INT8, "int8", null, 0,0,0, BUILTIN_FILENAME) }),
+		new TypeDefinition("int16", null, null, 16, 2, AccessModifier.Public, BaseType.INT, new Token[] { new Token(TokenType.INT16, "int16", null, 0,0,0, BUILTIN_FILENAME) }),
+		new TypeDefinition("int32", null, null, 32, 4, AccessModifier.Public, BaseType.INT, new Token[] { new Token(TokenType.INT32, "int32", null, 0,0,0, BUILTIN_FILENAME) }),
+		new TypeDefinition("int64", null, null, 64, 8, AccessModifier.Public, BaseType.INT, new Token[] { new Token(TokenType.INT64, "int64", null, 0,0,0, BUILTIN_FILENAME) }),
+		new TypeDefinition("int128", null, null, 128, 16, AccessModifier.Public, BaseType.INT, new Token[] { new Token(TokenType.INT128, "int128", null, 0,0,0, BUILTIN_FILENAME) }),
+		new TypeDefinition("float", null, null, DEFAULT_FLOATSIZE * 8, DEFAULT_FLOATSIZE, AccessModifier.Public, BaseType.FLOAT, new Token[] { new Token(TokenType.FLOAT, "float", null, 0,0,0, BUILTIN_FILENAME) }),
+		new TypeDefinition("float16", null, null, 16, 2, AccessModifier.Public, BaseType.FLOAT, new Token[] { new Token(TokenType.FLOAT16, "float16", null, 0,0,0, BUILTIN_FILENAME) }),
+		new TypeDefinition("float32", null, null, 32, 4, AccessModifier.Public, BaseType.FLOAT, new Token[] { new Token(TokenType.FLOAT32, "float32", null, 0,0,0, BUILTIN_FILENAME) }),
+		new TypeDefinition("float64", null, null, 64, 8, AccessModifier.Public, BaseType.FLOAT, new Token[] { new Token(TokenType.FLOAT64, "float64", null, 0,0,0, BUILTIN_FILENAME) }),
+		new TypeDefinition("float128", null, null, 128, 16, AccessModifier.Public, BaseType.FLOAT, new Token[] { new Token(TokenType.FLOAT128, "float128", null, 0,0,0, BUILTIN_FILENAME) }),
+		new TypeDefinition("bool", null, null, 1, 1, AccessModifier.Public, BaseType.INT, new Token[] { new Token(TokenType.BOOL, "bool", null, 0,0,0, BUILTIN_FILENAME) }),
+		new TypeDefinition("void", null, null, 0, 0, AccessModifier.Public, BaseType.VOID, new Token[] { new Token(TokenType.VOID, "void", null, 0,0,0, BUILTIN_FILENAME) })
 	};
 
 	public TypeDefinitionTableCreate(CalculateTypeDefinitionSizes calculateSymbolSizes, CalculateTypeDefinitionOffsets calculateSymbolOffsets) {
@@ -51,7 +51,7 @@ public class TypeDefinitionTableCreate : IExprVisitor, IStmtVisitor {
 		}
 	}
 
-	public TypeDefinitionTable Parse(List<List<Stmt>> toplevel) {
+	public TypeDefinitionTable Parse(Stmt[][] toplevel) {
 		foreach (var stmt in toplevel) {
 			foreach (var section in stmt) {
 				section.Accept(this, null);
@@ -63,7 +63,7 @@ public class TypeDefinitionTableCreate : IExprVisitor, IStmtVisitor {
 	}
 
 	TypeDefinition AddTypeDefinition(string sourceName, string functionName, AccessModifier accessModifier, Token[] tokens) {
-		var typeDef = new TypeDefinition(sourceName, functionName, SymbolTable.Global, -1, accessModifier, BaseType.VOID, tokens);
+		var typeDef = new TypeDefinition(sourceName, functionName, SymbolTable.Global, -1, -1, accessModifier, BaseType.VOID, tokens);
 		SymbolTable.Global.Children.Add(typeDef);
 		return typeDef;
 	}
@@ -219,10 +219,10 @@ public class CalculateTypeDefinitionSizes {
 
 	void CalcSizes(TypeDefinition symbol) {    // repeat until all set...
 		foreach (var child in symbol.Children) {
-			if (child.Size == -1) {
+			if (child.ByteSize == -1) {
 				if (child.Children.Count > 0) {
 					var total = CalcSize(child);
-					child.Size = total;
+					child.ByteSize = total;
 				} else {
 					SetSize(child);
 				}
@@ -231,24 +231,24 @@ public class CalculateTypeDefinitionSizes {
 	}
 	int CalcSize(TypeDefinition symbol) {    // repeat until all set...
 		foreach (var child in symbol.Children) {
-			child.Size = SetSize(child);
+			child.ByteSize = SetSize(child);
 		}
 		var size = TotalOfChildSizes(symbol);
 		return size;
 	}
 	int SetSize(TypeDefinition symbol) {
-		if (symbol.Size == -1) {
+		if (symbol.ByteSize == -1) {
 			var names = symbol.Tokens.Select(tok => tok.lexeme);
 			var name = string.Join('.', names);
 			var type = symbol.LookUpType(name);
-			symbol.Size = type.Size;
-			return type.Size;
+			symbol.ByteSize = type.ByteSize;
+			return type.ByteSize;
 		}
 		return -1;
 	}
 
 	bool CheckAllSizesSet(TypeDefinition symbol) {
-		if (!ChildSizesSet(symbol) || symbol.TypeName != "" && symbol.Size == -1) {
+		if (!ChildSizesSet(symbol) || symbol.TypeName != "" && symbol.ByteSize == -1) {
 			return false;
 		}
 		foreach (var child in symbol.Children) {
@@ -260,11 +260,11 @@ public class CalculateTypeDefinitionSizes {
 	}
 
 	bool ChildSizesSet(TypeDefinition symbol, bool onlyMembers = false) {
-		return symbol.Children.All(child => child.Size >= 0 || !onlyMembers || onlyMembers && child.IsMember);
+		return symbol.Children.All(child => child.ByteSize >= 0 || !onlyMembers || onlyMembers && child.IsMember);
 	}
 	int TotalOfChildSizes(TypeDefinition symbol, bool onlyMembers = true) {
 		if (ChildSizesSet(symbol, onlyMembers)) {
-			return symbol.Children.Sum(child => child.Size >= 0 && (onlyMembers && child.IsMember || !onlyMembers) ? child.Size : 0);
+			return symbol.Children.Sum(child => child.ByteSize >= 0 && (onlyMembers && child.IsMember || !onlyMembers) ? child.ByteSize : 0);
 		}
 		return -1;
 	}
@@ -282,7 +282,7 @@ public class CalculateTypeDefinitionOffsets {
 		foreach (var child in symbol.Children) {
 			if (child.IsMember) {
 				child.Offset = offset;
-				offset += child.Size;
+				offset += child.ByteSize;
 				CalcChildOffsets(child);
 			}
 		}

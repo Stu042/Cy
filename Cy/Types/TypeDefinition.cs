@@ -2,6 +2,7 @@
 using Cy.TokenGenerator;
 
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace Cy.Types;
 
@@ -20,9 +21,13 @@ public class TypeDefinition {
 	/// <summary>Type with no sizing information, i.e. int, float, void etc....</summary>
 	public BaseType BaseType;
 	/// <summary>Size (in bytes) of type.</summary>
-	public int Size;
+	public int ByteSize;
+	/// <summary>Size (in bits) of type.</summary>
+	public int BitSize;
 	/// <summary>Offset (in bytes) of type.</summary>
 	public int Offset;
+	/// <summary>Is this a pointer?</summary>
+	public bool IsPointer;
 	/// <summary>Token information.</summary>
 	public Token[] Tokens;
 	/// <summary>Is this a member/non functional object.</summary>
@@ -31,15 +36,17 @@ public class TypeDefinition {
 	public bool IsFunctional { get { return FunctionName != null; } }
 
 
-	public TypeDefinition(string typeName, string functionName, TypeDefinition parent, int size, AccessModifier accessModifier, BaseType baseType, Token[] tokens) {
+	public TypeDefinition(string typeName, string functionName, TypeDefinition parent, int bitSize, int byteSize, AccessModifier accessModifier, BaseType baseType, Token[] tokens, bool isPointer = false) {
 		TypeName = typeName;
 		FunctionName = functionName;
 		Parent = parent;
 		Children = new List<TypeDefinition>();
 		Modifier = accessModifier;
 		BaseType = baseType;
+		ByteSize = byteSize;
+		BitSize = bitSize;
 		Tokens = tokens;
-		Size = size;
+		IsPointer = isPointer;
 	}
 
 	public string FullyQualifiedName() {
@@ -81,8 +88,8 @@ public class TypeDefinition {
 	public string UiString() {
 		var isFunction = IsFunctional ? "()" : "";
 		if (IsFunctional) {
-			return $"{Modifier}, {TypeName} {FunctionName}{isFunction}, {Offset} {Size}";
+			return $"{Modifier}, {TypeName} {FunctionName}{isFunction}, {Offset} {ByteSize}";
 		}
-		return $"{Modifier}, {TypeName}, {Offset} {Size}";
+		return $"{Modifier}, {TypeName}, {Offset} {ByteSize}";
 	}
 }

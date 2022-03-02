@@ -1,6 +1,7 @@
-﻿using System.Linq;
+﻿using Cy.TokenGenerator;
+
 using System.Collections.Generic;
-using Cy.TokenGenerator;
+using System.Linq;
 
 namespace Cy.Parsing;
 
@@ -11,25 +12,25 @@ namespace Cy.Parsing;
 /// Peek - return token at position.</summary>
 public class ParserCursor {
 	public int Current { get; private set; }
-	List<Token> tokens;
+	Token[] tokens;
 
 
-	public void Init(List<Token> tokens) {
-		var toks = tokens.FindAll(token => token.tokenType != TokenType.IGNORED);
-		this.tokens = new List<Token>(toks.Count);
-		bool lastWasNewline = true;
-		foreach (Token token in toks) {
-			if (token.tokenType == TokenType.EOF && !lastWasNewline) {
-				this.tokens.Add(new Token(TokenType.NEWLINE));
-			}
-			if (token.tokenType != TokenType.NEWLINE) {
-				lastWasNewline = false;
-				this.tokens.Add(token);
-			} else if (!lastWasNewline) {
-				lastWasNewline = true;
-				this.tokens.Add(token);
-			}
-		}
+	public void Init(IList<Token> tokens) {
+		this.tokens = tokens.Where(token => token.tokenType != TokenType.IGNORED).ToArray();
+		//this.tokens = new Token[toks.Count()];
+		//bool lastWasNewline = true;
+		//foreach (Token token in toks) {
+		//	if (token.tokenType == TokenType.EOF && !lastWasNewline) {
+		//		this.tokens.Add(new Token(TokenType.NEWLINE));
+		//	}
+		//	if (token.tokenType != TokenType.NEWLINE) {
+		//		lastWasNewline = false;
+		//		this.tokens.Add(token);
+		//	} else if (!lastWasNewline) {
+		//		lastWasNewline = true;
+		//		this.tokens.Add(token);
+		//	}
+		//}
 		Current = 0;
 	}
 
@@ -118,7 +119,7 @@ public class ParserCursor {
 	}
 
 	public bool IsAtEnd(int offset = 0) {
-		return Current + offset >= tokens.Count || Current + offset < 0 || tokens[Current + offset].tokenType == TokenType.EOF;
+		return Current + offset >= tokens.Length || Current + offset < 0 || tokens[Current + offset].tokenType == TokenType.EOF;
 	}
 
 	public Token Advance() {
@@ -133,14 +134,14 @@ public class ParserCursor {
 	}
 
 	public Token PeekAt(int offset = 1) {
-		if (Current + offset >= tokens.Count) {
+		if (Current + offset >= tokens.Length) {
 			return Token.EOF;
 		}
 		return tokens[Current + offset];
 	}
 	public Token PeekNext() {
 		int offset = 1;
-		if (Current + offset >= tokens.Count) {
+		if (Current + offset >= tokens.Length) {
 			return Token.EOF;
 		}
 		return tokens[Current + offset];
@@ -148,7 +149,7 @@ public class ParserCursor {
 
 	public Token Previous() {
 		int index = Current - 1;
-		if (index >= tokens.Count || index < 0) {
+		if (index >= tokens.Length || index < 0) {
 			return Token.EOF;
 		}
 		return tokens[index];

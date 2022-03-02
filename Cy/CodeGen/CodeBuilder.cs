@@ -21,6 +21,7 @@ public class CodeBuilder {
 		writer = new Stack<CodeWriter>();
 		writer.Push(new CodeWriter());
 		allCode = new List<Stack<CodeWriter>>();
+		savedWriters = new Stack<CodeWriter>();
 	}
 
 	public void Allocate(string code) {
@@ -52,9 +53,11 @@ public class CodeBuilder {
 	
 	public string Code() {
 		var code = new StringBuilder();
-		var innerCode = allCode.Select(ac => ac.Peek().Code());
 		code.Append(writer.Peek().Code());
-		code.Append(innerCode);
+		var innerCode = allCode.Select(ac => ac.Peek().Code());
+		foreach (var ic in innerCode) {
+			code.Append(ic);
+		}
 		return code.ToString();
 	}
 }

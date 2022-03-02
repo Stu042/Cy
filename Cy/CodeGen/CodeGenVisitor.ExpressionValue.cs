@@ -6,6 +6,8 @@ using System;
 namespace Cy.CodeGen;
 
 public partial class CodeGenVisitor {
+
+	/// <summary>Perform arithmetic on an expression, used to get the value of an expresion.</summary>
 	public class ExpressionValue {
 		public bool IsLiteral;
 		public string TextValue;
@@ -13,25 +15,52 @@ public partial class CodeGenVisitor {
 		public BaseType ValueType;
 
 
-		public static BaseType GetType(ExpressionValue left, ExpressionValue right) {
+		public static BaseType GetBaseType(ExpressionValue left, ExpressionValue right) {
 			return left.ValueType switch {
 				BaseType.INT => right.ValueType switch {
 					BaseType.INT => BaseType.INT,
 					BaseType.FLOAT => BaseType.FLOAT,
-					BaseType.STRING => BaseType.STRING,
-					BaseType.UNKNOWN or _ => BaseType.UNKNOWN
+					BaseType.REFERENCE => BaseType.REFERENCE,
+					BaseType.OBJECT => BaseType.UNKNOWN,
+					BaseType.VOID => BaseType.UNKNOWN,
+					BaseType.UNKNOWN => BaseType.UNKNOWN,
+					_ => BaseType.UNKNOWN
 				},
 				BaseType.FLOAT => right.ValueType switch {
 					BaseType.INT => BaseType.FLOAT,
 					BaseType.FLOAT => BaseType.FLOAT,
-					BaseType.STRING => BaseType.STRING,
-					BaseType.UNKNOWN or _ => BaseType.UNKNOWN
+					BaseType.REFERENCE => BaseType.REFERENCE,
+					BaseType.OBJECT => BaseType.UNKNOWN,
+					BaseType.VOID => BaseType.UNKNOWN,
+					BaseType.UNKNOWN => BaseType.UNKNOWN,
+					_ => BaseType.UNKNOWN
 				},
-				BaseType.STRING => right.ValueType switch {
-					BaseType.INT => BaseType.STRING,
-					BaseType.FLOAT => BaseType.STRING,
-					BaseType.STRING => BaseType.STRING,
-					BaseType.UNKNOWN or _ => BaseType.UNKNOWN
+				BaseType.REFERENCE => right.ValueType switch {
+					BaseType.INT => BaseType.REFERENCE,
+					BaseType.FLOAT => BaseType.UNKNOWN,
+					BaseType.REFERENCE => BaseType.REFERENCE,
+					BaseType.OBJECT => BaseType.UNKNOWN,
+					BaseType.VOID => BaseType.UNKNOWN,
+					BaseType.UNKNOWN => BaseType.UNKNOWN,
+					_ => BaseType.UNKNOWN
+				},
+				BaseType.OBJECT => right.ValueType switch {
+					BaseType.INT => BaseType.UNKNOWN,
+					BaseType.FLOAT => BaseType.UNKNOWN,
+					BaseType.REFERENCE => BaseType.UNKNOWN,
+					BaseType.OBJECT => BaseType.UNKNOWN,
+					BaseType.VOID => BaseType.UNKNOWN,
+					BaseType.UNKNOWN => BaseType.UNKNOWN,
+					_ => BaseType.UNKNOWN
+				},
+				BaseType.VOID => right.ValueType switch {
+					BaseType.INT => BaseType.UNKNOWN,
+					BaseType.FLOAT => BaseType.UNKNOWN,
+					BaseType.REFERENCE => BaseType.UNKNOWN,
+					BaseType.OBJECT => BaseType.UNKNOWN,
+					BaseType.VOID => BaseType.UNKNOWN,
+					BaseType.UNKNOWN => BaseType.UNKNOWN,
+					_ => BaseType.UNKNOWN
 				},
 				BaseType.UNKNOWN or _ => BaseType.UNKNOWN
 			};
@@ -49,10 +78,11 @@ public partial class CodeGenVisitor {
 									var total = (int)left.Value + (double)right.Value;
 									return total;
 								}
-							case BaseType.STRING: {
+							case BaseType.REFERENCE: {
 									var total = (int)left.Value + (string)right.Value;
 									return total;
 								}
+							case BaseType.OBJECT:
 							case BaseType.VOID:
 							case BaseType.UNKNOWN:
 							default:
@@ -70,10 +100,11 @@ public partial class CodeGenVisitor {
 									var total = (double)left.Value + (double)right.Value;
 									return total;
 								}
-							case BaseType.STRING: {
+							case BaseType.REFERENCE: {
 									var total = (double)left.Value + (string)right.Value;
 									return total;
 								}
+							case BaseType.OBJECT:
 							case BaseType.VOID:
 							case BaseType.UNKNOWN:
 							default:
@@ -81,7 +112,7 @@ public partial class CodeGenVisitor {
 								break;
 						}
 						break;
-					case BaseType.STRING:
+					case BaseType.REFERENCE:
 						switch (right.ValueType) {
 							case BaseType.INT: {
 									var total = (string)left.Value + (int)right.Value;
@@ -91,10 +122,11 @@ public partial class CodeGenVisitor {
 									var total = (string)left.Value + (double)right.Value;
 									return total;
 								}
-							case BaseType.STRING: {
+							case BaseType.REFERENCE: {
 									var total = (string)left.Value + (string)right.Value;
 									return total;
 								}
+							case BaseType.OBJECT:
 							case BaseType.VOID:
 							case BaseType.UNKNOWN:
 							default:
@@ -123,9 +155,10 @@ public partial class CodeGenVisitor {
 									var total = (int)left.Value - (double)right.Value;
 									return total;
 								}
-							case BaseType.STRING:
+							case BaseType.REFERENCE:
 								// error
 								break;
+							case BaseType.OBJECT:
 							case BaseType.VOID:
 							case BaseType.UNKNOWN:
 							default:
@@ -143,9 +176,10 @@ public partial class CodeGenVisitor {
 									var total = (double)left.Value - (double)right.Value;
 									return total;
 								}
-							case BaseType.STRING:
+							case BaseType.REFERENCE:
 								// error
 								break;
+							case BaseType.OBJECT:
 							case BaseType.VOID:
 							case BaseType.UNKNOWN:
 							default:
@@ -153,8 +187,9 @@ public partial class CodeGenVisitor {
 								break;
 						}
 						break;
+					case BaseType.OBJECT:
 					case BaseType.VOID:
-					case BaseType.STRING:
+					case BaseType.REFERENCE:
 						// error
 						break;
 					case BaseType.UNKNOWN:
@@ -176,9 +211,10 @@ public partial class CodeGenVisitor {
 							case BaseType.FLOAT:
 								var floatTotal = (int)left.Value * (double)right.Value;
 								return floatTotal;
-							case BaseType.STRING:
+							case BaseType.REFERENCE:
 								// error
 								break;
+							case BaseType.OBJECT:
 							case BaseType.VOID:
 							case BaseType.UNKNOWN:
 							default:
@@ -194,9 +230,10 @@ public partial class CodeGenVisitor {
 							case BaseType.FLOAT:
 								var floatTotal = (double)left.Value * (double)right.Value;
 								return floatTotal;
-							case BaseType.STRING:
+							case BaseType.REFERENCE:
 								// error
 								break;
+							case BaseType.OBJECT:
 							case BaseType.VOID:
 							case BaseType.UNKNOWN:
 							default:
@@ -204,8 +241,9 @@ public partial class CodeGenVisitor {
 								break;
 						}
 						break;
+					case BaseType.OBJECT:
 					case BaseType.VOID:
-					case BaseType.STRING:
+					case BaseType.REFERENCE:
 						// error
 						break;
 					case BaseType.UNKNOWN:
@@ -227,9 +265,10 @@ public partial class CodeGenVisitor {
 							case BaseType.FLOAT:
 								var floatTotal = (int)left.Value / (double)right.Value;
 								return floatTotal;
-							case BaseType.STRING:
+							case BaseType.REFERENCE:
 								// error
 								break;
+							case BaseType.OBJECT:
 							case BaseType.VOID:
 							case BaseType.UNKNOWN:
 							default:
@@ -245,9 +284,10 @@ public partial class CodeGenVisitor {
 							case BaseType.FLOAT:
 								var floatTotal = (double)left.Value / (double)right.Value;
 								return floatTotal;
-							case BaseType.STRING:
+							case BaseType.REFERENCE:
 								// error
 								break;
+							case BaseType.OBJECT:
 							case BaseType.VOID:
 							case BaseType.UNKNOWN:
 							default:
@@ -255,8 +295,9 @@ public partial class CodeGenVisitor {
 								break;
 						}
 						break;
+					case BaseType.OBJECT:
 					case BaseType.VOID:
-					case BaseType.STRING:
+					case BaseType.REFERENCE:
 						// error
 						break;
 					case BaseType.UNKNOWN:
@@ -278,9 +319,10 @@ public partial class CodeGenVisitor {
 							case BaseType.FLOAT:
 								var floatTotal = (int)left.Value % (double)right.Value;
 								return floatTotal;
-							case BaseType.STRING:
+							case BaseType.REFERENCE:
 								// error
 								break;
+							case BaseType.OBJECT:
 							case BaseType.VOID:
 							case BaseType.UNKNOWN:
 							default:
@@ -296,9 +338,10 @@ public partial class CodeGenVisitor {
 							case BaseType.FLOAT:
 								var floatTotal = (double)left.Value % (double)right.Value;
 								return floatTotal;
-							case BaseType.STRING:
+							case BaseType.REFERENCE:
 								// error
 								break;
+							case BaseType.OBJECT:
 							case BaseType.VOID:
 							case BaseType.UNKNOWN:
 							default:
@@ -306,8 +349,9 @@ public partial class CodeGenVisitor {
 								break;
 						}
 						break;
+					case BaseType.OBJECT:
 					case BaseType.VOID:
-					case BaseType.STRING:
+					case BaseType.REFERENCE:
 						// error
 						break;
 					case BaseType.UNKNOWN:
@@ -333,13 +377,14 @@ public partial class CodeGenVisitor {
 								Value = (double)intValue,
 								ValueType = BaseType.FLOAT
 							};
-						case BaseType.STRING:
+						case BaseType.REFERENCE:
 							return new ExpressionValue {
 								IsLiteral = true,
 								TextValue = intValue.ToString(),
 								Value = intValue.ToString(),
-								ValueType = BaseType.STRING
+								ValueType = BaseType.REFERENCE
 							};
+						case BaseType.OBJECT:
 						case BaseType.VOID:
 						case BaseType.UNKNOWN:
 						default:
@@ -359,13 +404,14 @@ public partial class CodeGenVisitor {
 							};
 						case BaseType.FLOAT:
 							return value;
-						case BaseType.STRING:
+						case BaseType.REFERENCE:
 							return new ExpressionValue {
 								IsLiteral = true,
 								TextValue = floatValue.ToString(),
 								Value = floatValue.ToString(),
-								ValueType = BaseType.STRING
+								ValueType = BaseType.REFERENCE
 							};
+						case BaseType.OBJECT:
 						case BaseType.VOID:
 						case BaseType.UNKNOWN:
 						default:
@@ -373,8 +419,9 @@ public partial class CodeGenVisitor {
 							break;
 					}
 					break;
+				case BaseType.OBJECT:
 				case BaseType.VOID:
-				case BaseType.STRING:
+				case BaseType.REFERENCE:
 					// error
 					break;
 				case BaseType.UNKNOWN:

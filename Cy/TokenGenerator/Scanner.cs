@@ -9,15 +9,15 @@ namespace Cy.TokenGenerator;
 
 // Write tokens to console
 public static class Tokens {
-	public static void DisplayAllTokens(List<List<Token>> allFilesTokens) {
-		var tokenCount = allFilesTokens.Sum(tokens => tokens.Count);
+	public static void DisplayAllTokens(Token[][] allFilesTokens) {
+		var tokenCount = allFilesTokens.Sum(tokens => tokens.Length);
 		Console.WriteLine($"\n{tokenCount} Tokens:");
 		foreach (var tokens in allFilesTokens) {
 			Show(tokens);
 		}
 	}
 
-	static void Show(List<Token> tokens) {
+	static void Show(Token[] tokens) {
 		foreach (Token token in tokens) {
 			Console.WriteLine(token.ToFormattedString());
 		}
@@ -75,7 +75,7 @@ public class Scanner {
 	}
 
 
-	public List<Token> ScanTokens(string filename, string alltext) {
+	public Token[] ScanTokens(string filename, string alltext) {
 		tokens = new();
 		this.filename = filename;
 		line = 1;
@@ -86,7 +86,7 @@ public class Scanner {
 			ScanToken();
 		}
 		AddToken(TokenType.EOF, "\0");
-		return tokens;
+		return tokens.ToArray();
 	}
 
 

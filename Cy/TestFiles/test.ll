@@ -1,7 +1,7 @@
 ; ModuleID = 'test.cy'
 source_filename = "test.cy"
 target datalayout = "e-m:w-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
-target triple = "x86_64-pc-windows-msvc19.30.30709"
+target triple = "x86_64-pc-windows-msvc19.31.31104"
 
 define dso_local i32 @Main() #0 {
   ret i32 31

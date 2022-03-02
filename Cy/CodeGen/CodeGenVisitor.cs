@@ -1,7 +1,10 @@
-﻿using Cy.Enums;
+﻿using Cy.CodeGen.Llvm;
+using Cy.Enums;
 using Cy.Parsing;
 using Cy.Parsing.Interfaces;
+using Cy.Setup;
 using Cy.TokenGenerator;
+using Cy.Types;
 
 using System;
 using System.Collections.Generic;
@@ -12,8 +15,8 @@ namespace Cy.CodeGen;
 
 
 public partial class CodeGenVisitor : IExprVisitor, IStmtVisitor {
-	public string Run(List<List<Stmt>> toplevel, LlvmTypes llvmTypes) {
-		var opts = new Options(llvmTypes);
+	public string Run(Stmt[][] toplevel, TypeDefinitionTable typedefTable, Config conf) {
+		var opts = new Options(typedefTable, conf);
 		foreach (var stmt in toplevel) {
 			foreach (var section in stmt) {
 				section.Accept(this, opts);
@@ -42,7 +45,7 @@ public partial class CodeGenVisitor : IExprVisitor, IStmtVisitor {
 			IsLiteral = left.IsLiteral && right.IsLiteral,
 			TextValue = value.ToString(),
 			Value = value,
-			ValueType = ExpressionValue.GetType(left, right)
+			ValueType = ExpressionValue.GetBaseType(left, right)
 		};
 	}
 
@@ -69,13 +72,13 @@ public partial class CodeGenVisitor : IExprVisitor, IStmtVisitor {
 	public object VisitFunctionStmt(Stmt.Function stmt, object options) {
 		var opts = Options.GetOptions(options);
 		opts.Code.NewFunction();
-		var returnType = opts.TypesToLlvm.GetType(stmt.returnType.info);
+
+		var returnType = opts.TypesToLlvm.GetInstance(stmt.returnType.info);
 		opts.ReturnType.Push(returnType);
-		opts.Code.Allocate(opts.Tab.Show + "define dso_local " + returnType.LlvmTypeName + " @" + stmt.token.lexeme + "() #0 {");
+		opts.Code.Allocate(opts.Tab.Show + "define dso_local " + returnType.LlvmType + " @" + stmt.token.lexeme + "() #0 {");
 		opts.Tab.Inc();
 		foreach (var body in stmt.body) {
-			var line = (string)body.Accept(this, opts);
-			opts.Code.Build(line);
+			body.Accept(this, opts);
 		}
 		var poppedType = opts.ReturnType.Pop();
 		opts.Tab.Dec();
@@ -115,7 +118,7 @@ public partial class CodeGenVisitor : IExprVisitor, IStmtVisitor {
 			ValueType = expr.token.tokenType switch {
 				TokenType.INT_LITERAL => BaseType.INT,
 				TokenType.FLOAT_LITERAL => BaseType.FLOAT,
-				TokenType.STR_LITERAL => BaseType.STRING,
+				TokenType.STR_LITERAL => BaseType.REFERENCE,
 				_ => BaseType.UNKNOWN
 			}
 		};
@@ -125,7 +128,7 @@ public partial class CodeGenVisitor : IExprVisitor, IStmtVisitor {
 		var opts = Options.GetOptions(options);
 		var expressionValue = (ExpressionValue)stmt.value.Accept(this, opts);
 		expressionValue = ExpressionValue.CastLiteral(expressionValue, opts.ReturnType.Peek().TypeDef.BaseType);
-		opts.Code.Build($"{opts.Tab.Show}ret {opts.ReturnType.Peek().LlvmTypeName} {expressionValue.TextValue}");
+		opts.Code.Build($"{opts.Tab.Show}ret {opts.ReturnType.Peek().LlvmType} {expressionValue.TextValue}");
 		return opts;
 	}
 
@@ -135,7 +138,7 @@ public partial class CodeGenVisitor : IExprVisitor, IStmtVisitor {
 
 	public object VisitTypeStmt(Stmt.StmtType stmt, object options) {
 		var opts = Options.GetOptions(options);
-		var llvmType = opts.TypesToLlvm.GetType(stmt.info);
+		var llvmType = opts.TypesToLlvm.GetInstance(stmt.info);
 		return llvmType;
 	}
 
@@ -150,7 +153,7 @@ public partial class CodeGenVisitor : IExprVisitor, IStmtVisitor {
 
 	public object VisitVarStmt(Stmt.Var stmt, object options) {
 		var opts = Options.GetOptions(options);
-		var stmtType = (LlvmType)stmt.stmtType.Accept(this, options);
+		var stmtType = (LlvmInstance)stmt.stmtType.Accept(this, options);
 		var exprValue = (ExpressionValue)stmt.initialiser.Accept(this, options);
 		// create new instance of type stmtType equal to exprValue
 		throw new NotImplementedException();

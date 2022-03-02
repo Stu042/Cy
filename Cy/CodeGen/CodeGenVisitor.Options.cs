@@ -1,12 +1,16 @@
 ﻿using Cy.CodeGen.Llvm;
+using Cy.Setup;
+using Cy.Types;
 
 using System.Collections.Generic;
 
 namespace Cy.CodeGen;
 
-
-
 public partial class CodeGenVisitor {
+
+	/// <summary>
+	/// Helper class to provide multiple utilities that require state within CodeGenVisitor.
+	/// </summary>
 	public class Options {
 		public class Tabs {
 			const int TabSize = 2;
@@ -23,17 +27,17 @@ public partial class CodeGenVisitor {
 			}
 		}
 
-		public InstanceTable Variable;
 		public Tabs Tab;
-		public LlvmTypes TypesToLlvm;
-		public Stack<LlvmType> ReturnType;
+		public LlvmInstances TypesToLlvm;
+		public Stack<LlvmInstance> ReturnType;
 		public CodeBuilder Code;
-		public Options(LlvmTypes llvmTypes) {
+		public TypeDefinitionTable TypeDefTable;
+		public Options(TypeDefinitionTable typeDefTable, Config conf) {
 			Tab = new Tabs();
-			TypesToLlvm = llvmTypes;
+			TypesToLlvm = new LlvmInstances(conf);
 			Code = new CodeBuilder();
-			ReturnType = new Stack<LlvmType>();
-			Variable = new InstanceTable();
+			ReturnType = new Stack<LlvmInstance>();
+			TypeDefTable = typeDefTable;
 		}
 
 		public static Options GetOptions(object obj) {

@@ -1,12 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
 using Cy.Parsing;
 using Cy.Parsing.Interfaces;
 using Cy.TokenGenerator;
 
 using FluentAssertions;
+
+using System.Collections.Generic;
 
 using Xunit;
 
@@ -17,7 +15,7 @@ namespace CyTests {
 		static readonly string test1_Filename = "test1.cy";
 		readonly ErrorDisplay errorDisplay;
 
-		static readonly List<Token> ifTokens = new() {
+		static readonly Token[] ifTokens = new[] {
 			new Token(TokenType.IF, "if", null, 0, 1, 0, test1_Filename),
 			new Token(TokenType.LEFT_PAREN, "(", null, 0, 1, 3, test1_Filename),
 			new Token(TokenType.IDENTIFIER, "a", null, 0, 1, 8, test1_Filename),
@@ -29,7 +27,7 @@ namespace CyTests {
 			new Token(TokenType.NEWLINE, "\n", null, 0, 1, 13, test1_Filename),
 			new Token(TokenType.EOF, "\0", null, 0, 1, 14, test1_Filename),
 		};
-		static readonly List<Stmt> ifStatement = new() {
+		static readonly Stmt[] ifStatement = new[] {
 			new Stmt.If(
 				ifTokens[0],
 				new Expr.Variable(ifTokens[2]),
@@ -57,7 +55,7 @@ namespace CyTests {
 		//	)
 		//};
 
-		static readonly List<Token> callTokens = new() {
+		static readonly Token[] callTokens = new[] {
 			new Token(TokenType.INT32, "int32", null, 0, 1, 0, test1_Filename),
 			new Token(TokenType.IDENTIFIER, "afunction", null, 0, 1, 0, test1_Filename),
 			new Token(TokenType.LEFT_PAREN, "(", null, 0, 1, 9, test1_Filename),
@@ -71,7 +69,7 @@ namespace CyTests {
 			new Token(TokenType.NEWLINE, "\n", null, 0, 1, 13, test1_Filename),
 			new Token(TokenType.EOF, "\0", null, 0, 1, 13, test1_Filename),
 		};
-		static readonly List<Stmt> callStatement = new() {
+		static readonly Stmt[] callStatement = new[] {
 			new Stmt.Function(
 				new Stmt.StmtType(new List<Token>() { callTokens[0] }),
 				callTokens[1],
@@ -87,7 +85,7 @@ namespace CyTests {
 			)
 		};
 
-		static readonly List<Token> callMultArgsTokens = new() {
+		static readonly Token[] callMultArgsTokens = new[] {
 			new Token(TokenType.INT32, "int32", null, 0, 1, 0, test1_Filename),
 			new Token(TokenType.IDENTIFIER, "afunction", null, 0, 1, 0, test1_Filename),
 			new Token(TokenType.LEFT_PAREN, "(", null, 0, 1, 9, test1_Filename),
@@ -104,7 +102,7 @@ namespace CyTests {
 			new Token(TokenType.NEWLINE, "\n", null, 0, 1, 13, test1_Filename),
 			new Token(TokenType.EOF, "\0", null, 0, 1, 13, test1_Filename),
 		};
-		static readonly List<Stmt> callMultArgsStatement = new() {
+		static readonly Stmt[] callMultArgsStatement = new[] {
 			new Stmt.Function(
 				new Stmt.StmtType(new List<Token>() { callMultArgsTokens[0] }),
 				callMultArgsTokens[1],
@@ -118,17 +116,17 @@ namespace CyTests {
 			)
 		};
 
-		static readonly List<Token> unaryTokens = new() {
+		static readonly Token[] unaryTokens = new[] {
 			new Token(TokenType.MINUSMINUS, "--", null, 0, 1, 0, test1_Filename),
 			new Token(TokenType.IDENTIFIER, "a", null, 0, 1, 2, test1_Filename),
 			new Token(TokenType.NEWLINE, "\n", null, 0, 1, 3, test1_Filename),
 			new Token(TokenType.EOF, "\0", null, 0, 1, 4, test1_Filename),
 		};
-		static readonly List<Stmt> unaryStatement = new() {
+		static readonly Stmt[] unaryStatement = new[] {
 			new Stmt.Expression(new Expr.Unary(unaryTokens[0], new Expr.Variable(unaryTokens[1])))
 		};
 
-		static readonly List<Token> whileTokens = new() {
+		static readonly Token[] whileTokens = new[] {
 			new Token(TokenType.WHILE, "while", null, 0, 1, 0, test1_Filename),
 			new Token(TokenType.IDENTIFIER, "a", null, 0, 1, 2, test1_Filename),
 			new Token(TokenType.EQUAL_EQUAL, "==", null, 0, 1, 2, test1_Filename),
@@ -162,7 +160,7 @@ namespace CyTests {
 			var cursor = new ParserCursor();
 			var parser = new Parser(cursor, errorDisplay);
 			var returnedAst = parser.Parse(callTokens);
-			Asts.Display(new List<List<Stmt>>() { returnedAst });
+			Asts.Display(new Stmt[][] { returnedAst });
 			callStatement.Should().BeEquivalentTo(returnedAst);
 		}
 		[Fact]

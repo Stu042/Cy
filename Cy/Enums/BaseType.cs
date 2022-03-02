@@ -4,8 +4,7 @@ public enum BaseType {
 	UNKNOWN,
 	INT,
 	FLOAT,
-	STRING,
+	REFERENCE,
 	VOID,
-	OBJECT,
-	FUNCTION
+	OBJECT
 }

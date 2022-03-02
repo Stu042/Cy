@@ -14,6 +14,7 @@ public class Config {
 
 	public string Version { get; }
 	public string ClangExe { get; }
+	public int DefaultAlignment { get; }
 
 	public Config() {
 		Includes = CommandLineInput.Instance.Includes;
@@ -27,5 +28,6 @@ public class Config {
 		DisplayIr = CommandLineInput.Instance.DisplayIr;
 		Version = typeof(Program).Assembly.GetName().Version.ToString();
 		ClangExe = @"C:\Program Files\LLVM\bin\clang.exe";
+		DefaultAlignment = 4;
 	}
 }

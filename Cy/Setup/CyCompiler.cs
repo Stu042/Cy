@@ -39,35 +39,38 @@ public class CyCompiler {
 	}
 
 
-	List<List<Token>> ScanFiles() {
-		var allFilesTokens = new List<List<Token>>();
+	Token[][] ScanFiles() {
+		var listFilesTokens = new List<Token[]>();
 		foreach (var filename in _config.Input) {
 			if (_config.Verbose) {
 				Console.WriteLine($"Reading file: {filename}");
 			}
 			var alltext = File.ReadAllText(filename);
 			var tokens = _scanner.ScanTokens(filename, alltext);
-			allFilesTokens.Add(tokens);
+			listFilesTokens.Add(tokens);
 		}
+		var allFilesTokens = listFilesTokens.ToArray();
 		if (_config.DisplayTokens) {
 			Tokens.DisplayAllTokens(allFilesTokens);
 		}
 		return allFilesTokens;
 	}
 
-	List<List<Stmt>> ParseTokens(List<List<Token>> allFilesTokens) {
-		var allFilesStmts = new List<List<Stmt>>();
+	Stmt[][] ParseTokens(Token[][] allFilesTokens) {
+		var a = new Stmt[allFilesTokens.Length][];
+		var listFilesStmts = new List<Stmt[]>();
 		foreach (var tokens in allFilesTokens) {
 			var stmts = _parser.Parse(tokens);
-			allFilesStmts.Add(stmts);
+			listFilesStmts.Add(stmts);
 		}
+		var allFileStmts = listFilesStmts.ToArray();
 		if (_config.DisplayAsts) {
-			Asts.Display(allFilesStmts);
+			Asts.Display(allFileStmts);
 		}
-		return allFilesStmts;
+		return allFileStmts;
 	}
 
-	TypeDefinitionTable MapTypes(List<List<Stmt>> allFilesStmts) {
+	TypeDefinitionTable MapTypes(Stmt[][] allFilesStmts) {
 		var typeTable = _createSymbolTable.Parse(allFilesStmts);
 		if (_config.DisplayPreCompileSymbols) {
 			_displaySymbolTable.DisplayTable(typeTable);

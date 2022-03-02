@@ -2,7 +2,6 @@
 using Cy.Setup;
 using Cy.Types;
 
-using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
@@ -15,29 +14,23 @@ public class GenIr {
 	readonly Config _config;
 	
 	readonly string filename;
-	readonly StringBuilder preCode;
-	readonly StringBuilder postCode;
-	readonly StringBuilder code;
 
 	public GenIr(CodeGenVisitor codeGenVisitor, Llvm.Foundation foundation, Config config){
 		_codeGenVisitor = codeGenVisitor;
 		_foundation = foundation;
 		_config = config;
 		filename = _config.FileOut;
-		preCode = new StringBuilder();
-		postCode = new StringBuilder();
-		code = new StringBuilder();
 	}
 
-	public string GenerateLlvmIr(List<List<Stmt>> toplevel, TypeDefinitionTable definitionTable) {
-		var llvmTypes = new LlvmTypes(definitionTable);
-		preCode.Append(_foundation.GetPreLLVMCode());
-		var generatedCode = _codeGenVisitor.Run(toplevel, llvmTypes);
+	public string GenerateLlvmIr(Stmt[][] toplevel, TypeDefinitionTable definitionTable) {
+		var preCode = _foundation.GetPreLLVMCode();
+		var generatedCode = _codeGenVisitor.Run(toplevel, definitionTable, _config);
+		var postCode = _foundation.GetPostLLVMCode();
+		var code = new StringBuilder();
+		code.Append(preCode);
 		code.Append(generatedCode);
-		postCode.Append(_foundation.GetPostLLVMCode());
-		preCode.Append(code);
-		preCode.Append(postCode);
-		File.WriteAllText(filename, preCode.ToString());
-		return preCode.ToString();
+		code.Append(postCode);
+		File.WriteAllText(filename, code.ToString());
+		return code.ToString();
 	}
 }

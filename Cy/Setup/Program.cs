@@ -36,12 +36,10 @@ class Program {
 		services.AddScoped<ScannerCursor, ScannerCursor>();
 		services.AddScoped<Parser, Parser>();
 		services.AddScoped<ParserCursor, ParserCursor>();
-		services.AddScoped<TypeDefinitionTableCreate, TypeDefinitionTableCreate>();
-		services.AddScoped<CalculateTypeDefinitionSizes, CalculateTypeDefinitionSizes>();
-		services.AddScoped<CalculateTypeDefinitionOffsets, CalculateTypeDefinitionOffsets>();
+		services.AddScoped<TypeDefinitionVisitor, TypeDefinitionVisitor>();
 		services.AddScoped<TypeDefinitionDisplay, TypeDefinitionDisplay>();
 		services.AddScoped<Foundation, Foundation>();
 		services.AddScoped<CodeGenVisitor, CodeGenVisitor>();
-		services.AddScoped<GenIr, GenIr>();
+		services.AddScoped<CompileToIr, CompileToIr>();
 	}
 }

@@ -1,4 +1,5 @@
-﻿using Cy.Setup;
+﻿using Cy.Enums;
+using Cy.Setup;
 using Cy.TokenGenerator;
 using Cy.Types;
 
@@ -8,10 +9,20 @@ using System.Linq;
 namespace Cy.CodeGen.Llvm;
 
 
-/// <summary>Provides instance tracking for LlvmIr code generation.</summary>
+public class LlvmInstance {
+	public string LlvmName;
+	public string LlvmType;
+	public string FullyQualifiedTypeName;
+	public TypeDefinition TypeDef;
+}
+
+
+/// <summary>Provides instance tracking and creation for LlvmIr code generation.</summary>
 public class LlvmInstances {
 	/// <summary>FQTypeName points to LlvmInstance.</summary>
 	readonly Stack<Dictionary<string, LlvmInstance>> instances;
+	/// <summary>Index for current instance name, i.e. %1, %2, etc...</summary>
+	readonly Stack<int> instanceCount;
 	/// <summary>Minimum size of alignment used.</summary>
 	readonly int defaultAlignment;
 
@@ -19,22 +30,49 @@ public class LlvmInstances {
 		defaultAlignment = conf.DefaultAlignment;
 		instances = new Stack<Dictionary<string, LlvmInstance>>();
 		instances.Push(new Dictionary<string, LlvmInstance>());
+		instanceCount = new Stack<int>();
+		instanceCount.Push(0);
 	}
 
 	public void NewBlock() {
 		instances.Push(new Dictionary<string, LlvmInstance>());
+		instanceCount.Push(0);
 	}
-	public void BlockEnd() {
+	public void EndBlock() {
 		instances.Pop();
+		instanceCount.Pop();
+	}
+
+	public string NewTempInstance() {
+		var llvmNameIdx = instanceCount.Pop() + 1;
+		instanceCount.Push(llvmNameIdx);
+		return $"%{llvmNameIdx}";
+	}
+
+
+	public LlvmInstance NewInstance(bool isLiteral, string textRepresentation, object value, BaseType baseType) {
+		string fullName = null;
+		if (isLiteral) {
+			var inst = new LlvmInstance {
+				LlvmName = textRepresentation,
+				LlvmType = null,
+				FullyQualifiedTypeName = fullName
+			};
+			instances.Peek().Add(fullName, inst);
+			return inst;
+		}
+		return null;
 	}
 
 	public LlvmInstance NewInstance(TypeDefinition typdef) {
 		var fullName = typdef.FullyQualifiedName();
 		if (GetInstance(fullName) == null) {
+			var llvmNameIdx = instanceCount.Pop() + 1;
+			instanceCount.Push(llvmNameIdx);
 			var inst = new LlvmInstance {
-				LlvmType = GetLlvmType(typdef),
+				LlvmName = $"%{llvmNameIdx}",
+				LlvmType = GetLlvmType(typdef.Tokens[0].tokenType),
 				FullyQualifiedTypeName = fullName,
-				Align = GetAlign(typdef),
 				TypeDef = typdef
 			};
 			instances.Peek().Add(fullName, inst);
@@ -56,9 +94,8 @@ public class LlvmInstances {
 		return null;
 	}
 
-
-	string GetLlvmType(TypeDefinition typedef) {
-		return typedef.Tokens[0].tokenType switch {
+	public static string GetLlvmType(TokenType tokenType) {
+		return tokenType switch {
 			TokenType.BOOL => "i1",
 			TokenType.INT or TokenType.INT32 => "i32",
 			TokenType.INT8 => "i8",

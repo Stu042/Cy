@@ -6,15 +6,15 @@ using System.Collections.Generic;
 
 namespace Cy.Parsing;
 
-public abstract class Expr {
-	public Token token;
+public abstract class Expr : Ast {
+
+	public Expr(Token token) : base(token) {} 
 
 	public abstract object Accept(IExprVisitor visitor, object options = null);
 
 	public class Grouping : Expr {
 		public Expr expression;
-		public Grouping(Token token, Expr expr) {
-			this.token = token;
+		public Grouping(Token token, Expr expr) : base(token) {
 			expression = expr;
 		}
 		public override object Accept(IExprVisitor visitor, object options = null) {
@@ -25,8 +25,7 @@ public abstract class Expr {
 	/// <summary>A hardcoded value, i.e. a number.</summary>
 	public class Literal : Expr {
 		public object value;
-		public Literal(Token token, object value) {
-			this.token = token;
+		public Literal(Token token, object value) : base(token) {
 			this.value = value;
 		}
 		public override object Accept(IExprVisitor visitor, object options = null) {
@@ -38,9 +37,8 @@ public abstract class Expr {
 	public class Set : Expr {
 		public Expr obj;
 		public Expr value;
-		public Set(Expr obj, Token token, Expr value) {
+		public Set(Expr obj, Token token, Expr value) : base(token) {
 			this.obj = obj;
-			this.token = token;
 			this.value = value;
 		}
 		public override object Accept(IExprVisitor visitor, object options = null) {
@@ -53,9 +51,8 @@ public abstract class Expr {
 	/// <summary>.</summary>
 	public class Get : Expr {
 		public Expr obj;
-		public Get(Expr obj, Token token) {
+		public Get(Expr obj, Token token) : base(token) {
 			this.obj = obj;
-			this.token = token;
 		}
 		public override object Accept(IExprVisitor visitor, object options = null) {
 			return visitor.VisitGetExpr(this, options);
@@ -67,9 +64,8 @@ public abstract class Expr {
 	public class Binary : Expr {
 		public Expr left;
 		public Expr right;
-		public Binary(Expr left, Token token, Expr right) {
+		public Binary(Expr left, Token token, Expr right) : base(token) {
 			this.left = left;
-			this.token = token;
 			this.right = right;
 		}
 		public override object Accept(IExprVisitor visitor, object options = null) {
@@ -81,9 +77,8 @@ public abstract class Expr {
 	public class Call : Expr {          // token is end of function call - rparen
 		public Expr callee;             // function we are calling (might be a constructor with no function body as yet)
 		public List<Expr> arguments;    // input args
-		public Call(Expr callee, Token token, List<Expr> arguments) {
+		public Call(Expr callee, Token token, List<Expr> arguments) : base(token) {
 			this.callee = callee;
-			this.token = token;
 			this.arguments = arguments;
 		}
 		public override object Accept(IExprVisitor visitor, object options = null) {
@@ -95,8 +90,7 @@ public abstract class Expr {
 	/// <summary>Get a value from Expr to assign to a variable.</summary>
 	public class Assign : Expr {
 		public Expr value;
-		public Assign(Token token, Expr value) {
-			this.token = token;
+		public Assign(Token token, Expr value) : base(token) {
 			this.value = value;
 		}
 		public override object Accept(IExprVisitor visitor, object options = null) {
@@ -107,8 +101,7 @@ public abstract class Expr {
 
 	/// <summary>Simply a variable.</summary>
 	public class Variable : Expr {
-		public Variable(Token token) {
-			this.token = token;
+		public Variable(Token token) : base(token) {
 		}
 		public override object Accept(IExprVisitor visitor, object options = null) {
 			return visitor.VisitVariableExpr(this, options);
@@ -120,8 +113,7 @@ public abstract class Expr {
 	/// <summary>Minus and not (!)</summary>
 	public class Unary : Expr {
 		public Expr right;
-		public Unary(Token token, Expr right) {
-			this.token = token;
+		public Unary(Token token, Expr right) : base(token) {
 			this.right = right;
 		}
 		public override object Accept(IExprVisitor visitor, object options = null) {

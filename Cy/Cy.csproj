@@ -19,8 +19,4 @@
     <PackageReference Include="Cocona" Version="2.0.2" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Notes\" />
-  </ItemGroup>
-
 </Project>

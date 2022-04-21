@@ -38,11 +38,11 @@ public static class Asts {
 
 
 		public object VisitAssignExpr(Expr.Assign expr, object options) {
-			return Parenthesize2("=", expr.token.lexeme, expr.value);
+			return Parenthesize2("=", expr.Token.lexeme, expr.value);
 		}
 
 		public object VisitBinaryExpr(Expr.Binary expr, object options) {
-			return Parenthesize(expr.token.lexeme, expr.left, expr.right);
+			return Parenthesize(expr.Token.lexeme, expr.left, expr.right);
 		}
 
 		public object VisitBlockStmt(Stmt.Block stmt, object options) {
@@ -61,7 +61,7 @@ public static class Asts {
 
 
 		public object VisitInputVarStmt(Stmt.InputVar invar, object options) {
-			return invar.type.token.lexeme + " " + invar.token.lexeme;
+			return invar.type.Token.lexeme + " " + invar.Token.lexeme;
 		}
 
 		public object VisitFunctionStmt(Stmt.Function stmt, object options) {
@@ -72,7 +72,7 @@ public static class Asts {
 			} else {
 				typestr = "void";
 			}
-			builder.Append($"({typestr} {stmt.token.lexeme}(");
+			builder.Append($"({typestr} {stmt.Token.lexeme}(");
 			foreach (var param in stmt.input) {
 				if (param != stmt.input[0]) {
 					builder.Append(", ");
@@ -89,7 +89,7 @@ public static class Asts {
 
 		public object VisitClassStmt(Stmt.ClassDefinition obj, object options) {
 			StringBuilder builder = new();
-			builder.Append($"({obj.token.lexeme}: ");
+			builder.Append($"({obj.Token.lexeme}: ");
 			List<string> memberStr = new();
 			foreach (Stmt.Var memb in obj.members) {
 				memberStr.Add((string)memb.Accept(this, null));
@@ -113,7 +113,7 @@ public static class Asts {
 		}
 
 		public object VisitSetExpr(Expr.Set expr, object options) {
-			return Parenthesize2("=", expr.obj, expr.token.lexeme, expr.value);
+			return Parenthesize2("=", expr.obj, expr.Token.lexeme, expr.value);
 		}
 
 		public object VisitReturnStmt(Stmt.Return stmt, object options) {
@@ -124,27 +124,27 @@ public static class Asts {
 		}
 
 		public object VisitTypeStmt(Stmt.StmtType stmt, object options) {
-			return stmt.token.lexeme;
+			return stmt.Token.lexeme;
 		}
 
 		public object VisitUnaryExpr(Expr.Unary expr, object options) {
-			return Parenthesize(expr.token.lexeme, expr.right);
+			return Parenthesize(expr.Token.lexeme, expr.right);
 		}
 
 		public object VisitVariableExpr(Expr.Variable var, object options) {
-			return var.token.lexeme;
+			return var.Token.lexeme;
 		}
 
 		public object VisitVarStmt(Stmt.Var stmt, object options) {
 			string typestr = (string)stmt.stmtType.Accept(this, null);
 			if (stmt.initialiser == null) {
-				return Parenthesize2(typestr, stmt.token);
+				return Parenthesize2(typestr, stmt.Token);
 			}
-			return Parenthesize2(typestr, stmt.token, "=", stmt.initialiser);
+			return Parenthesize2(typestr, stmt.Token, "=", stmt.initialiser);
 		}
 
 		public object VisitGetExpr(Expr.Get expr, object options) {
-			return Parenthesize2(".", expr.obj, expr.token.lexeme);
+			return Parenthesize2(".", expr.obj, expr.Token.lexeme);
 		}
 
 		public object VisitCallExpr(Expr.Call expr, object options) {

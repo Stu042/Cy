@@ -1,4 +1,5 @@
-﻿using Cy.CodeGen.Llvm;
+﻿using Cy.CodeGen.Helpers;
+using Cy.CodeGen.Llvm;
 using Cy.Enums;
 using Cy.Parsing;
 using Cy.Parsing.Interfaces;
@@ -31,25 +32,50 @@ public partial class CodeGenVisitor : IExprVisitor, IStmtVisitor {
 	}
 
 	public object VisitBinaryExpr(Expr.Binary expr, object options) {
+		var opts = Options.Get(options);
 		var left = (ExpressionValue)expr.left.Accept(this, options);
 		var right = (ExpressionValue)expr.right.Accept(this, options);
-		var value = expr.token.tokenType switch {
-			TokenType.PLUS => (left.IsLiteral && right.IsLiteral) ? ExpressionValue.AddLiteral(left, right) : "",
-			TokenType.MINUS => (left.IsLiteral && right.IsLiteral) ? ExpressionValue.SubLiteral(left, right) : "",
-			TokenType.STAR => (left.IsLiteral && right.IsLiteral) ? ExpressionValue.MultLiteral(left, right) : "",
-			TokenType.SLASH => (left.IsLiteral && right.IsLiteral) ? ExpressionValue.DivLiteral(left, right) : "",
-			TokenType.PERCENT => (left.IsLiteral && right.IsLiteral) ? ExpressionValue.ModLiteral(left, right) : "",
-			_ => ""
+		object value;
+		switch (expr.Token.tokenType) {
+			case TokenType.PLUS:
+				value = (left.IsLiteral && right.IsLiteral) ? ExpressionValue.AddLiteral(left, right) : "";
+				break;
+			case TokenType.MINUS:
+				value = (left.IsLiteral && right.IsLiteral) ? ExpressionValue.SubLiteral(left, right) : "";
+				break;
+			case TokenType.STAR:
+				value = (left.IsLiteral && right.IsLiteral) ? ExpressionValue.MultLiteral(left, right) : "";
+				break;
+			case TokenType.SLASH:
+				value = (left.IsLiteral && right.IsLiteral) ? ExpressionValue.DivLiteral(left, right) : "";
+				break;
+			case TokenType.PERCENT:
+				value = (left.IsLiteral && right.IsLiteral) ? ExpressionValue.ModLiteral(left, right) : "";
+				break;
+			default:
+				value = "";
+				break;
+		};
+		var instance = new LlvmInstance {
+			FullyQualifiedTypeName = left.Instance.FullyQualifiedTypeName + expr.Token.lexeme + right.Instance.FullyQualifiedTypeName,
+			LlvmName = value.ToString(),
+			LlvmType = null,
+			TypeDef = left.Instance.TypeDef
 		};
 		return new ExpressionValue {
 			IsLiteral = left.IsLiteral && right.IsLiteral,
-			TextValue = value.ToString(),
+			TextRepresentation = value.ToString(),
 			Value = value,
-			ValueType = ExpressionValue.GetBaseType(left, right)
+			BaseType = ExpressionValue.GetBaseType(left, right),
+			Instance = instance
 		};
 	}
 
 	public object VisitBlockStmt(Stmt.Block stmt, object options) {
+		var opts = Options.Get(options);
+		opts.LlvmInstance.NewBlock();
+
+		opts.LlvmInstance.EndBlock();
 		throw new NotImplementedException();
 	}
 
@@ -70,12 +96,13 @@ public partial class CodeGenVisitor : IExprVisitor, IStmtVisitor {
 	}
 
 	public object VisitFunctionStmt(Stmt.Function stmt, object options) {
-		var opts = Options.GetOptions(options);
+		var opts = Options.Get(options);
 		opts.Code.NewFunction();
+		opts.LlvmInstance.NewBlock();
 
-		var returnType = opts.TypesToLlvm.GetInstance(stmt.returnType.info);
+		var returnType = opts.LlvmInstance.GetInstance(stmt.returnType.info);
 		opts.ReturnType.Push(returnType);
-		opts.Code.Allocate(opts.Tab.Show + "define dso_local " + returnType.LlvmType + " @" + stmt.token.lexeme + "() #0 {");
+		opts.Code.Allocate($"{opts.Tab.Show}define dso_local {returnType.LlvmType} @{stmt.Token.lexeme} () #0 {{");
 		opts.Tab.Inc();
 		foreach (var body in stmt.body) {
 			body.Accept(this, opts);
@@ -86,6 +113,7 @@ public partial class CodeGenVisitor : IExprVisitor, IStmtVisitor {
 			// error, wrong type
 		}
 		opts.Code.Build("}");
+		opts.LlvmInstance.EndBlock();
 		opts.Code.EndFunction();
 		return opts;
 	}
@@ -108,27 +136,32 @@ public partial class CodeGenVisitor : IExprVisitor, IStmtVisitor {
 
 	public object VisitLiteralExpr(Expr.Literal expr, object options) {
 		return new ExpressionValue {
-			TextValue = expr.token.tokenType switch {
+			TextRepresentation = expr.Token.tokenType switch {
 				TokenType.INT_LITERAL or TokenType.FLOAT_LITERAL => expr.value.ToString(),
 				TokenType.STR_LITERAL => "\"" + expr.value.ToString() + "\"",
 				_ => expr.value.ToString()
 			},
 			IsLiteral = true,
 			Value = expr.value,
-			ValueType = expr.token.tokenType switch {
+			BaseType = expr.Token.tokenType switch {
 				TokenType.INT_LITERAL => BaseType.INT,
 				TokenType.FLOAT_LITERAL => BaseType.FLOAT,
 				TokenType.STR_LITERAL => BaseType.REFERENCE,
 				_ => BaseType.UNKNOWN
+			},
+			Instance = new LlvmInstance {
+				FullyQualifiedTypeName = expr.Token.lexeme,
+				LlvmName = expr.value.ToString(),
+				LlvmType = null
 			}
 		};
 	}
 
 	public object VisitReturnStmt(Stmt.Return stmt, object options) {
-		var opts = Options.GetOptions(options);
+		var opts = Options.Get(options);
 		var expressionValue = (ExpressionValue)stmt.value.Accept(this, opts);
 		expressionValue = ExpressionValue.CastLiteral(expressionValue, opts.ReturnType.Peek().TypeDef.BaseType);
-		opts.Code.Build($"{opts.Tab.Show}ret {opts.ReturnType.Peek().LlvmType} {expressionValue.TextValue}");
+		opts.Code.Build($"{opts.Tab.Show}ret {opts.ReturnType.Peek().LlvmType} {expressionValue.TextRepresentation}");
 		return opts;
 	}
 
@@ -137,9 +170,9 @@ public partial class CodeGenVisitor : IExprVisitor, IStmtVisitor {
 	}
 
 	public object VisitTypeStmt(Stmt.StmtType stmt, object options) {
-		var opts = Options.GetOptions(options);
-		var llvmType = opts.TypesToLlvm.GetInstance(stmt.info);
-		return llvmType;
+		var opts = Options.Get(options);
+		var instance = opts.LlvmInstance.GetInstance(stmt.info);
+		return instance;
 	}
 
 	public object VisitUnaryExpr(Expr.Unary expr, object options) {
@@ -152,11 +185,12 @@ public partial class CodeGenVisitor : IExprVisitor, IStmtVisitor {
 	}
 
 	public object VisitVarStmt(Stmt.Var stmt, object options) {
-		var opts = Options.GetOptions(options);
-		var stmtType = (LlvmInstance)stmt.stmtType.Accept(this, options);
+		var opts = Options.Get(options);
+		var instance = (LlvmInstance)stmt.stmtType.Accept(this, options);
+		opts.Code.Allocate($"{opts.Tab.Show}{instance.LlvmName} = alloca {instance.LlvmType}, align {opts.Conf.DefaultAlignment}");
 		var exprValue = (ExpressionValue)stmt.initialiser.Accept(this, options);
-		// create new instance of type stmtType equal to exprValue
-		throw new NotImplementedException();
+		opts.Code.Assign($"{opts.Tab.Show}store {instance.LlvmType} {exprValue.TextRepresentation}, {instance.LlvmType}* {instance.LlvmName}, align {opts.Conf.DefaultAlignment}");
+		return opts;
 	}
 
 	public object VisitWhileStmt(Stmt.While stmt, object options) {

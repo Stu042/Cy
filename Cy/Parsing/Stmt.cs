@@ -6,15 +6,17 @@ using System.Collections.Generic;
 
 
 namespace Cy.Parsing;
-public abstract class Stmt {
-	public Token token;
+public abstract class Stmt : Ast {
+	
+	public Stmt(Token token) : base(token) {}
+
 	public abstract object Accept(IStmtVisitor visitor, object options = null);
 
 	/// <summary>A group of statements.</summary>
 	public class Block : Stmt {
 		public List<Stmt> statements;
-		public Block(List<Stmt> statements) {
-			token = statements[0].token;
+		public Block(List<Stmt> statements) : base(statements[0].Token) {
+			Token = statements[0].Token;
 			this.statements = statements;
 		}
 		public override object Accept(IStmtVisitor visitor, object options = null) {
@@ -23,11 +25,10 @@ public abstract class Stmt {
 	}
 
 
-	/// <summary>For those times we need an expression at the start of a line.</summary>
+	/// <summary>For those times we need an expression at the start of a line - note, never.</summary>
 	public class Expression : Stmt {
 		public Expr expression;
-		public Expression(Expr expression) {
-			token = expression.token;
+		public Expression(Expr expression) : base(expression.Token) {
 			this.expression = expression;
 		}
 		public override object Accept(IStmtVisitor visitor, object options = null) {
@@ -39,9 +40,8 @@ public abstract class Stmt {
 	/// <summary>variables defined as part of a function (input)<summary>
 	public class InputVar : Stmt {
 		public StmtType type;
-		public InputVar(StmtType type, Token token) {
+		public InputVar(StmtType type, Token token) : base(token) {
 			this.type = type;
-			this.token = token;
 		}
 		public override object Accept(IStmtVisitor visitor, object options = null) {
 			return visitor.VisitInputVarStmt(this, options);
@@ -53,9 +53,8 @@ public abstract class Stmt {
 		public StmtType returnType;
 		public List<InputVar> input;
 		public List<Stmt> body;
-		public Function(StmtType returnType, Token token, List<InputVar> input, List<Stmt> body) {
+		public Function(StmtType returnType, Token token, List<InputVar> input, List<Stmt> body) : base(token) {
 			this.returnType = returnType;
-			this.token = token;
 			this.input = input;
 			this.body = body;
 		}
@@ -72,8 +71,7 @@ public abstract class Stmt {
 		public Expr condition;
 		public List<Stmt> body;
 
-		public For(Token forKeyword, StmtType iteratorType, Token iterator, Expr condition, List<Stmt> body) {
-			token = forKeyword;
+		public For(Token forKeyword, StmtType iteratorType, Token iterator, Expr condition, List<Stmt> body) : base(forKeyword) {
 			this.iteratorType = iteratorType;
 			this.iterator = iterator;
 			this.condition = condition;
@@ -88,8 +86,7 @@ public abstract class Stmt {
 		public Expr value;
 		public List<Stmt> body;
 		public List<Stmt> elseBody;
-		public If(Token ifKeyword, Expr value, List<Stmt> body, List<Stmt> elseBody) {
-			token = ifKeyword;
+		public If(Token ifKeyword, Expr value, List<Stmt> body, List<Stmt> elseBody) : base(ifKeyword) {
 			this.value = value;
 			this.body = body;
 			this.elseBody = elseBody;
@@ -102,8 +99,7 @@ public abstract class Stmt {
 	/// <summary>The return statement.</summary>
 	public class Return : Stmt {
 		public Expr value;
-		public Return(Token token, Expr value) {
-			this.token = token;
+		public Return(Token token, Expr value) : base(token) {
 			this.value = value;
 		}
 		public override object Accept(IStmtVisitor visitor, object options = null) {
@@ -116,9 +112,8 @@ public abstract class Stmt {
 	public class Var : Stmt {
 		public StmtType stmtType;
 		public Expr initialiser;
-		public Var(Token typeToken, Token token, Expr initialiser) {
+		public Var(Token typeToken, Token token, Expr initialiser) : base(token) {
 			stmtType = new StmtType(new List<Token>() { typeToken });
-			this.token = token;
 			this.initialiser = initialiser;
 		}
 		public override object Accept(IStmtVisitor visitor, object options = null) {
@@ -131,8 +126,7 @@ public abstract class Stmt {
 		public List<Var> members;
 		public List<Function> methods;
 		public List<ClassDefinition> classes;
-		public ClassDefinition(Token token, List<Var> members, List<Function> methods, List<ClassDefinition> classes) {
-			this.token = token;
+		public ClassDefinition(Token token, List<Var> members, List<Function> methods, List<ClassDefinition> classes) : base(token) {
 			this.members = members;
 			this.methods = methods;
 			this.classes = classes;
@@ -145,13 +139,11 @@ public abstract class Stmt {
 	/// <summary>A basic or user defined type.</summary>
 	public class StmtType : Stmt {
 		public Token[] info;
-		public StmtType(List<Token> tokens) {
-			token = tokens[0];
+		public StmtType(List<Token> tokens) : base(tokens[0]) {
 			info = tokens.ToArray();
 		}
-		public StmtType() {
-			token = new Token(TokenType.VOID);
-			info = new Token[] { token };
+		public StmtType() : base(new Token(TokenType.VOID)) {
+			info = new Token[] { Token };
 		}
 		public override object Accept(IStmtVisitor visitor, object options = null) {
 			return visitor.VisitTypeStmt(this, options);
@@ -162,8 +154,7 @@ public abstract class Stmt {
 		public Expr condition;
 		public List<Stmt> body;
 
-		public While(Token whileKeyword, Expr condition, List<Stmt> body) {
-			token = whileKeyword;
+		public While(Token whileKeyword, Expr condition, List<Stmt> body) : base(whileKeyword) {
 			this.condition = condition;
 			this.body = body;
 		}

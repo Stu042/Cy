@@ -109,7 +109,7 @@ public class Parser {
 			} else if (astmt is Stmt.ClassDefinition c) {
 				classes.Add(c);
 			} else {
-				_display.Error(astmt.token, "Object definitions should contain only methods, properties or class definitions.");
+				_display.Error(astmt.Token, "Object definitions should contain only methods, properties or class definitions.");
 			}
 		}
 		return new Stmt.ClassDefinition(name, members, methods, classes);
@@ -289,10 +289,10 @@ public class Parser {
 			Token equals = _parserCursor.Previous();
 			Expr value = Assignment();
 			if (expr is Expr.Variable vexpr) {
-				Token name = vexpr.token;
+				Token name = vexpr.Token;
 				return new Expr.Assign(name, value);
 			} else if (expr is Expr.Get gexpr) {
-				return new Expr.Set(gexpr.obj, gexpr.token, value);
+				return new Expr.Set(gexpr.obj, gexpr.Token, value);
 			}
 			_display.Error(equals, "Invalid assignment target."); // [no-throw]
 		}

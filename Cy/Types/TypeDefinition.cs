@@ -2,7 +2,6 @@
 using Cy.TokenGenerator;
 
 using System.Collections.Generic;
-using System.Reflection;
 
 namespace Cy.Types;
 
@@ -24,6 +23,8 @@ public class TypeDefinition {
 	public int ByteSize;
 	/// <summary>Size (in bits) of type.</summary>
 	public int BitSize;
+	/// <summary>Memory alignment this type requires.</summary>
+	public int Alignment;
 	/// <summary>Offset (in bytes) of type.</summary>
 	public int Offset;
 	/// <summary>Is this a pointer?</summary>
@@ -36,18 +37,20 @@ public class TypeDefinition {
 	public bool IsFunctional { get { return FunctionName != null; } }
 
 
-	public TypeDefinition(string typeName, string functionName, TypeDefinition parent, int bitSize, int byteSize, AccessModifier accessModifier, BaseType baseType, Token[] tokens, bool isPointer = false) {
+	public TypeDefinition(string typeName, string functionName, TypeDefinition parent, int bitSize, int defaultAlignment, AccessModifier accessModifier, BaseType baseType, Token[] tokens, bool isPointer = false) {
 		TypeName = typeName;
 		FunctionName = functionName;
 		Parent = parent;
 		Children = new List<TypeDefinition>();
 		Modifier = accessModifier;
 		BaseType = baseType;
-		ByteSize = byteSize;
+		ByteSize = (bitSize + 7) / 8;
 		BitSize = bitSize;
+		Alignment = GetAlignment(ByteSize, defaultAlignment);
 		Tokens = tokens;
 		IsPointer = isPointer;
 	}
+
 
 	public string FullyQualifiedName() {
 		var nameParts = new List<string>();
@@ -91,5 +94,15 @@ public class TypeDefinition {
 			return $"{Modifier}, {TypeName} {FunctionName}{isFunction}, {Offset} {ByteSize}";
 		}
 		return $"{Modifier}, {TypeName}, {Offset} {ByteSize}";
+	}
+	int GetAlignment(int byteSize, int defaultAlignment) {
+		return byteSize switch {
+			0 => 0,
+			1 or 2 => 2,
+			3 or 4 => 4,
+			int n when (n >= 5 && n <= 8) => 8,
+			int n when (n >= 9 && n <= 16) => 16,
+			_ => defaultAlignment
+		};
 	}
 }

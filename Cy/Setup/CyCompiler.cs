@@ -14,11 +14,11 @@ public class CyCompiler {
 	readonly Config _config;
 	readonly Scanner _scanner;
 	readonly Parser _parser;
-	readonly TypeDefinitionTableCreate _createSymbolTable;
+	readonly TypeDefinitionVisitor _createSymbolTable;
 	readonly TypeDefinitionDisplay _displaySymbolTable;
-	readonly GenIr _compiler;
+	readonly CompileToIr _compiler;
 
-	public CyCompiler(GenIr compiler, TypeDefinitionTableCreate createSymbolTable, Scanner scanner, TypeDefinitionDisplay displaySymbolTable, Config config, Parser parser) {
+	public CyCompiler(CompileToIr compiler, TypeDefinitionVisitor createSymbolTable, Scanner scanner, TypeDefinitionDisplay displaySymbolTable, Config config, Parser parser) {
 		_compiler = compiler;
 		_createSymbolTable = createSymbolTable;
 		_scanner = scanner;

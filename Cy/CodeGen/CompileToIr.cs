@@ -8,14 +8,14 @@ using System.Text;
 namespace Cy.CodeGen;
 
 
-public class GenIr {
+public class CompileToIr {
 	readonly CodeGenVisitor _codeGenVisitor;
 	readonly Llvm.Foundation _foundation;
 	readonly Config _config;
 	
 	readonly string filename;
 
-	public GenIr(CodeGenVisitor codeGenVisitor, Llvm.Foundation foundation, Config config){
+	public CompileToIr(CodeGenVisitor codeGenVisitor, Llvm.Foundation foundation, Config config){
 		_codeGenVisitor = codeGenVisitor;
 		_foundation = foundation;
 		_config = config;

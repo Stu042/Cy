@@ -4,7 +4,7 @@ A compiler, written using C#, for an asynchronous C-like language that attempts 
 
 Examples of Cy source can be found in the directory, TestFiles.cy. These will be used for testing the compiler and vary from as basic as possible to - eventually - covering all common uses.
 
-The frontend compiler creates llvm ir which can be used with llvm to run immediately or compile to native code, this allows for use with varied architectures and able to utilise optimisation by llvm.
+The frontend compiler creates llvm ir which can be used with llvm to run immediately or compile to native code, this allows use with varied architectures and provides the ablity to use llvm to optimise the resultant code.
 
 ## Example Code
 
@@ -16,7 +16,7 @@ int Main():
 
 ```cy
 // Gotta have a hello world program, also shows the format of Mains input arguments
-int Main(str[] argv):
+int Main(str[] args):
     print("Hello world\n")
     return 0
 ```
@@ -71,7 +71,7 @@ Main() can be defined in several ways:
 - `void Main():`
 - `int Main():`
 - `int32 Main():`
-- `int Main(str args):`
+- `int Main(str[] args):`
 
 ### Types
 
@@ -159,9 +159,9 @@ The #set command must be placed in the global namespace and recommended to be fi
 ```cy
 #set default                                                                // allow runtime to calculate the best amount of threads to use
 
-int64 Main(str[] argv):
-    int[] values = int[argv.length - 1]                                     // create an uninitiliased array of ints
-    for (int idx = 1; idx < argv.length; idx++)                             // loop over all input - except app name
+int64 Main(str[] args):
+    int[] values = int[args.length - 1]                                     // create an uninitiliased array of ints
+    for (int idx = 1; idx < args.length; idx++)                             // loop over all input - except app name
         values[idx - 1] = arg.ToInt()                                       // convert arg to an integer and add to array
     int64 total = CalculateTotal(int[] values)                              // total an int array
     return total                                                            // and the final result

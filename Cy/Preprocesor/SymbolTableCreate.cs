@@ -14,7 +14,7 @@ public class SymbolTableCreate : IExprVisitor, IStmtVisitor {
 	public class Options {
 		public bool InClassDefinition;
 	}
-	public SymbolTable SymbolTable;
+	public TypeTable SymbolTable;
 
 	static readonly string BUILTIN_FILENAME = "builtin";
 	static readonly int DEFAULT_INTSIZE = 4;
@@ -39,7 +39,7 @@ public class SymbolTableCreate : IExprVisitor, IStmtVisitor {
 	public SymbolTableCreate(CalculateSymbolSizes calculateSymbolSizes, CalculateSymbolOffsets calculateSymbolOffsets) {
 		_calculateSymbolSizes = calculateSymbolSizes;
 		_calculateSymbolOffsets = calculateSymbolOffsets;
-		SymbolTable = new SymbolTable();
+		SymbolTable = new TypeTable();
 		PopulateStandardTypes();
 	}
 	void PopulateStandardTypes() {
@@ -49,7 +49,7 @@ public class SymbolTableCreate : IExprVisitor, IStmtVisitor {
 		}
 	}
 
-	public SymbolTable Parse(List<List<Stmt>> toplevel) {
+	public TypeTable Parse(List<List<Stmt>> toplevel) {
 		foreach (var stmt in toplevel) {
 			foreach (var section in stmt) {
 				section.Accept(this, null);
@@ -123,8 +123,8 @@ public class SymbolTableCreate : IExprVisitor, IStmtVisitor {
 	public object VisitClassStmt(Stmt.ClassDefinition stmt, object options = null) {
 		var previousTypeTable = SymbolTable.Types;
 		SymbolTable.Types = AddSymbolDefinition(stmt.token.lexeme, null, AccessModifier.Public, false, new Token[] { stmt.token });
-		foreach (Stmt.Var memb in stmt.members) {
-			memb.Accept(this, new Options { InClassDefinition = true });
+		foreach (Stmt.VarDefinition memb in stmt.members) {
+			memb.Accept(this, new Options { InClassDefinition = true });	
 		}
 		foreach (Stmt.Function method in stmt.methods) {
 			method.Accept(this, new Options { InClassDefinition = true });
@@ -139,15 +139,18 @@ public class SymbolTableCreate : IExprVisitor, IStmtVisitor {
 	}
 
 	public object VisitSetExpr(Expr.Set expr, object options = null) {
+		expr.value.Accept(this, options);
 		return null;
 	}
 
 	public object VisitReturnStmt(Stmt.Return stmt, object options = null) {
+		stmt.value.Accept(this, options);
 		return null;
 	}
 
 	public object VisitTypeStmt(Stmt.StmtType stmt, object options = null) {
-		return stmt.info;
+		var names = stmt.info.Select(info => info.lexeme);
+		return string.Join('.', names);
 	}
 
 	public object VisitUnaryExpr(Expr.Unary expr, object options = null) {
@@ -158,7 +161,7 @@ public class SymbolTableCreate : IExprVisitor, IStmtVisitor {
 		return null;
 	}
 
-	public object VisitVarStmt(Stmt.Var stmt, object options = null) {
+	public object VisitVarStmt(Stmt.VarDefinition stmt, object options = null) {
 		var typeTokens = (Token[])stmt.stmtType.Accept(this);
 		var opts = GetOptions(options);
 		if (opts.InClassDefinition) {
@@ -208,7 +211,7 @@ public class SymbolTableCreate : IExprVisitor, IStmtVisitor {
 
 
 public class CalculateSymbolSizes {
-	public void SetSizes(SymbolTable symbolTable) {
+	public void SetSizes(TypeTable symbolTable) {
 		while (!CheckAllSizesSet(symbolTable.Types)) {
 			CalcSizes(symbolTable.Types);
 		}
@@ -267,7 +270,7 @@ public class CalculateSymbolSizes {
 }
 
 public class CalculateSymbolOffsets {
-	public void CalculateOffsets(SymbolTable symbolTable) {
+	public void CalculateOffsets(TypeTable symbolTable) {
 		foreach (var child in symbolTable.Types.Children) {
 			CalcChildOffsets(child);
 		}

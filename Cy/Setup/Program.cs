@@ -2,6 +2,7 @@
 
 using Cy.Preprocesor;
 using Cy.Preprocesor.Interfaces;
+using Cy.Types;
 
 using Microsoft.Extensions.DependencyInjection;
 
@@ -31,9 +32,7 @@ class Program {
 		services.AddScoped<ScannerCursor, ScannerCursor>();
 		services.AddScoped<Parser, Parser>();
 		services.AddScoped<ParserCursor, ParserCursor>();
-		services.AddScoped<SymbolTableCreate, SymbolTableCreate>();
-		services.AddScoped<CalculateSymbolSizes, CalculateSymbolSizes>();
-		services.AddScoped<CalculateSymbolOffsets, CalculateSymbolOffsets>();
-		services.AddScoped<SymbolTableDisplay, SymbolTableDisplay>();
-    }
+		services.AddScoped<TypeTableCreate, TypeTableCreate>();
+		services.AddScoped<TypeTableCreateVisitor, TypeTableCreateVisitor>();
+	}
 }

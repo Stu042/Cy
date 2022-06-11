@@ -90,7 +90,7 @@ public static class Asts {
 			StringBuilder builder = new();
 			builder.Append($"({obj.token.lexeme}: ");
 			List<string> memberStr = new();
-			foreach (Stmt.Var memb in obj.members) {
+			foreach (Stmt.VarDefinition memb in obj.members) {
 				memberStr.Add((string)memb.Accept(this, null));
 			}
 			builder.Append(Parenthesize2("members: ", memberStr.ToArray()));
@@ -134,7 +134,7 @@ public static class Asts {
 			return var.token.lexeme;
 		}
 
-		public object VisitVarStmt(Stmt.Var stmt, object options) {
+		public object VisitVarStmt(Stmt.VarDefinition stmt, object options) {
 			string typestr = (string)stmt.stmtType.Accept(this, null);
 			if (stmt.initialiser == null) {
 				return Parenthesize2(typestr, stmt.token);
@@ -147,7 +147,7 @@ public static class Asts {
 		}
 
 		public object VisitCallExpr(Expr.Call expr, object options) {
-			return Parenthesize2("call", expr.callee, Parenthesize("args: ", expr.arguments.ToArray()));
+			return Parenthesize2("call", expr.callee, Parenthesize("args: ", expr.arguments));
 		}
 
 		public object VisitIfStmt(Stmt.If stmt, object options) {

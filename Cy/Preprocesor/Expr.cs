@@ -78,8 +78,8 @@ public abstract class Expr {
 	/// <summary>Call a method/function.</summary>
 	public class Call : Expr {          // token is end of function call - rparen
 		public Expr callee;             // function we are calling (might be a constructor with no function body as yet)
-		public List<Expr> arguments;    // input args
-		public Call(Expr callee, Token token, List<Expr> arguments) {
+		public Expr[] arguments;		// input args
+		public Call(Expr callee, Token token, Expr[] arguments) {
 			this.callee = callee;
 			this.token = token;
 			this.arguments = arguments;

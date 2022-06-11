@@ -4,10 +4,10 @@ namespace Cy.Preprocesor;
 
 
 /// <summary>Global SymbolDefinition must have a null parent and be named "".</summary>
-public class SymbolTable {
+public class TypeTable {
 	public SymbolDefinition Types;
 
-	public SymbolTable() {
+	public TypeTable() {
 		Types = new SymbolDefinition("", null, null, -1, AccessModifier.Public, false, null);
 	}
 	public SymbolDefinition LookTypeUp(string typeName, string currentTypeName) {

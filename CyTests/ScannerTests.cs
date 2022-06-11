@@ -164,7 +164,7 @@ int Main():
 			errorDisplay = new ErrorDisplay(config);
 			var scannerCursor = new ScannerCursor();
 			if (scanner == null) {
-				scanner = new Scanner(scannerCursor, config, errorDisplay);
+				scanner = new Scanner(scannerCursor, errorDisplay);
 			}
 		}
 

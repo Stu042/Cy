@@ -32,8 +32,8 @@ namespace CyTests {
 			new Stmt.If(
 				ifTokens[0],
 				new Expr.Variable(ifTokens[2]),
-				new List<Stmt> {
-					new Stmt.Var(ifTokens[6], ifTokens[7], null)
+				new Stmt[] {
+					new Stmt.VarDefinition(ifTokens[6], ifTokens[7], null)
 				},
 				null
 			)
@@ -72,16 +72,16 @@ namespace CyTests {
 		};
 		static readonly List<Stmt> callStatement = new() {
 			new Stmt.Function(
-				new Stmt.StmtType(new List<Token>() { callTokens[0] }),
+				new Stmt.StmtType(new Token[] { callTokens[0] }),
 				callTokens[1],
-				new List<Stmt.InputVar>() {
+				new Stmt.InputVar[] {
 					new Stmt.InputVar(
-						new Stmt.StmtType(new List<Token>() { callTokens[3] }),
+						new Stmt.StmtType(new Token[] { callTokens[3] }),
 						callTokens[4]
 					)
 				},
-				new List<Stmt> {
-					new Stmt.Var(callTokens[7], callTokens[8], null)
+				new Stmt[] {
+					new Stmt.VarDefinition(callTokens[7], callTokens[8], null)
 				}
 			)
 		};
@@ -105,14 +105,14 @@ namespace CyTests {
 		};
 		static readonly List<Stmt> callMultArgsStatement = new() {
 			new Stmt.Function(
-				new Stmt.StmtType(new List<Token>() { callMultArgsTokens[0] }),
+				new Stmt.StmtType(new Token[] { callMultArgsTokens[0] }),
 				callMultArgsTokens[1],
-				new List<Stmt.InputVar>() {
-					new Stmt.InputVar(new Stmt.StmtType(new List<Token>() { callMultArgsTokens[3] }), callMultArgsTokens[4]),
-					new Stmt.InputVar(new Stmt.StmtType(new List<Token>() { callMultArgsTokens[6] }), callMultArgsTokens[7])
+				new Stmt.InputVar[] {
+					new Stmt.InputVar(new Stmt.StmtType(new Token[] { callMultArgsTokens[3] }), callMultArgsTokens[4]),
+					new Stmt.InputVar(new Stmt.StmtType(new Token[] { callMultArgsTokens[6] }), callMultArgsTokens[7])
 				},
-				new List<Stmt> {
-					new Stmt.Var(callMultArgsTokens[10], callMultArgsTokens[11], null)
+				new Stmt[] {
+					new Stmt.VarDefinition(callMultArgsTokens[10], callMultArgsTokens[11], null)
 				}
 			)
 		};
@@ -158,17 +158,19 @@ namespace CyTests {
 
 		[Fact]
 		public void Test_Tokens_To_Call_Ast() {
-			var cursor = new ParserCursor(callTokens);
+			var cursor = new ParserCursor();
+			cursor.Init(callTokens);
 			var parser = new Parser(cursor, errorDisplay);
-			var returnedAst = parser.Parse();
+			var returnedAst = parser.Parse(callTokens);
 			Asts.Display(new List<List<Stmt>>() { returnedAst });
 			callStatement.Should().BeEquivalentTo(returnedAst);
 		}
 		[Fact]
 		public void Test_Tokens_To_Call_With_Multiple_Args_Ast() {
-			var cursor = new ParserCursor(callMultArgsTokens);
+			var cursor = new ParserCursor();
+			cursor.Init(callMultArgsTokens);
 			Parser parser = new(cursor, errorDisplay);
-			var returnedAst = parser.Parse();
+			var returnedAst = parser.Parse(callMultArgsTokens);
 			callMultArgsStatement.Should().BeEquivalentTo(returnedAst);
 		}
 
@@ -176,17 +178,19 @@ namespace CyTests {
 		//		int b"
 		[Fact]
 		public void Test_Tokens_To_If_Ast() {
-			var cursor = new ParserCursor(ifTokens);
+			var cursor = new ParserCursor();
+			cursor.Init(ifTokens);
 			Parser parser = new(cursor, errorDisplay);
-			var returnedAst = parser.Parse();
+			var returnedAst = parser.Parse(ifTokens);
 			ifStatement.Should().BeEquivalentTo(returnedAst);
 		}
 
 		[Fact]
 		public void Test_Tokens_To_Unary_Ast() {
-			var cursor = new ParserCursor(unaryTokens);
+			var cursor = new ParserCursor();
+			cursor.Init(unaryTokens);
 			var parser = new Parser(cursor, errorDisplay);
-			var returnedAst = parser.Parse();
+			var returnedAst = parser.Parse(unaryTokens);
 			unaryStatement.Should().BeEquivalentTo(returnedAst);
 		}
 

@@ -17,7 +17,7 @@ public interface IStmtVisitor {
 	/// <summary>A type for a variable or function statement.</summary>
 	object VisitTypeStmt(Stmt.StmtType stmt, object options);
 	/// <summary>A variable statement.</summary>
-	object VisitVarStmt(Stmt.Var stmt, object options);
+	object VisitVarStmt(Stmt.VarDefinition stmt, object options);
 	/// <summary>A for loop statement.</summary>
 	object VisitForStmt(Stmt.For stmt, object options);
 	/// <summary>A while loop statement.</summary>

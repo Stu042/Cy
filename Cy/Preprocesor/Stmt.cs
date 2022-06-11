@@ -1,18 +1,16 @@
 ﻿using Cy.Preprocesor.Interfaces;
 
-using System.Collections.Generic;
-
-
 
 namespace Cy.Preprocesor;
+
 public abstract class Stmt {
 	public Token token;
 	public abstract object Accept(IStmtVisitor visitor, object options = null);
 
 	/// <summary>A group of statements.</summary>
 	public class Block : Stmt {
-		public List<Stmt> statements;
-		public Block(List<Stmt> statements) {
+		public Stmt[] statements;
+		public Block(Stmt[] statements) {
 			token = statements[0].token;
 			this.statements = statements;
 		}
@@ -50,9 +48,9 @@ public abstract class Stmt {
 	/// <summary>Function definition.</summary>
 	public class Function : Stmt {
 		public StmtType returnType;
-		public List<InputVar> input;
-		public List<Stmt> body;
-		public Function(StmtType returnType, Token token, List<InputVar> input, List<Stmt> body) {
+		public InputVar[] input;
+		public Stmt[] body;
+		public Function(StmtType returnType, Token token, InputVar[] input, Stmt[] body) {
 			this.returnType = returnType;
 			this.token = token;
 			this.input = input;
@@ -69,9 +67,9 @@ public abstract class Stmt {
 		public StmtType iteratorType;
 		public Token iterator;
 		public Expr condition;
-		public List<Stmt> body;
+		public Stmt[] body;
 
-		public For(Token forKeyword, StmtType iteratorType, Token iterator, Expr condition, List<Stmt> body) {
+		public For(Token forKeyword, StmtType iteratorType, Token iterator, Expr condition, Stmt[] body) {
 			token = forKeyword;
 			this.iteratorType = iteratorType;
 			this.iterator = iterator;
@@ -85,9 +83,9 @@ public abstract class Stmt {
 
 	public class If : Stmt {
 		public Expr value;
-		public List<Stmt> body;
-		public List<Stmt> elseBody;
-		public If(Token ifKeyword, Expr value, List<Stmt> body, List<Stmt> elseBody) {
+		public Stmt[] body;
+		public Stmt[] elseBody;
+		public If(Token ifKeyword, Expr value, Stmt[] body, Stmt[] elseBody) {
 			token = ifKeyword;
 			this.value = value;
 			this.body = body;
@@ -112,11 +110,11 @@ public abstract class Stmt {
 
 
 	/// <summary>Variable declaration, with possible assignment.</summary>
-	public class Var : Stmt {
+	public class VarDefinition : Stmt {
 		public StmtType stmtType;
 		public Expr initialiser;
-		public Var(Token typeToken, Token token, Expr initialiser) {
-			stmtType = new StmtType(new List<Token>() { typeToken });
+		public VarDefinition(Token typeToken, Token token, Expr initialiser) {
+			stmtType = new StmtType(new Token[] { typeToken });
 			this.token = token;
 			this.initialiser = initialiser;
 		}
@@ -127,10 +125,10 @@ public abstract class Stmt {
 
 
 	public class ClassDefinition : Stmt {
-		public List<Var> members;
-		public List<Function> methods;
-		public List<ClassDefinition> classes;
-		public ClassDefinition(Token token, List<Var> members, List<Function> methods, List<ClassDefinition> classes) {
+		public VarDefinition[] members;
+		public Function[] methods;
+		public ClassDefinition[] classes;
+		public ClassDefinition(Token token, VarDefinition[] members, Function[] methods, ClassDefinition[] classes) {
 			this.token = token;
 			this.members = members;
 			this.methods = methods;
@@ -144,9 +142,9 @@ public abstract class Stmt {
 	/// <summary>A basic or user defined type.</summary>
 	public class StmtType : Stmt {
 		public Token[] info;
-		public StmtType(List<Token> tokens) {
+		public StmtType(Token[] tokens) {
 			token = tokens[0];
-			info = tokens.ToArray();
+			info = tokens;
 		}
 		public StmtType() {
 			token = new Token(TokenType.VOID);
@@ -159,9 +157,9 @@ public abstract class Stmt {
 
 	public class While : Stmt {
 		public Expr condition;
-		public List<Stmt> body;
+		public Stmt[] body;
 
-		public While(Token whileKeyword, Expr condition, List<Stmt> body) {
+		public While(Token whileKeyword, Expr condition, Stmt[] body) {
 			token = whileKeyword;
 			this.condition = condition;
 			this.body = body;

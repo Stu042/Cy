@@ -11,13 +11,9 @@ public class CyCompiler {
 	readonly Config _config;
 	readonly Scanner _scanner;
 	readonly Parser _parser;
-	readonly SymbolTableCreate _createSymbolTable;
-	readonly SymbolTableDisplay _displaySymbolTable;
 
-	public CyCompiler(SymbolTableCreate createSymbolTable, Scanner scanner, SymbolTableDisplay displaySymbolTable, Config config, Parser parser) {
-		_createSymbolTable = createSymbolTable;
+	public CyCompiler(Scanner scanner, Config config, Parser parser) {
 		_scanner = scanner;
-		_displaySymbolTable = displaySymbolTable;
 		_config = config;
 		_parser = parser;
 	}
@@ -25,7 +21,6 @@ public class CyCompiler {
 	public int Compile() {
 		var allFilesTokens = ScanFiles();
 		var allFilesStmts = ParseTokens(allFilesTokens);
-		var symbolTable = MapSymbols(allFilesStmts);
 		return 0;
 	}
 
@@ -56,13 +51,5 @@ public class CyCompiler {
 			Asts.Display(allFilesStmts);
 		}
 		return allFilesStmts;
-	}
-
-	SymbolTable MapSymbols(List<List<Stmt>> allFilesStmts) {
-		var typeTable = _createSymbolTable.Parse(allFilesStmts);
-		if (_config.DisplayPreCompileSymbols) {
-			_displaySymbolTable.DisplayTable(typeTable);
-		}
-		return typeTable;
 	}
 }

@@ -1,28 +1,11 @@
-﻿using Cy.Preprocesor.Interfaces;
+﻿using Cy.Constants;
+using Cy.Preprocesor.Interfaces;
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Cy.Preprocesor;
-
-
-// Write tokens to console
-public static class Tokens {
-	public static void DisplayAllTokens(List<List<Token>> allFilesTokens) {
-		var tokenCount = allFilesTokens.Sum(tokens => tokens.Count);
-		Console.WriteLine($"\n{tokenCount} Tokens:");
-		foreach (var tokens in allFilesTokens) {
-			Show(tokens);
-		}
-	}
-
-	static void Show(List<Token> tokens) {
-		foreach (Token token in tokens) {
-			Console.WriteLine(token.ToFormattedString());
-		}
-	}
-}
 
 
 public class Scanner {
@@ -32,40 +15,39 @@ public class Scanner {
 	string filename;
 	List<Token> tokens;
 	int line;
-	int currentIndent;
 
 
 	static readonly Dictionary<string, TokenType> keywords = new() {
-		{ "this", TokenType.THIS },
-		{ "if", TokenType.IF },
-		{ "while", TokenType.WHILE },
-		{ "for", TokenType.FOR },
-		{ "each", TokenType.EACH },
-		{ "else", TokenType.ELSE },
-		{ "return", TokenType.RETURN },
-		{ "false", TokenType.FALSE },
-		{ "true", TokenType.TRUE },
-		{ "null", TokenType.NULL },
-		{ "super", TokenType.SUPER },
+		{ CommandNames.This, TokenType.THIS },
+		{ CommandNames.If, TokenType.IF },
+		{ CommandNames.While, TokenType.WHILE },
+		{ CommandNames.For, TokenType.FOR },
+		{ CommandNames.Each, TokenType.EACH },
+		{ CommandNames.Else, TokenType.ELSE },
+		{ CommandNames.Return, TokenType.RETURN },
+		{ CommandNames.False, TokenType.FALSE },
+		{ CommandNames.True, TokenType.TRUE },
+		{ CommandNames.Null, TokenType.NULL },
+		{ CommandNames.Super, TokenType.SUPER },
 	};
 
 
 	static readonly Dictionary<string, TokenType> baseTypes = new() {
-		{ "int", TokenType.INT },
-		{ "int8", TokenType.INT8 },
-		{ "int16", TokenType.INT16 },
-		{ "int32", TokenType.INT32 },
-		{ "int64", TokenType.INT64 },
-		{ "int128", TokenType.INT128 },
-		{ "float", TokenType.FLOAT },
-		{ "float16", TokenType.FLOAT16 },
-		{ "float32", TokenType.FLOAT32 },
-		{ "float64", TokenType.FLOAT64 },
-		{ "float128", TokenType.FLOAT128 },
-		{ "ascii", TokenType.ASCII },
-		{ "utf8", TokenType.UTF8 },
-		{ "bool", TokenType.BOOL },
-		{ "void", TokenType.VOID },
+		{ BasicTypeNames.Int, TokenType.INT },
+		{ BasicTypeNames.Int8, TokenType.INT8 },
+		{ BasicTypeNames.Int16, TokenType.INT16 },
+		{ BasicTypeNames.Int32, TokenType.INT32 },
+		{ BasicTypeNames.Int64, TokenType.INT64 },
+		{ BasicTypeNames.Int128, TokenType.INT128 },
+		{ BasicTypeNames.Float, TokenType.FLOAT },
+		{ BasicTypeNames.Float16, TokenType.FLOAT16 },
+		{ BasicTypeNames.Float32, TokenType.FLOAT32 },
+		{ BasicTypeNames.Float64, TokenType.FLOAT64 },
+		{ BasicTypeNames.Float128, TokenType.FLOAT128 },
+		{ BasicTypeNames.Ascii, TokenType.ASCII },
+		{ BasicTypeNames.Utf8, TokenType.UTF8 },
+		{ BasicTypeNames.Bool, TokenType.BOOL },
+		{ BasicTypeNames.Void, TokenType.VOID },
 	};
 
 
@@ -79,7 +61,6 @@ public class Scanner {
 		tokens = new();
 		this.filename = filename;
 		line = 1;
-		currentIndent = 0;
 		_cursor.NewFile(alltext);
 		while (!_cursor.IsAtEnd()) {
 			_cursor.Start();
@@ -122,6 +103,12 @@ public class Scanner {
 				break;
 			case '#':
 				AddToken(TokenType.HASH);
+				break;
+			case '{':
+				AddToken(TokenType.LEFT_BRACE);
+				break;
+			case '}':
+				AddToken(TokenType.RIGHT_BRACE);
 				break;
 			case '!':
 				AddToken(_cursor.Match('=') ? TokenType.BANG_EQUAL : TokenType.BANG);
@@ -174,15 +161,9 @@ public class Scanner {
 			case '\r':
 				AddToken(TokenType.IGNORED);                    // Ignore most whitespace.
 				break;
-			case '\n': {
-					AddToken(TokenType.NEWLINE);
-					line++;
-					currentIndent = 0;
-					while (_cursor.Peek() == '\t' && !_cursor.IsAtEnd()) {
-						currentIndent++;
-						_cursor.Advance();
-					}
-				}
+			case '\n':
+				AddToken(TokenType.NEWLINE);
+				line++;
 				break;
 			case '"':
 				String();
@@ -260,18 +241,18 @@ public class Scanner {
 
 
 	void AddToken(TokenType type) {
-		tokens.Add(new Token(type, _cursor.ToString(), null, currentIndent, line, _cursor.Offset(), filename));
+		tokens.Add(new Token(type, _cursor.ToString(), null, line, _cursor.Offset(), filename));
 	}
 
 	void AddToken(TokenType type, string lexeme) {
-		tokens.Add(new Token(type, lexeme, null, currentIndent, line, _cursor.Offset(), filename));
+		tokens.Add(new Token(type, lexeme, null, line, _cursor.Offset(), filename));
 	}
 
 	void AddToken(TokenType type, object literal) {
-		tokens.Add(new Token(type, _cursor.ToString(), literal, currentIndent, line, _cursor.Offset(), filename));
+		tokens.Add(new Token(type, _cursor.ToString(), literal, line, _cursor.Offset(), filename));
 	}
 
 	void Error(string message) {
-		_display.Error(filename, line, _cursor.Offset(), _cursor.GetLineStr(), "Scanner error. " + message);
+		_display.Error(filename, line, _cursor.Offset(), _cursor.GetLineStr(), "Scanner error, " + message);
 	}
 }

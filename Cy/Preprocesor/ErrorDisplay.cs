@@ -1,10 +1,13 @@
-﻿using Cy.Preprocesor.Interfaces;
+﻿using Cy.Constants;
+using Cy.Preprocesor.Interfaces;
 using Cy.Setup;
+using Cy.Util;
 
 using System;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Cy.Preprocesor;
 public class ErrorDisplay : IErrorDisplay {
@@ -14,9 +17,11 @@ public class ErrorDisplay : IErrorDisplay {
 		_config = config;
 	}
 
+
 	public void Error(Token token, string linestr, string message) {
 		Error(token.filename, token.line, token.offset, linestr, message);
 	}
+
 	public void Error(Token tok, string message) {
 		Error(tok.filename, tok.line, tok.offset, GetLine(tok.filename, tok.line), message);
 	}
@@ -24,12 +29,26 @@ public class ErrorDisplay : IErrorDisplay {
 	public void Error(string filename, int line, int offset, string lineText, string message) {
 		var infoText = BuildInfoText(line, offset, _config.TabSize);
 		var errorLine = BuildErrorLine(lineText, line, _config.TabSize);
-		var pointerLine = BuildPointerLine(infoText, lineText, offset + infoText.Length, _config.TabSize);
-		Console.WriteLine($"Error in {filename}. {message}");
-		Console.WriteLine(infoText + errorLine);
-		Console.WriteLine(pointerLine);
+		var pointerLine = BuildPointerLine(infoText, lineText, offset, _config.TabSize);
+		ColourConsole.Write($"Error in {filename},", Colour.Hue.FG_Red);
+		var newMessage = TokenTypeToString(message);
+		ColourConsole.WriteLine($" {newMessage}", Colour.Hue.FG_DarkGrey);
+		ColourConsole.Write(infoText, Colour.Hue.FG_DarkBlue);
+		ColourConsole.WriteLine(errorLine, Colour.Hue.FG_White);
+		ColourConsole.Write(pointerLine, Colour.Hue.FG_Blue);
+		if (pointerLine != null) {
+			ColourConsole.WriteLine("^", Colour.Hue.FG_Cyan);
+		}
 	}
 
+	string TokenTypeToString(string message) {
+		var tokenTypeValues = (TokenType[])Enum.GetValues(typeof(TokenType));
+		foreach (var tokenTypeValue in tokenTypeValues) {
+			var pattern = $"\\b{Regex.Escape(tokenTypeValue.ToString())}\\b";
+			message = Regex.Replace(message, pattern, "'" + TokenTypeStr.TokenTypeString[tokenTypeValue] + "'");
+		}
+		return message;
+	}
 
 	// i.e. "    15|24 "
 	string BuildInfoText(int line, int offset, int tabSize) {
@@ -47,17 +66,16 @@ public class ErrorDisplay : IErrorDisplay {
 	// i.e. "--------^"
 	string BuildPointerLine(string infoText, string errorText, int offset, int tabSize) {
 		if (offset < 0 || offset >= errorText.Length) {
-			return $"Error offset is out of range, offset {offset}, line: {infoText + errorText}";
+			offset = errorText.Length;
 		}
 		var output = new StringBuilder(offset + infoText.Length);
 		var firstPart = errorText[..offset];
 		var tabcount = firstPart.Count(c => c == '\t');
 		output.Append(new string('-', tabcount * tabSize - tabcount + offset + infoText.Length));
-		output.Append('^');
 		return output.ToString();
 	}
 
-	// return text at line from file in filename
+	/// <summary>Return text at line from file in filename</summary>
 	string GetLine(string filename, int line) {
 		if (filename != "") {
 			string[] alltext = File.ReadAllLines(filename);

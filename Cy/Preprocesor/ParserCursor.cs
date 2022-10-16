@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using System.Collections.Generic;
+using Cy.Constants;
 
 namespace Cy.Preprocesor;
 
@@ -32,6 +33,14 @@ public class ParserCursor {
 		Current = 0;
 	}
 
+	/// <summary>Is the expected token type next (after any newlines).</summary>
+	public bool IsSkipNewlineCheck(TokenType expected) {
+		while (Consume(TokenType.NEWLINE) != null) {}
+		if (IsAtEnd()) {
+			return false;
+		}
+		return tokens[Current].tokenType == expected;
+	}
 
 	/// <summary>Is the expected token type next.</summary>
 	public bool IsCheck(TokenType expected) {
@@ -102,6 +111,12 @@ public class ParserCursor {
 		return false;
 	}
 
+	public Token Consume(TokenType expected) {
+		if (IsCheck(expected)) {
+			return Advance();
+		}
+		return null;
+	}
 
 	public Token Consume(TokenType expected, string message) {
 		if (IsCheck(expected)) {
@@ -109,6 +124,14 @@ public class ParserCursor {
 		}
 		throw new ParserException(Peek(), message);
 	}
+	public Token ConsumeSkipNewline(TokenType expected, string message) {
+		while (Consume(TokenType.NEWLINE) != null) { }
+		if (IsCheck(expected)) {
+			return Advance();
+		}
+		throw new ParserException(Peek(), message);
+	}
+
 	public Token ConsumeAny(string message, params TokenType[] expecteds) {
 		if (IsCheckAny(expecteds)) {
 			return Advance();

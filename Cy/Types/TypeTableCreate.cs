@@ -5,40 +5,56 @@ using System.Collections.Generic;
 
 namespace Cy.Types;
 
+public class TypeTableCreateOption
+{
+	public NamespaceHelper NamespaceHelper;
+	public TypeTable TypeTable;
+}
 
+
+/// <summary> Create a collection of all type definitions. </summary>
 public class TypeTableCreate {
 	readonly TypeTableCreateVisitor _visitor;
-	public Dictionary<string, Type> Types;
+	readonly TypeTable _typeTable;
+	readonly NamespaceHelper _namespaceHelper;
 
-	readonly Type[] builtinTypes = new Type[] {
-		new Type("int", AccessModifier.Public, TypeFormat.Int, 32, 4),
-		new Type("int8", AccessModifier.Public, TypeFormat.Int, 8, 1),
-		new Type("int16", AccessModifier.Public, TypeFormat.Int, 16, 2),
-		new Type("int32", AccessModifier.Public, TypeFormat.Int, 32, 4),
-		new Type("int64", AccessModifier.Public, TypeFormat.Int, 64, 8),
-		new Type("int128", AccessModifier.Public, TypeFormat.Int, 128, 16),
-		new Type("float", AccessModifier.Public, TypeFormat.Float, 64, 8),
-		new Type("float16", AccessModifier.Public, TypeFormat.Float, 16, 2),
-		new Type("float32", AccessModifier.Public, TypeFormat.Float, 32, 4),
-		new Type("float64", AccessModifier.Public, TypeFormat.Float, 64, 8),
-		new Type("float128", AccessModifier.Public, TypeFormat.Float, 128, 16),
-		new Type("bool", AccessModifier.Public, TypeFormat.Bool, 1, 1),
-		new Type("void", AccessModifier.Public, TypeFormat.Void, 0, 0)
+	readonly BaseType[] builtinTypes = new BaseType[] {
+		new BaseType(Constants.BasicTypeNames.Int, AccessModifier.Public, TypeFormat.Int, 32, 4),
+		new BaseType(Constants.BasicTypeNames.Int8, AccessModifier.Public, TypeFormat.Int, 8, 1),
+		new BaseType(Constants.BasicTypeNames.Int16, AccessModifier.Public, TypeFormat.Int, 16, 2),
+		new BaseType(Constants.BasicTypeNames.Int32, AccessModifier.Public, TypeFormat.Int, 32, 4),
+		new BaseType(Constants.BasicTypeNames.Int64, AccessModifier.Public, TypeFormat.Int, 64, 8),
+		new BaseType(Constants.BasicTypeNames.Int128, AccessModifier.Public, TypeFormat.Int, 128, 16),
+		new BaseType(Constants.BasicTypeNames.Float, AccessModifier.Public, TypeFormat.Float, 64, 8),
+		new BaseType(Constants.BasicTypeNames.Float16, AccessModifier.Public, TypeFormat.Float, 16, 2),
+		new BaseType(Constants.BasicTypeNames.Float32, AccessModifier.Public, TypeFormat.Float, 32, 4),
+		new BaseType(Constants.BasicTypeNames.Float64, AccessModifier.Public, TypeFormat.Float, 64, 8),
+		new BaseType(Constants.BasicTypeNames.Float128, AccessModifier.Public, TypeFormat.Float, 128, 16),
+		new BaseType(Constants.BasicTypeNames.Bool, AccessModifier.Public, TypeFormat.Bool, 1, 1),
+		new BaseType(Constants.BasicTypeNames.Void, AccessModifier.Public, TypeFormat.Void, 0, 0)
 	};
 
-	public TypeTableCreate(TypeTableCreateVisitor visitor) {
+	public TypeTableCreate(TypeTable typeTable, NamespaceHelper namespaceHelper, TypeTableCreateVisitor visitor) {
+		_typeTable = typeTable;
+		_namespaceHelper = namespaceHelper;
 		_visitor = visitor;
-		Types = new Dictionary<string, Type>();
 		foreach (var type in builtinTypes) {
-			Types.Add(type.Name, type);
+			_typeTable.Add(type);
 		};
 	}
 
-	public void Create(List<List<Stmt>> allFilesStmts) {
+	public TypeTable Create(List<List<Stmt>> allFilesStmts) {
+		var typeTableCreateOption = new TypeTableCreateOption
+		{
+			NamespaceHelper = _namespaceHelper,
+			TypeTable = _typeTable,
+		};
 		foreach (var stmts in allFilesStmts) {
 			foreach (var stmt in stmts) {
-				stmt.Accept(_visitor, Types);
+				stmt.Accept(_visitor, typeTableCreateOption);
 			}
 		}
+		return _typeTable;
 	}
 }
+

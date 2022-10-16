@@ -58,9 +58,15 @@ public class ScannerCursor {
 	public int Offset() {
 		int s = start;
 		int c = 0;
+		if (source[s] == '\n') {
+			--s;
+			c += 1;
+		}
 		while (source[s] != '\n' && s > 0) {
 			--s;
-			c++;
+			if (!char.IsControl(source[s])) {
+				c++;
+			}
 		}
 		return c;
 	}

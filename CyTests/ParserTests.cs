@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
+using Cy.Constants;
 using Cy.Preprocesor;
 using Cy.Preprocesor.Interfaces;
 
@@ -11,22 +11,23 @@ using Xunit;
 
 
 
-namespace CyTests {
-	public class ParserTests {
+namespace CyTests
+{
+    public class ParserTests {
 		static readonly string test1_Filename = "test1.cy";
 		readonly ErrorDisplay errorDisplay;
 
 		static readonly List<Token> ifTokens = new() {
-			new Token(TokenType.IF, "if", null, 0, 1, 0, test1_Filename),
-			new Token(TokenType.LEFT_PAREN, "(", null, 0, 1, 3, test1_Filename),
-			new Token(TokenType.IDENTIFIER, "a", null, 0, 1, 8, test1_Filename),
-			new Token(TokenType.RIGHT_PAREN, ")", null, 0, 1, 11, test1_Filename),
-			new Token(TokenType.COLON, ":", null, 0, 1, 12, test1_Filename),
-			new Token(TokenType.NEWLINE, "\n", null, 0, 1, 13, test1_Filename),
-			new Token(TokenType.INT, "int", null, 1, 2, 1, test1_Filename),
-			new Token(TokenType.IDENTIFIER, "b", null, 1, 2, 5, test1_Filename),
-			new Token(TokenType.NEWLINE, "\n", null, 0, 1, 13, test1_Filename),
-			new Token(TokenType.EOF, "\0", null, 0, 1, 14, test1_Filename),
+			new Token(TokenType.IF, "if", null, 1, 0, test1_Filename),
+			new Token(TokenType.LEFT_PAREN, "(", null,  1, 3, test1_Filename),
+			new Token(TokenType.IDENTIFIER, "a", null,  1, 8, test1_Filename),
+			new Token(TokenType.RIGHT_PAREN, ")", null, 1, 11, test1_Filename),
+			new Token(TokenType.COLON, ":", null, 1, 12, test1_Filename),
+			new Token(TokenType.NEWLINE, "\n", null,  1, 13, test1_Filename),
+			new Token(TokenType.INT, "int", null,  2, 1, test1_Filename),
+			new Token(TokenType.IDENTIFIER, "b", null, 2, 5, test1_Filename),
+			new Token(TokenType.NEWLINE, "\n", null,  1, 13, test1_Filename),
+			new Token(TokenType.EOF, "\0", null,  1, 14, test1_Filename),
 		};
 		static readonly List<Stmt> ifStatement = new() {
 			new Stmt.If(
@@ -57,18 +58,18 @@ namespace CyTests {
 		//};
 
 		static readonly List<Token> callTokens = new() {
-			new Token(TokenType.INT32, "int32", null, 0, 1, 0, test1_Filename),
-			new Token(TokenType.IDENTIFIER, "afunction", null, 0, 1, 0, test1_Filename),
-			new Token(TokenType.LEFT_PAREN, "(", null, 0, 1, 9, test1_Filename),
-			new Token(TokenType.INT32, "int32", null, 0, 1, 0, test1_Filename),
-			new Token(TokenType.IDENTIFIER, "a", null, 0, 1, 10, test1_Filename),
-			new Token(TokenType.RIGHT_PAREN, ")", null, 0, 1, 11, test1_Filename),
-			new Token(TokenType.COLON, ":", null, 0, 1, 11, test1_Filename),
-			new Token(TokenType.NEWLINE, "\n", null, 0, 1, 12, test1_Filename),
-			new Token(TokenType.INT, "int", null, 1, 2, 1, test1_Filename),
-			new Token(TokenType.IDENTIFIER, "b", null, 1, 2, 5, test1_Filename),
-			new Token(TokenType.NEWLINE, "\n", null, 0, 1, 13, test1_Filename),
-			new Token(TokenType.EOF, "\0", null, 0, 1, 13, test1_Filename),
+			new Token(TokenType.INT32, "i32", null,  1, 0, test1_Filename),
+			new Token(TokenType.IDENTIFIER, "afunction", null, 1, 0, test1_Filename),
+			new Token(TokenType.LEFT_PAREN, "(", null,  1, 9, test1_Filename),
+			new Token(TokenType.INT32, "i32", null,  1, 0, test1_Filename),
+			new Token(TokenType.IDENTIFIER, "a", null,  1, 10, test1_Filename),
+			new Token(TokenType.RIGHT_PAREN, ")", null,  1, 11, test1_Filename),
+			new Token(TokenType.COLON, ":", null,  1, 11, test1_Filename),
+			new Token(TokenType.NEWLINE, "\n", null, 1, 12, test1_Filename),
+			new Token(TokenType.INT, "int", null,  2, 1, test1_Filename),
+			new Token(TokenType.IDENTIFIER, "b", null,  2, 5, test1_Filename),
+			new Token(TokenType.NEWLINE, "\n", null, 1, 13, test1_Filename),
+			new Token(TokenType.EOF, "\0", null, 1, 13, test1_Filename),
 		};
 		static readonly List<Stmt> callStatement = new() {
 			new Stmt.Function(
@@ -87,21 +88,21 @@ namespace CyTests {
 		};
 
 		static readonly List<Token> callMultArgsTokens = new() {
-			new Token(TokenType.INT32, "int32", null, 0, 1, 0, test1_Filename),
-			new Token(TokenType.IDENTIFIER, "afunction", null, 0, 1, 0, test1_Filename),
-			new Token(TokenType.LEFT_PAREN, "(", null, 0, 1, 9, test1_Filename),
-			new Token(TokenType.INT32, "int32", null, 0, 1, 0, test1_Filename),
-			new Token(TokenType.IDENTIFIER, "a", null, 0, 1, 10, test1_Filename),
-			new Token(TokenType.COMMA, ",", null, 0, 1, 10, test1_Filename),
-			new Token(TokenType.INT32, "float32", null, 0, 1, 0, test1_Filename),
-			new Token(TokenType.IDENTIFIER, "b", null, 0, 1, 10, test1_Filename),
-			new Token(TokenType.RIGHT_PAREN, ")", null, 0, 1, 11, test1_Filename),
-			new Token(TokenType.COLON, ":", null, 0, 1, 11, test1_Filename),
-			new Token(TokenType.NEWLINE, "\n", null, 0, 1, 12, test1_Filename),
-			new Token(TokenType.INT, "int", null, 1, 2, 1, test1_Filename),
-			new Token(TokenType.IDENTIFIER, "c", null, 1, 2, 5, test1_Filename),
-			new Token(TokenType.NEWLINE, "\n", null, 0, 1, 13, test1_Filename),
-			new Token(TokenType.EOF, "\0", null, 0, 1, 13, test1_Filename),
+			new Token(TokenType.INT32, "i32", null,  1, 0, test1_Filename),
+			new Token(TokenType.IDENTIFIER, "afunction", null,  1, 0, test1_Filename),
+			new Token(TokenType.LEFT_PAREN, "(", null,  1, 9, test1_Filename),
+			new Token(TokenType.INT32, "i32", null, 1, 0, test1_Filename),
+			new Token(TokenType.IDENTIFIER, "a", null, 1, 10, test1_Filename),
+			new Token(TokenType.COMMA, ",", null,  1, 10, test1_Filename),
+			new Token(TokenType.INT32, "f32", null,  1, 0, test1_Filename),
+			new Token(TokenType.IDENTIFIER, "b", null,  1, 10, test1_Filename),
+			new Token(TokenType.RIGHT_PAREN, ")", null,  1, 11, test1_Filename),
+			new Token(TokenType.COLON, ":", null,  1, 11, test1_Filename),
+			new Token(TokenType.NEWLINE, "\n", null,  1, 12, test1_Filename),
+			new Token(TokenType.INT, "int", null,  2, 1, test1_Filename),
+			new Token(TokenType.IDENTIFIER, "c", null, 2, 5, test1_Filename),
+			new Token(TokenType.NEWLINE, "\n", null,  1, 13, test1_Filename),
+			new Token(TokenType.EOF, "\0", null,  1, 13, test1_Filename),
 		};
 		static readonly List<Stmt> callMultArgsStatement = new() {
 			new Stmt.Function(
@@ -118,26 +119,26 @@ namespace CyTests {
 		};
 
 		static readonly List<Token> unaryTokens = new() {
-			new Token(TokenType.MINUSMINUS, "--", null, 0, 1, 0, test1_Filename),
-			new Token(TokenType.IDENTIFIER, "a", null, 0, 1, 2, test1_Filename),
-			new Token(TokenType.NEWLINE, "\n", null, 0, 1, 3, test1_Filename),
-			new Token(TokenType.EOF, "\0", null, 0, 1, 4, test1_Filename),
+			new Token(TokenType.MINUSMINUS, "--", null,1, 0, test1_Filename),
+			new Token(TokenType.IDENTIFIER, "a", null, 1, 2, test1_Filename),
+			new Token(TokenType.NEWLINE, "\n", null, 1, 3, test1_Filename),
+			new Token(TokenType.EOF, "\0", null, 1, 4, test1_Filename),
 		};
 		static readonly List<Stmt> unaryStatement = new() {
 			new Stmt.Expression(new Expr.Unary(unaryTokens[0], new Expr.Variable(unaryTokens[1])))
 		};
 
 		static readonly List<Token> whileTokens = new() {
-			new Token(TokenType.WHILE, "while", null, 0, 1, 0, test1_Filename),
-			new Token(TokenType.IDENTIFIER, "a", null, 0, 1, 2, test1_Filename),
-			new Token(TokenType.EQUAL_EQUAL, "==", null, 0, 1, 2, test1_Filename),
-			new Token(TokenType.IDENTIFIER, "a", null, 0, 1, 2, test1_Filename),
-			new Token(TokenType.COLON, ":", null, 0, 0, 2, test1_Filename),
-			new Token(TokenType.NEWLINE, "\n", null, 0, 0, 3, test1_Filename),
-			new Token(TokenType.INT, "int", null, 1, 1, 1, test1_Filename),
-			new Token(TokenType.IDENTIFIER, "c", null, 1, 1, 5, test1_Filename),
-			new Token(TokenType.NEWLINE, "\n", null, 0, 1, 13, test1_Filename),
-			new Token(TokenType.EOF, "\0", null, 0, 1, 13, test1_Filename),
+			new Token(TokenType.WHILE, "while", null, 1, 0, test1_Filename),
+			new Token(TokenType.IDENTIFIER, "a", null,  1, 2, test1_Filename),
+			new Token(TokenType.EQUAL_EQUAL, "==", null, 1, 2, test1_Filename),
+			new Token(TokenType.IDENTIFIER, "a", null,  1, 2, test1_Filename),
+			new Token(TokenType.COLON, ":", null,  0, 2, test1_Filename),
+			new Token(TokenType.NEWLINE, "\n", null,  0, 3, test1_Filename),
+			new Token(TokenType.INT, "int", null,  1, 1, test1_Filename),
+			new Token(TokenType.IDENTIFIER, "c", null, 1, 5, test1_Filename),
+			new Token(TokenType.NEWLINE, "\n", null, 1, 13, test1_Filename),
+			new Token(TokenType.EOF, "\0", null, 1, 13, test1_Filename),
 		};
 		//static readonly List<Cy.Ast.Stmt> whileStatement = new() {
 		//	new Cy.Ast.Stmt.While(whileTokens[0], new Cy.Ast.Expr.Compare)

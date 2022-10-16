@@ -1,4 +1,5 @@
-﻿using Cy.Enums;
+﻿using Cy.Constants;
+using Cy.Enums;
 using Cy.Preprocesor.Interfaces;
 
 using System.Collections.Generic;
@@ -7,7 +8,7 @@ using System.Linq;
 namespace Cy.Preprocesor;
 
 /// <summary>Create the symbol table, given an AST.</summary>
-public class SymbolTableCreate : IExprVisitor, IStmtVisitor {
+public class SymbolTableCreate : IAstVisitor {
 
 	readonly CalculateSymbolSizes _calculateSymbolSizes;
 	readonly CalculateSymbolOffsets _calculateSymbolOffsets;
@@ -21,19 +22,19 @@ public class SymbolTableCreate : IExprVisitor, IStmtVisitor {
 	static readonly int DEFAULT_FLOATSIZE = 8;
 
 	readonly SymbolDefinition[] standardTypes = new SymbolDefinition[] {
-		new SymbolDefinition("int", null, null, DEFAULT_INTSIZE, AccessModifier.Public, false, new Token[] { new Token(TokenType.INT, "int", null, 0,0,0, BUILTIN_FILENAME) }),
-		new SymbolDefinition("int8", null, null, 1, AccessModifier.Public, false, new Token[] { new Token(TokenType.INT8, "int8", null, 0,0,0, BUILTIN_FILENAME) }),
-		new SymbolDefinition("int16", null, null, 2, AccessModifier.Public, false, new Token[] { new Token(TokenType.INT16, "int16", null, 0,0,0, BUILTIN_FILENAME) }),
-		new SymbolDefinition("int32", null, null, 4, AccessModifier.Public, false, new Token[] { new Token(TokenType.INT32, "int32", null, 0,0,0, BUILTIN_FILENAME) }),
-		new SymbolDefinition("int64", null, null, 8, AccessModifier.Public, false, new Token[] { new Token(TokenType.INT64, "int64", null, 0,0,0, BUILTIN_FILENAME) }),
-		new SymbolDefinition("int128", null, null, 16, AccessModifier.Public, false, new Token[] { new Token(TokenType.INT128, "int128", null, 0,0,0, BUILTIN_FILENAME) }),
-		new SymbolDefinition("float", null, null, DEFAULT_FLOATSIZE, AccessModifier.Public, false, new Token[] { new Token(TokenType.FLOAT, "float", null, 0,0,0, BUILTIN_FILENAME) }),
-		new SymbolDefinition("float16", null, null, 2, AccessModifier.Public, false, new Token[] { new Token(TokenType.FLOAT16, "float16", null, 0,0,0, BUILTIN_FILENAME) }),
-		new SymbolDefinition("float32", null, null, 4, AccessModifier.Public, false, new Token[] { new Token(TokenType.FLOAT32, "float32", null, 0,0,0, BUILTIN_FILENAME) }),
-		new SymbolDefinition("float64", null, null, 8, AccessModifier.Public, false, new Token[] { new Token(TokenType.FLOAT64, "float64", null, 0,0,0, BUILTIN_FILENAME) }),
-		new SymbolDefinition("float128", null, null, 16, AccessModifier.Public, false, new Token[] { new Token(TokenType.FLOAT128, "float128", null, 0,0,0, BUILTIN_FILENAME) }),
-		new SymbolDefinition("bool", null, null, 1, AccessModifier.Public, false, new Token[] { new Token(TokenType.BOOL, "bool", null, 0,0,0, BUILTIN_FILENAME) }),
-		new SymbolDefinition("void", null, null, 0, AccessModifier.Public, false, new Token[] { new Token(TokenType.VOID, "void", null, 0,0,0, BUILTIN_FILENAME) })
+		new SymbolDefinition("int", null, null, DEFAULT_INTSIZE, AccessModifier.Public, false, new Token[] { new Token(TokenType.INT, "int", null, 0,0, BUILTIN_FILENAME) }),
+		new SymbolDefinition("int8", null, null, 1, AccessModifier.Public, false, new Token[] { new Token(TokenType.INT8, "int8", null, 0,0, BUILTIN_FILENAME) }),
+		new SymbolDefinition("int16", null, null, 2, AccessModifier.Public, false, new Token[] { new Token(TokenType.INT16, "int16", null, 0,0, BUILTIN_FILENAME) }),
+		new SymbolDefinition("int32", null, null, 4, AccessModifier.Public, false, new Token[] { new Token(TokenType.INT32, "int32", null, 0,0, BUILTIN_FILENAME) }),
+		new SymbolDefinition("int64", null, null, 8, AccessModifier.Public, false, new Token[] { new Token(TokenType.INT64, "int64", null, 0,0, BUILTIN_FILENAME) }),
+		new SymbolDefinition("int128", null, null, 16, AccessModifier.Public, false, new Token[] { new Token(TokenType.INT128, "int128", null, 0,0, BUILTIN_FILENAME) }),
+		new SymbolDefinition("float", null, null, DEFAULT_FLOATSIZE, AccessModifier.Public, false, new Token[] { new Token(TokenType.FLOAT, "float", null, 0,0, BUILTIN_FILENAME) }),
+		new SymbolDefinition("float16", null, null, 2, AccessModifier.Public, false, new Token[] { new Token(TokenType.FLOAT16, "float16", null, 0,0, BUILTIN_FILENAME) }),
+		new SymbolDefinition("float32", null, null, 4, AccessModifier.Public, false, new Token[] { new Token(TokenType.FLOAT32, "float32", null, 0,0, BUILTIN_FILENAME) }),
+		new SymbolDefinition("float64", null, null, 8, AccessModifier.Public, false, new Token[] { new Token(TokenType.FLOAT64, "float64", null, 0,0, BUILTIN_FILENAME) }),
+		new SymbolDefinition("float128", null, null, 16, AccessModifier.Public, false, new Token[] { new Token(TokenType.FLOAT128, "float128", null, 0,0, BUILTIN_FILENAME) }),
+		new SymbolDefinition("bool", null, null, 1, AccessModifier.Public, false, new Token[] { new Token(TokenType.BOOL, "bool", null, 0,0, BUILTIN_FILENAME) }),
+		new SymbolDefinition("void", null, null, 0, AccessModifier.Public, false, new Token[] { new Token(TokenType.VOID, "void", null, 0,0, BUILTIN_FILENAME) })
 	};
 
 	public SymbolTableCreate(CalculateSymbolSizes calculateSymbolSizes, CalculateSymbolOffsets calculateSymbolOffsets) {

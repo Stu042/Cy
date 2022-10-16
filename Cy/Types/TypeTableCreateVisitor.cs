@@ -5,6 +5,7 @@ using System.Linq;
 
 namespace Cy.Types;
 
+
 public class TypeTableCreateVisitor : IAstVisitor {
 	public object VisitAssignExpr(Expr.Assign expr, object options) {
 		expr.value.Accept(this, options);
@@ -33,14 +34,14 @@ public class TypeTableCreateVisitor : IAstVisitor {
 	}
 
 	public object VisitClassStmt(Stmt.ClassDefinition stmt, object options) {
-		var types = (ObjectType)options;
+		var data = (TypeTableCreateOption)options;
 		var obj = new ObjectType(stmt.token.lexeme, Enums.AccessModifier.Public, Enums.TypeFormat.Object, 0, 0);
-		types.AddChild(obj);
+		data.TypeTable.Add(obj);
 		foreach (var memb in stmt.members) {
-			var member = (Type)memb.Accept(this, options);    // VisitVarStmt returns member (Type or ObjectType) definitions
+			var member = (ObjectChildType)memb.Accept(this, options);		// VisitVarStmt returns member (Type or ObjectType) definitions
 			obj.AddChild(member);
 		}
-		foreach (var memb in stmt.methods) {        // VisitFunctionStmt returns method definitions
+		foreach (var memb in stmt.methods) {						// VisitFunctionStmt returns method definitions
 			var method = (MethodType)memb.Accept(this, options);
 			obj.AddChild(method);
 		}
@@ -63,17 +64,23 @@ public class TypeTableCreateVisitor : IAstVisitor {
 
 	// returns method definitions
 	public object VisitFunctionStmt(Stmt.Function stmt, object options) {
+		string returnTypeName;
+		Enums.TypeFormat returnTypeFormat;
 		if (stmt.returnType != null) {
-			stmt.returnType.Accept(this, options);
+			returnTypeName = (string)stmt.returnType.Accept(this, options);
+			returnTypeFormat = Enums.TypeFormat.Int;				// todo, lookup type and get format
 		} else {
+			returnTypeName = Constants.BasicTypeNames.Void;
+			returnTypeFormat = Enums.TypeFormat.Void;
 		}
+		var functionType = new MethodType(stmt.token.lexeme, returnTypeName, Enums.AccessModifier.Public, returnTypeFormat, 0, 0);
 		foreach (var param in stmt.input) {
-			param.Accept(this, options);
+			param.Accept(this, options);							// todo, add params to MethodType?
 		}
 		foreach (var body in stmt.body) {
 			body.Accept(this, options);
 		}
-		return null;
+		return functionType;
 	}
 
 	public object VisitGetExpr(Expr.Get obj, object options) {
@@ -106,8 +113,7 @@ public class TypeTableCreateVisitor : IAstVisitor {
 	}
 
 	public object VisitReturnStmt(Stmt.Return stmt, object options) {
-		if (stmt.value == null) {
-		} else {
+		if (stmt.value != null) {
 			stmt.value.Accept(this, options);
 		}
 		return null;
@@ -120,8 +126,10 @@ public class TypeTableCreateVisitor : IAstVisitor {
 	}
 
 	public object VisitTypeStmt(Stmt.StmtType stmt, object options) {
-		var names = stmt.info.Select(info => info.lexeme);
-		return string.Join('.', names);
+		var data = (TypeTableCreateOption)options;
+		var typeName = data.NamespaceHelper.CreateName(stmt.info.Select(info => info.lexeme));
+		var existingType = data.TypeTable.LookUp(typeName, data.NamespaceHelper.Current);
+		return existingType;
 	}
 
 	public object VisitUnaryExpr(Expr.Unary expr, object options) {
@@ -132,9 +140,10 @@ public class TypeTableCreateVisitor : IAstVisitor {
 		return null;
 	}
 
-	// returns method definitions
 	public object VisitVarStmt(Stmt.VarDefinition stmt, object options) {
-		return null;
+		var type = stmt.stmtType.Accept(this, options);
+		var member = new ObjectChildType(stmt.token.lexeme, (BaseType)type);
+		return member;
 	}
 
 	public object VisitWhileStmt(Stmt.While stmt, object options) {

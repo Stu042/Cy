@@ -1,4 +1,5 @@
-﻿using Cy.Preprocesor.Interfaces;
+﻿using Cy.Constants;
+using Cy.Preprocesor.Interfaces;
 
 using System.Collections.Generic;
 
@@ -24,16 +25,17 @@ public class Parser {
 					statements.Add(s);
 				}
 			} catch (ParserException e) {
-				_display.Error(e.token, "Parser error:" + e.Message);
+				_display.Error(e.token, e.Message);
 				Synchronise();
 			}
+			while (_parserCursor.IsMatch(TokenType.NEWLINE)) { }
 		}
 		return statements;
 	}
 
 	// <summary>Check for class definitions, function definition - including constructors and destructors and variable declaration.</summary>
 	Stmt Declaration() {
-		if (_parserCursor.IsCheckAll(TokenType.IDENTIFIER, TokenType.COLON)) {
+		if (_parserCursor.IsCheckAll(TokenType.IDENTIFIER, TokenType.LEFT_BRACE)) {
 			return DefineClass();
 		}
 		if (IsContructorDeclaration()) {
@@ -82,24 +84,17 @@ public class Parser {
 			}
 			idxtostart++;
 		} while (lparenCount > 0);
-		if (!_parserCursor.IsCheckAt(TokenType.COLON, idxtostart++)) {
-			return false;
-		}
-		if (_parserCursor.IsCheckAt(TokenType.NEWLINE, idxtostart)) {
-			return true;
-		}
-		return false;
+		return true;
 	}
 
 	Stmt.ClassDefinition DefineClass() {
 		Token name = _parserCursor.Advance();
-		int startIndent = name.indent;
-		_parserCursor.Consume(TokenType.COLON, "Expect a : after '" + name.lexeme + "' for an object definition.");
+		_parserCursor.Consume(TokenType.LEFT_BRACE, $"Expect a {TokenType.LEFT_BRACE} after '" + name.lexeme + "' for an object definition.");
 		_parserCursor.Consume(TokenType.NEWLINE, "Expect a newline after '" + name.lexeme + "' for an object definition.");
 		var members = new List<Stmt.VarDefinition>();
 		var methods = new List<Stmt.Function>();
 		var classes = new List<Stmt.ClassDefinition>();
-		while (!_parserCursor.IsAtEnd() && (_parserCursor.Peek().indent > startIndent || _parserCursor.Peek().tokenType == TokenType.NEWLINE)) {
+		while (!_parserCursor.IsAtEnd() && (_parserCursor.Peek().tokenType != TokenType.RIGHT_BRACE || _parserCursor.Peek().tokenType == TokenType.NEWLINE)) {
 			var astmt = Declaration();
 			if (astmt is Stmt.VarDefinition v) {
 				members.Add(v);
@@ -118,8 +113,8 @@ public class Parser {
 	/// <summary>Declare a function/method.</summary>
 	Stmt.Function FunDeclaration() {
 		var returnType = new Stmt.StmtType(new Token[] { _parserCursor.Advance() });
-		Token name = _parserCursor.Consume(TokenType.IDENTIFIER, "Expected function name.");
-		_parserCursor.Consume(TokenType.LEFT_PAREN, "Expect open bracket after function name.");
+		Token name = _parserCursor.Consume(TokenType.IDENTIFIER, $"Expected {TokenType.IDENTIFIER}.");
+		_parserCursor.Consume(TokenType.LEFT_PAREN, $"Expect {TokenType.LEFT_PAREN} after function name.");
 		var parameters = new List<Stmt.InputVar>();
 		if (!_parserCursor.IsCheck(TokenType.RIGHT_PAREN)) {
 			do {
@@ -133,9 +128,7 @@ public class Parser {
 				parameters.Add(new Stmt.InputVar(new Stmt.StmtType(new Token[] { typeTok }), id));
 			} while (_parserCursor.IsMatch(TokenType.COMMA));
 		}
-		_parserCursor.Consume(TokenType.RIGHT_PAREN, "Expect closing bracket after parameters.");
-		_parserCursor.Consume(TokenType.COLON, "Expect colon before function body.");
-		_parserCursor.Consume(TokenType.NEWLINE, "Expect newline before function body.");
+		_parserCursor.Consume(TokenType.RIGHT_PAREN, $"Expect {TokenType.RIGHT_PAREN} after parameters.");
 		List<Stmt> body = Block();
 		return new Stmt.Function(returnType, name, parameters.ToArray(), body.ToArray());
 	}
@@ -212,8 +205,8 @@ public class Parser {
 	Stmt IfStatement() {
 		Token ifKeyword = _parserCursor.Advance();
 		Expr condition = Expression();
-		_parserCursor.Consume(TokenType.COLON, "Expect colon after if statement.");
-		_parserCursor.Consume(TokenType.NEWLINE, "Expect newline after colon.");
+		_parserCursor.Consume(TokenType.LEFT_BRACE, "Expect colon after if statement.");
+		_parserCursor.Consume(TokenType.NEWLINE, $"Expect newline after {TokenType.LEFT_BRACE}.");
 		var body = Block();
 		List<Stmt> elseBody = null;
 		if (_parserCursor.IsMatch(TokenType.ELSE)) {
@@ -242,35 +235,26 @@ public class Parser {
 
 	/// <summary>Get the current Block of statements.</summary>
 	List<Stmt> Block() {
+		_parserCursor.ConsumeSkipNewline(TokenType.LEFT_BRACE, $"Expect {TokenType.LEFT_BRACE} before code block.");
+		_parserCursor.Consume(TokenType.NEWLINE, $"Expect newline after {TokenType.LEFT_BRACE}.");
 		List<Stmt> statements = new();
-		int startIndent = _parserCursor.Peek().indent;
-		while (!_parserCursor.IsAtEnd() && _parserCursor.Peek().indent >= startIndent) {
+		while (!_parserCursor.IsAtEnd() && _parserCursor.Peek().tokenType != TokenType.RIGHT_BRACE) {
 			Stmt stmt = Declaration();
 			if (stmt != null) {
 				statements.Add(stmt);
 			}
 		}
+		_parserCursor.Consume(TokenType.RIGHT_BRACE, $"Missing {TokenType.RIGHT_BRACE}");
 		return statements;
 	}
 
-	/// <summary>Create a variable which optionally has an assigned expression.
-	/// Some syntatic sugar for a for statement, i.e. int a = each b:</summary>
+	/// <summary>Create a variable which optionally has an assigned expression.</summary>
 	Stmt VarDeclaration() {
 		Token typeToken = _parserCursor.Advance();
-		var type = new Stmt.StmtType(new Token[] { typeToken });
 		Token name = _parserCursor.Consume(TokenType.IDENTIFIER, "Expect variable name.");
 		Expr initializer = null;
 		if (_parserCursor.IsMatch(TokenType.EQUAL)) {
-			if (_parserCursor.IsMatch(TokenType.EACH)) {
-				Token forKeyword = _parserCursor.Previous();
-				Expr collection = Expression();
-				_parserCursor.Consume(TokenType.COLON, "Expect colon after each statement.");
-				_parserCursor.Consume(TokenType.NEWLINE, "Expect newline at end of each statement.");
-				var body = Block();
-				return new Stmt.For(forKeyword, type, name, collection, body.ToArray());
-			} else {
-				initializer = Expression();
-			}
+			initializer = Expression();
 		}
 		_parserCursor.Consume(TokenType.NEWLINE, "Expect newline after variable declaration.");
 		return new Stmt.VarDefinition(typeToken, name, initializer);
@@ -314,7 +298,7 @@ public class Parser {
 
 	Expr Or() {
 		Expr expr = And();
-		while (_parserCursor.IsMatch(TokenType.OR)) {
+		while (_parserCursor.IsMatch(TokenType.LOGICAL_OR)) {
 			Token op = _parserCursor.Previous();
 			Expr right = And();
 			//				expr = new Expr.Logical(expr, op, right);
@@ -324,7 +308,7 @@ public class Parser {
 
 	Expr And() {
 		Expr expr = Equality();
-		while (_parserCursor.IsMatch(TokenType.AND)) {
+		while (_parserCursor.IsMatch(TokenType.LOGICAL_AND)) {
 			Token op = _parserCursor.Previous();
 			Expr right = Equality();
 			//expr = new Ast.Expr.Logical(expr, op, right);

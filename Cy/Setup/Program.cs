@@ -8,7 +8,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 
 namespace Cy.Setup;
-class Program {
+
+static class Program {
 	public static int Main(string[] args) {
 		var app = CoconaApp.Create(args, options => {
 			options.TreatPublicMethodsAsCommands = true;
@@ -28,11 +29,14 @@ class Program {
 	static void ConfigureServices(IServiceCollection services) {
 		services.AddSingleton<Config, Config>();
 		services.AddScoped<IErrorDisplay, ErrorDisplay>();
+		services.AddScoped<TokenDisplay, TokenDisplay>();
 		services.AddScoped<Scanner, Scanner>();
 		services.AddScoped<ScannerCursor, ScannerCursor>();
 		services.AddScoped<Parser, Parser>();
 		services.AddScoped<ParserCursor, ParserCursor>();
 		services.AddScoped<TypeTableCreate, TypeTableCreate>();
 		services.AddScoped<TypeTableCreateVisitor, TypeTableCreateVisitor>();
+		services.AddScoped<Types.TypeTable, Types.TypeTable>();
+		services.AddScoped<NamespaceHelper, NamespaceHelper>();
 	}
 }

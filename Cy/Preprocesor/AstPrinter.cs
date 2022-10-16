@@ -12,7 +12,7 @@ public static class Asts {
 		new AstPrinter().DisplayAllAsts(allFilesStmts);
 	}
 
-	protected class AstPrinter : IExprVisitor, IStmtVisitor {
+	protected class AstPrinter : IAstVisitor {
 
 		public void DisplayAllAsts(List<List<Stmt>> allFilesStmts) {
 			Console.WriteLine("\nAST:");

@@ -1,10 +1,11 @@
-﻿namespace Cy.Preprocesor;
+﻿using Cy.Constants;
+
+namespace Cy.Preprocesor;
 
 public class Token {
 	public TokenType tokenType; // type of token
 	public string lexeme;       // actual text of token from source
 	public object literal;      // value if a literal
-	public int indent;          // indent of the line
 	public int line;            // line number
 	public int offset;          // index from start of line
 	public string filename;     // source filename
@@ -15,7 +16,6 @@ public class Token {
 		tokenType = TokenType.EOF;
 		lexeme = "";
 		literal = null;
-		indent = 0;
 		line = 0;
 		offset = 0;
 		filename = "";
@@ -24,7 +24,6 @@ public class Token {
 		tokenType = type;
 		lexeme = "";
 		literal = null;
-		indent = 0;
 		line = 0;
 		offset = 0;
 		filename = "";
@@ -33,17 +32,15 @@ public class Token {
 		tokenType = type;
 		this.lexeme = lexeme;
 		literal = null;
-		indent = 0;
 		line = 0;
 		offset = 0;
 		filename = "";
 	}
 
-	public Token(TokenType type, string lexeme, object literal, int indent, int line, int offset, string filename) {
+	public Token(TokenType type, string lexeme, object literal, int line, int offset, string filename) {
 		tokenType = type;
 		this.lexeme = lexeme;
 		this.literal = literal;
-		this.indent = indent;
 		this.line = line;
 		this.offset = offset;
 		this.filename = filename;
@@ -82,20 +79,6 @@ public class Token {
 		};
 	}
 
-	public string ToFormattedString() {
-		string lexemeStr = lexeme;
-		string literalStr = literal?.ToString();
-		if (tokenType == TokenType.NEWLINE) {
-			lexemeStr = "\\n";
-		}
-		if (tokenType == TokenType.EOF) {
-			lexemeStr = "\\0";
-		}
-		if (lexeme == "\r") {
-			lexemeStr = "\\r";
-		}
-		return $"{lexemeStr,-10} {tokenType,-20} {literalStr,-20} Indent:{indent,2} Line:{line,4} Offset:{offset,3}";
-	}
 	public override string ToString() {
 		string lexemeStr = lexeme;
 		string literalStr = literal?.ToString();
@@ -108,7 +91,10 @@ public class Token {
 		if (lexeme == "\r") {
 			lexemeStr = "\\r";
 		}
-		return $"Lexeme: {lexemeStr}, Type: {tokenType}, Literal: {literalStr}, Indent:{indent}, Line:{line}, Offset:{offset}";
+		if (lexeme == "\t") {
+			lexemeStr = "\\t";
+		}
+		return $"Lexeme: {lexemeStr}, Type: {tokenType}, Literal: {literalStr}, Line:{line}, Offset:{offset}";
 	}
 
 	public Token Clone() {
@@ -116,7 +102,6 @@ public class Token {
 			tokenType = tokenType,
 			lexeme = lexeme,
 			literal = literal,
-			indent = indent,
 			line = line,
 			offset = offset,
 			filename = filename

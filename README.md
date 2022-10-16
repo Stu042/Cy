@@ -10,48 +10,57 @@ The frontend compiler creates llvm ir which can be used with llvm to run immedia
 
 ```cy
 // the simplest program
-int Main():
+int Main() {
     return 42
+}
 ```
 
 ```cy
 // Gotta have a hello world program, also shows the format of Mains input arguments
-int Main(str[] args):
+int Main(ascii[] args){
     print("Hello world\n")
     return 0
+}
 ```
 
 ```cy
 // Recursion will be possible and sized types are shown here
-int32 Main():
+i32 Main(){
     return Factorial(42)
+}
 
-int32 Factorial(int32 num):
-    if (num > 1)
+i32 Factorial(i32 num){
+    if (num > 1){
         return num * Factorial(num - 1)
+    }
     return num
+}
 ```
 
 ```cy
 // A simple class example
-int Main():
+int Main(){
     User user = User("Stu")
     user.Hello()
     print("User has {user.NameLength()} characters.\n")
     return 0
+}
 
-
-User:
-    str name
+User{
+    ascii name
 	
-    User(str name):
+    User(ascii name){
         this.name = name
+    }
 
-    void Hello():
+    void Hello(){
         print("{name} says hi.\n")
+    }
 	
-    int NameLength():
-        return name.length	// str is an array of int8, arrays have a member named, length
+    int NameLength(){
+        return name.length	// ascii is an array of i8, arrays have a member named, length
+    }
+}
 ```
 
 ### Resources
@@ -68,10 +77,10 @@ Main() will always run on thread #0
 
 Main() can be defined in several ways:
 
-- `void Main():`
-- `int Main():`
-- `int32 Main():`
-- `int Main(str[] args):`
+- `void Main()`
+- `int Main()`
+- `int32 Main()`
+- `int Main(ascii[] args)`
 
 ### Types
 
@@ -79,16 +88,18 @@ Main() can be defined in several ways:
 
 Most basic types have the type (starting with a lowercase letter) followed by a number to indicate bit size. Bit size must be a power of 2:
 
-- `int8`
-- `int16`
-- `int32`
-- `int64`
-- `int128`
+- `i8`
+- `i16`
+- `i32`
+- `i64`
+- `i128`
 - `float16`
-- `float32`
-- `float64`
-- `float128`
-- `str`
+- `f32`
+- `f64`
+- `f128`
+- `bool`
+- `ascii`
+- `utf8`
 - `void`
 
 `int` and `float` are also basic types and will be sized to suit ideal performance of the targets architecture. For a 64 bit Windows or Linux system these would be 32 bits and 64 bits respectively. 32 bits for the default int is not the obvious size (as its a 64 bit machine and OS) but this is likely to be large enough for most uses and should improve CPU cache performance. Strings - initially - are an array of 8 bit ASCII characters, UTF8 and UTF16 will be added at a later stage.
@@ -99,9 +110,9 @@ Arrays can be defined as:
 
 `int[] a`
 
-`int8[] someChars`
+`i8[] someChars`
 
-Note int8[] and str are synonymous.
+Note i8[] and ascii are synonymous.
 
 ##### Built-in Members for Arrays
 
@@ -113,7 +124,7 @@ The main function is defined as above and other functions can be defined in a si
 
 Example function definition:
 
-`int Factorial(int n): #1`
+`int Factorial(int n) #1 {`
 
 The factorial function will (by default) run on thread #1, will return an integer of default size and takes an integer of default size as input.  Main always runs on thread #0.
 
@@ -134,10 +145,12 @@ Called like this FactorialCallback() will be called, on the default thread (#0),
 ### Example Function
 
 ```cy
-int Factorial(int n):
-    if (n <= 1)
+int Factorial(int n){
+    if (n <= 1){
         return 1
+    }
     return n * Factorial(n-1)
+}
 ```
 
 ### Working With Threads
@@ -159,34 +172,40 @@ The #set command must be placed in the global namespace and recommended to be fi
 ```cy
 #set default                                                                // allow runtime to calculate the best amount of threads to use
 
-int64 Main(str[] args):
+i64 Main(ascii[] args){
     int[] values = int[args.length - 1]                                     // create an uninitiliased array of ints
-    for (int idx = 1; idx < args.length; idx++)                             // loop over all input - except app name
+    for (int idx = 1; idx < args.length; idx++) {                           // loop over all input - except app name
         values[idx - 1] = arg.ToInt()                                       // convert arg to an integer and add to array
-    int64 total = CalculateTotal(int[] values)                              // total an int array
+    }
+    i64 total = CalculateTotal(int[] values)                                // total an int array
     return total                                                            // and the final result
+}
 
 
-int64 CalculateTotal(int[] values):
+i64 CalculateTotal(int[] values){
     int blockSize = values.length / #count                                  // calculate the amount of values each thread will use
     int blockStart = 0
-    int64[] totals = int[#count]                                            // a place to store intermediate results
-    for (int thread = 1; thread < #count; thread++):                        // for each thread
+    i64[] totals = int[#count]                                              // a place to store intermediate results
+    for (int thread = 1; thread < #count; thread++){                        // for each thread
         int blockEnd = blockStart + blockSize                               // calculate end block index
         totals[thread] = TotalValues(values[blockStart..blockEnd]) #thread  // total these values by calling TotalValues() on thread numbered thread
         blockStart = blockEnd                                               // setup ready for next block
+    }
     totals[0] = TotalValues(values[blockStart..])                           // run final block on this thread - we would be waiting for results anyway
-    int64 total = 0                                                         // declare final total
-    int64 aTotal = each totals:                                             // let aTotal equal each intermediate total value
+    i64 total = 0                                                           // declare final total
+    i64 aTotal = each totals{                                               // let aTotal equal each intermediate total value
         total += aTotal                                                     // add the intermediate totals
+    }
     return total		
+}
 
-
-int64 TotalValues(int[] values):
-    int64 total = 0
-    int value = each values:
+i64 TotalValues(int[] values){
+    i64 total = 0
+    int value = each values{
         total += value
+    }
     return value
+}
 ```
 
 The line `totals[thread] = TotalValues(values[blockStart..blockEnd]) #thread` will create a job for the thread pool to call `TotalValues` with a copy of the range of values.
@@ -200,17 +219,19 @@ Indentation must be by tab, spaces are not counted.
 ### Objects
 
 ```cy
-AnObject:
+AnObject{
     int a
-    float32 b
+    f32 b
 
-    AnObject(int a, float32 bb):
+    AnObject(int a, float32 bb){
         this.a = a
         b = bb
+    }
 
-    int Add():
+    int Add(){
         return a + b
-
+    }
+}
 ```
 
 Objects are defined by a name followed by a colon, then the contents. Objects can contain members and functions. A function by the same name as the Object will be used as a constructor. A destructor definition will look the same but will start with a tilde '~'.

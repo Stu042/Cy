@@ -106,6 +106,8 @@ public class Parser {
 				_display.Error(astmt.token, "Object definitions should contain only methods, properties or class definitions.");
 			}
 		}
+		_parserCursor.Consume(TokenType.RIGHT_BRACE, $"Expect a {TokenType.RIGHT_BRACE} at end of object definition.");
+		_parserCursor.Consume(TokenType.NEWLINE, $"Expect a {TokenType.NEWLINE} after object definition.");
 		return new Stmt.ClassDefinition(name, members.ToArray(), methods.ToArray(), classes.ToArray());
 	}
 

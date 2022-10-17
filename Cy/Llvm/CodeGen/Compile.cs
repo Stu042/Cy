@@ -59,10 +59,10 @@ public class CompileVisitor : IExprVisitor, IStmtVisitor {
 	}
 
 	public object VisitClassStmt(Stmt.ClassDefinition obj, object options) {
-		foreach (Stmt.VarDefinition memb in obj.members) {
+		foreach (var memb in obj.members) {
 			memb.Accept(this, options);
 		}
-		foreach (Stmt.Function memb in obj.methods) {
+		foreach (var memb in obj.methods) {
 			memb.Accept(this, options);
 		}
 		return null;

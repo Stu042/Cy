@@ -34,17 +34,19 @@ public class TypeTableCreateVisitor : IAstVisitor {
 	}
 
 	public object VisitClassStmt(Stmt.ClassDefinition stmt, object options) {
-		var data = (TypeTableCreateOption)options;
+		var data = options as TypeTableCreateOption;
+		data.NamespaceHelper.Enter(stmt.token.lexeme);
 		var obj = new ObjectType(stmt.token.lexeme, Enums.AccessModifier.Public, Enums.TypeFormat.Object, 0, 0);
 		data.TypeTable.Add(obj);
 		foreach (var memb in stmt.members) {
-			var member = (ObjectChildType)memb.Accept(this, options);		// VisitVarStmt returns member (Type or ObjectType) definitions
+			var member = memb.Accept(this, options) as ObjectChildType;		// VisitVarStmt returns member (Type or ObjectType) definitions
 			obj.AddChild(member);
 		}
-		foreach (var memb in stmt.methods) {						// VisitFunctionStmt returns method definitions
-			var method = (MethodType)memb.Accept(this, options);
+		foreach (var memb in stmt.methods) {										// VisitFunctionStmt returns method definitions
+			var method = memb.Accept(this, options) as MethodType;
 			obj.AddChild(method);
 		}
+		data.NamespaceHelper.Leave();
 		return null;
 	}
 
@@ -126,9 +128,9 @@ public class TypeTableCreateVisitor : IAstVisitor {
 	}
 
 	public object VisitTypeStmt(Stmt.StmtType stmt, object options) {
-		var data = (TypeTableCreateOption)options;
+		var data = options as TypeTableCreateOption;
 		var typeName = data.NamespaceHelper.CreateName(stmt.info.Select(info => info.lexeme));
-		var existingType = data.TypeTable.LookUp(typeName, data.NamespaceHelper.Current);
+		var existingType = data.TypeTable.LookUp(typeName);
 		return existingType;
 	}
 
@@ -141,8 +143,11 @@ public class TypeTableCreateVisitor : IAstVisitor {
 	}
 
 	public object VisitVarStmt(Stmt.VarDefinition stmt, object options) {
-		var type = stmt.stmtType.Accept(this, options);
-		var member = new ObjectChildType(stmt.token.lexeme, (BaseType)type);
+		var type = stmt.stmtType.Accept(this, options) as BaseType;
+		if (type == null) {
+			throw new TypeParserException(stmt, "Unknown type.");	// probably a bad place for an exception, not easy to continue after this
+		}
+		var member = new ObjectChildType(stmt.token.lexeme, type);
 		return member;
 	}
 

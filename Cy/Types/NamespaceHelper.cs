@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-
+using System.Linq;
 
 namespace Cy.Types;
 
@@ -28,6 +28,12 @@ public class NamespaceHelper {
 		var fullName = new string[] { Current, currentName };
 		var fullNameSpace = String.Join(NAMESPACE_DELIMITER, fullName);
 		return fullNameSpace;
+	}
+
+	/// <summary> Just the last part of the fullname. </summary>
+	public string SimpleName(string fullName) {
+		var fullNameSplit = fullName.Split(NAMESPACE_DELIMITER);
+		return fullNameSplit[^1];
 	}
 
 	/// <summary> With string part, join them to create a name, i.e. AnObject.AnotherObject </summary>

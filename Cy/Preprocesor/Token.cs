@@ -94,6 +94,9 @@ public class Token {
 		if (lexeme == "\t") {
 			lexemeStr = "\\t";
 		}
+		if (string.IsNullOrEmpty(literalStr)) {
+			return $"Lexeme: {lexemeStr}, Type: {tokenType}, Line:{line}, Offset:{offset}";
+		}
 		return $"Lexeme: {lexemeStr}, Type: {tokenType}, Literal: {literalStr}, Line:{line}, Offset:{offset}";
 	}
 

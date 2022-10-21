@@ -10,7 +10,7 @@ namespace Cy.Types;
 public class NamespaceHelper {
 	const char NAMESPACE_DELIMITER = '.';
 	readonly Stack<string> names = new();
-	public string Current { get => String.Join(NAMESPACE_DELIMITER, names); }
+	public string Current { get => String.Join(NAMESPACE_DELIMITER, names.Reverse()); }
 
 
 	/// <summary> Add a name to the current namespace. </summary>
@@ -24,9 +24,8 @@ public class NamespaceHelper {
 	}
 
 	/// <summary> Full name of namespace, dot delimited. </summary>
-	public string FullName(string currentName) {
-		var fullName = new string[] { Current, currentName };
-		var fullNameSpace = String.Join(NAMESPACE_DELIMITER, fullName);
+	public string FullName() {
+		var fullNameSpace = String.Join(NAMESPACE_DELIMITER, Current);
 		return fullNameSpace;
 	}
 
@@ -40,6 +39,16 @@ public class NamespaceHelper {
 	public string CreateName(IEnumerable<string> parts) {
 		var fullName = String.Join(NAMESPACE_DELIMITER, parts);
 		return fullName;
+	}
+
+	public string FullNamePlus(string current) {
+		if (string.IsNullOrEmpty(current)) {
+			return FullName();
+		}
+		var currentNames = new Stack<string>(names);
+		currentNames.Push(current);
+		var fullNameSpace = String.Join(NAMESPACE_DELIMITER, currentNames.Reverse());
+		return fullNameSpace;
 	}
 }
 

@@ -5,18 +5,11 @@ using System.Collections.Generic;
 
 namespace Cy.Types;
 
-public class TypeTableCreateOption
-{
-	public NamespaceHelper NamespaceHelper;
-	public TypeTable TypeTable;
-}
-
 
 /// <summary> Create a collection of all type definitions. </summary>
 public class TypeTableCreate {
 	readonly TypeTableCreateVisitor _visitor;
 	readonly TypeTable _typeTable;
-	readonly NamespaceHelper _namespaceHelper;
 
 	readonly BaseType[] builtinTypes = new BaseType[] {
 		new BaseType(Constants.BasicTypeNames.Int, AccessModifier.Public, TypeFormat.Int, 32, 4),
@@ -34,9 +27,8 @@ public class TypeTableCreate {
 		new BaseType(Constants.BasicTypeNames.Void, AccessModifier.Public, TypeFormat.Void, 0, 0)
 	};
 
-	public TypeTableCreate(TypeTable typeTable, NamespaceHelper namespaceHelper, TypeTableCreateVisitor visitor) {
+	public TypeTableCreate(TypeTable typeTable, TypeTableCreateVisitor visitor) {
 		_typeTable = typeTable;
-		_namespaceHelper = namespaceHelper;
 		_visitor = visitor;
 		foreach (var type in builtinTypes) {
 			_typeTable.Add(type);
@@ -44,14 +36,9 @@ public class TypeTableCreate {
 	}
 
 	public TypeTable Create(List<List<Stmt>> allFilesStmts) {
-		var typeTableCreateOption = new TypeTableCreateOption
-		{
-			NamespaceHelper = _namespaceHelper,
-			TypeTable = _typeTable,
-		};
 		foreach (var stmts in allFilesStmts) {
 			foreach (var stmt in stmts) {
-				stmt.Accept(_visitor, typeTableCreateOption);
+				stmt.Accept(_visitor, _typeTable);
 			}
 		}
 		return _typeTable;

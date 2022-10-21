@@ -35,6 +35,7 @@ public class Parser {
 
 	// <summary>Check for class definitions, function definition - including constructors and destructors and variable declaration.</summary>
 	Stmt Declaration() {
+		while (_parserCursor.Consume(TokenType.NEWLINE) != null) { }
 		if (_parserCursor.IsCheckAll(TokenType.IDENTIFIER, TokenType.LEFT_BRACE)) {
 			return DefineClass();
 		}
@@ -95,7 +96,7 @@ public class Parser {
 		var methods = new List<Stmt.Function>();
 		var classes = new List<Stmt.ClassDefinition>();
 		while (!_parserCursor.IsAtEnd() && (_parserCursor.Peek().tokenType != TokenType.RIGHT_BRACE || _parserCursor.Peek().tokenType == TokenType.NEWLINE)) {
-			var astmt = Declaration();
+			var astmt = Declaration();                      // todo problem here, just before classes.Add(c); is called...
 			if (astmt is Stmt.VarDefinition v) {
 				members.Add(v);
 			} else if (astmt is Stmt.Function f) {

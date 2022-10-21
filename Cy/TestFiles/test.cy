@@ -15,7 +15,6 @@ MyObject {
 	f64 b
 }
 
-int Main()
-{
+int Main() {
 	return 2
 }

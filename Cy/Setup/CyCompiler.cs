@@ -67,11 +67,15 @@ public class CyCompiler {
 			foreach (var type in typeTable.types) {
 				var typeDef = type.Value;
 				ColourConsole.WriteLine($"//FG_Blue {typeDef.Format, -20} //FG_Green {typeDef.Name, -40} //FG_Grey {typeDef.BitSize, 5} {typeDef.ByteSize, -4}");
-				var objectDef = typeDef as ObjectType;
-				if (objectDef != null) {
+				if (typeDef is ObjectType objectDef) {
 					for (var index = 0; index < objectDef.ChildCount(); index++) {
 						var child = objectDef.GetChildAtIndex(index);
-						ColourConsole.WriteLine($"\t//FG_Blue {child.Format,-20} //FG_Green {child.Name,-40} //FG_Grey {child.BitSize,5} {child.ByteSize,-4}");
+						if (child is ObjectChildType objectChildType) {
+							ColourConsole.WriteLine($"\t//FG_Blue {objectChildType.Name,-20} //FG_Green {objectChildType.Identifier,-32} //FG_Grey {objectChildType.BitSize,5} {objectChildType.ByteSize,-4}");
+						} else if (child is ObjectType) {
+						} else {
+							ColourConsole.WriteLine($"\t//FG_Blue {child.Format,-20} //FG_Green {child.Name,-32} //FG_Grey {child.BitSize,5} {child.ByteSize,-4}");
+						}
 					}
 				}
 			}

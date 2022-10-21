@@ -34,10 +34,13 @@ public class TypeTableCreateVisitor : IAstVisitor {
 	}
 
 	public object VisitClassStmt(Stmt.ClassDefinition stmt, object options) {
-		var data = options as TypeTableCreateOption;
+		var data = options as TypeTable;
 		data.NamespaceHelper.Enter(stmt.token.lexeme);
-		var obj = new ObjectType(stmt.token.lexeme, Enums.AccessModifier.Public, Enums.TypeFormat.Object, 0, 0);
-		data.TypeTable.Add(obj);
+		var obj = new ObjectType(data.NamespaceHelper.FullName(), Enums.AccessModifier.Public, Enums.TypeFormat.Object, 0, 0);
+		data.Add(obj);
+		foreach (var memb in stmt.classes) {
+			memb.Accept(this, options);
+		}
 		foreach (var memb in stmt.members) {
 			var member = memb.Accept(this, options) as ObjectChildType;		// VisitVarStmt returns member (Type or ObjectType) definitions
 			obj.AddChild(member);
@@ -47,7 +50,7 @@ public class TypeTableCreateVisitor : IAstVisitor {
 			obj.AddChild(method);
 		}
 		data.NamespaceHelper.Leave();
-		return null;
+		return obj;
 	}
 
 	public object VisitExpressionStmt(Stmt.Expression stmt, object options) {
@@ -69,8 +72,9 @@ public class TypeTableCreateVisitor : IAstVisitor {
 		string returnTypeName;
 		Enums.TypeFormat returnTypeFormat;
 		if (stmt.returnType != null) {
-			returnTypeName = (string)stmt.returnType.Accept(this, options);
-			returnTypeFormat = Enums.TypeFormat.Int;				// todo, lookup type and get format
+			var returnStmt = (BaseType)stmt.returnType.Accept(this, options);
+			returnTypeName = returnStmt.Name;
+			returnTypeFormat = returnStmt.Format;
 		} else {
 			returnTypeName = Constants.BasicTypeNames.Void;
 			returnTypeFormat = Enums.TypeFormat.Void;
@@ -128,9 +132,9 @@ public class TypeTableCreateVisitor : IAstVisitor {
 	}
 
 	public object VisitTypeStmt(Stmt.StmtType stmt, object options) {
-		var data = options as TypeTableCreateOption;
+		var data = options as TypeTable;
 		var typeName = data.NamespaceHelper.CreateName(stmt.info.Select(info => info.lexeme));
-		var existingType = data.TypeTable.LookUp(typeName);
+		var existingType = data.LookUp(typeName);
 		return existingType;
 	}
 

@@ -6,12 +6,12 @@ namespace Cy.Types;
 
 /// <summary> All types used, with full name. </summary>
 public class TypeTable {
-	readonly NamespaceHelper _namespaceHelper;
+	public NamespaceHelper NamespaceHelper;
 	public Dictionary<string, BaseType> types = new();
 
 
 	public TypeTable(NamespaceHelper namespaceHelper) {
-		_namespaceHelper = namespaceHelper;
+		NamespaceHelper = namespaceHelper;
 	}
 
 	public void Add(BaseType type) {
@@ -23,7 +23,7 @@ public class TypeTable {
 		if (types.ContainsKey(name)) {
 			return types[name];
 		}
-		var simpleName = _namespaceHelper.SimpleName(name);
+		var simpleName = NamespaceHelper.FullNamePlus(name);
 		if (types.ContainsKey(simpleName)) {
 			return types[simpleName];
 		}

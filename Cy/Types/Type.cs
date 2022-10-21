@@ -84,6 +84,9 @@ public class ObjectType : BaseType {
 
 	public void AddChild(BaseType child) {
 		children.Add(child);
+		if (child is ObjectType) {
+			return;
+		}
 		BitSize += child.BitSize;
 		ByteSize += child.ByteSize;
 	}

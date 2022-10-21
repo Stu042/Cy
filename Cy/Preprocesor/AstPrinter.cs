@@ -89,16 +89,27 @@ public static class Asts {
 		public object VisitClassStmt(Stmt.ClassDefinition obj, object options) {
 			StringBuilder builder = new();
 			builder.Append($"({obj.token.lexeme}: ");
+			List<string> definitionStr = new();
+			foreach (Stmt.ClassDefinition clss in obj.classes) {
+				definitionStr.Add((string)clss.Accept(this, null));
+			}
+			if (definitionStr.Count > 0) {
+				builder.Append(Parenthesize2("definitions:", definitionStr.ToArray()));
+			}
 			List<string> memberStr = new();
 			foreach (Stmt.VarDefinition memb in obj.members) {
 				memberStr.Add((string)memb.Accept(this, null));
 			}
-			builder.Append(Parenthesize2("members: ", memberStr.ToArray()));
+			if (memberStr.Count > 0) {
+				builder.Append(Parenthesize2("members:", memberStr.ToArray()));
+			}
 			List<string> methodStr = new();
 			foreach (Stmt.Function memb in obj.methods) {
 				methodStr.Add((string)memb.Accept(this, null));
 			}
-			builder.Append(Parenthesize2("methods:", methodStr.ToArray()));
+			if (methodStr.Count > 0) {
+				builder.Append(Parenthesize2("methods:", methodStr.ToArray()));
+			}
 			builder.Append(')');
 			return builder.ToString();
 		}

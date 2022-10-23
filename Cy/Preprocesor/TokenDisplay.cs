@@ -9,15 +9,15 @@ namespace Cy.Preprocesor {
 	// Write tokens to console
 	public class TokenDisplay {
 		public void DisplayAllTokens(List<List<Token>> allFilesTokens, bool allTokens = false) {
-			var tokenCount = allFilesTokens.Sum(tokens => allTokens ? tokens.Count : tokens.Where(tok => tok.tokenType != TokenType.IGNORED).Count());
+			var tokenCount = allFilesTokens.Sum(tokens => allTokens ? tokens.Count : tokens.Where(tok => tok.TokenType != TokenType.IGNORED).Count());
 			ColourConsole.WriteLine($"\n{tokenCount} Tokens:", Colour.Hue.FG_DarkGrey);
 			foreach (var tokens in allFilesTokens) {
 				ColourConsole.Write("File: ", Colour.Hue.FG_DarkGrey);
-				ColourConsole.WriteLine(tokens[0].filename, Colour.Hue.FG_Grey);
+				ColourConsole.WriteLine(tokens[0].Filename, Colour.Hue.FG_Grey);
 				if (allTokens) {
 					Show(tokens);
 				} else {
-					Show(tokens.Where(tok => tok.tokenType != TokenType.IGNORED));
+					Show(tokens.Where(tok => tok.TokenType != TokenType.IGNORED));
 				}
 			}
 		}
@@ -29,8 +29,8 @@ namespace Cy.Preprocesor {
 		}
 
 		string FormattedToken(Token token) {
-			string lexemeStr = TidyLexemeString(token.tokenType, token.lexeme);
-			string literalStr = token.literal?.ToString();
+			string lexemeStr = TidyLexemeString(token.TokenType, token.Lexeme);
+			string literalStr = token.Literal?.ToString();
 			//return Colour.Create($"{lexemeStr,-10} ", Colour.Hue.FG_DarkCyan) +
 			//		Colour.Create($"{token.tokenType,-20} ", Colour.Hue.FG_Green) +
 			//		Colour.Create($"{literalStr,-20} ", Colour.Hue.FG_DarkBlue) +
@@ -38,7 +38,7 @@ namespace Cy.Preprocesor {
 			//		Colour.Create($"{token.line,4} ", Colour.Hue.FG_Grey) +
 			//		Colour.Create("Offset:", Colour.Hue.FG_DarkGrey) +
 			//		Colour.Create($"{token.offset,3}", Colour.Hue.FG_Grey);
-			return ColourConsole.LineProperty($"//LEXEME {lexemeStr,-10} //TOKENTYPE {token.tokenType,-20} //LITERAL {literalStr,-20} //LINE Line://LINE_NUMBER{token.line,4} //OFFSET Offset://OFFSET_NUMBER {token.offset,3}");
+			return ColourConsole.LineProperty($"//LEXEME {lexemeStr,-10} //TOKENTYPE {token.TokenType,-20} //LITERAL {literalStr,-20} //LINE Line://LINE_NUMBER{token.Line,4} //OFFSET Offset://OFFSET_NUMBER {token.Offset,3}");
 		}
 
 		string TidyLexemeString(TokenType tokenType, string lexeme) {

@@ -177,16 +177,16 @@ int Main():
 		[Fact]
 		public void TestSourceToTokens1()
 		{
-			var expected = test1_ExpectedTokens.Where(item => item.tokenType != TokenType.IGNORED).Select(item => item.Clone()).ToList();
-			var actualTokens = scanner.ScanTokens(test1_Filename, test1_Source).Where(item => item.tokenType != TokenType.IGNORED).ToList();
+			var expected = test1_ExpectedTokens.Where(item => item.TokenType != TokenType.IGNORED).Select(item => item.Clone()).ToList();
+			var actualTokens = scanner.ScanTokens(test1_Filename, test1_Source).Where(item => item.TokenType != TokenType.IGNORED).ToList();
 			expected.Should().BeEquivalentTo(actualTokens);
 		}
 
 		[Fact]
 		public void TestSourceToTokens2()
 		{
-			var expected = test2_ExpectedTokens.Where(item => item.tokenType != TokenType.IGNORED).Select(item => item.Clone()).ToList();
-			var actualTokens = scanner.ScanTokens(test2_Filename, test2_Source).Where(item => item.tokenType != TokenType.IGNORED).ToList();
+			var expected = test2_ExpectedTokens.Where(item => item.TokenType != TokenType.IGNORED).Select(item => item.Clone()).ToList();
+			var actualTokens = scanner.ScanTokens(test2_Filename, test2_Source).Where(item => item.TokenType != TokenType.IGNORED).ToList();
 			expected.Should().BeEquivalentTo(actualTokens);
 		}
 	}

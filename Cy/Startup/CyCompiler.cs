@@ -1,6 +1,5 @@
 ﻿using Cy.Preprocesor;
 using Cy.Types;
-using Cy.Util;
 
 using System;
 using System.Collections.Generic;
@@ -62,22 +61,8 @@ public class CyCompiler {
 
 	TypeTable CreateTypeTable(List<List<Stmt>> allFilesStmts) {
 		var typeTable = _typeTableCreate.Create(allFilesStmts);
-		if (_config.DisplayTokens) {
-			ColourConsole.WriteLine("\n//FG_Grey Types:");
-			foreach (var type in typeTable.Types) {
-				var typeDef = type.Value;
-				ColourConsole.WriteLine($"//FG_Cyan {typeDef.Format, -20} //FG_Green {typeDef.Name, -40} //FG_Grey {typeDef.BitSize, 5} {typeDef.ByteSize, -4}");
-				if (typeDef is ObjectType objectDef) {
-					foreach (var child in objectDef.Children) {
-						if (child is ObjectChildType objectChildType) {
-							ColourConsole.WriteLine($"\t//FG_Cyan {objectChildType.Format, -20} //FG_Blue {objectChildType.Name,-20} //FG_Green {objectChildType.Identifier,-11} //FG_Grey {objectChildType.BitSize,5} {objectChildType.ByteSize,-4}");
-						} else if (child is ObjectType) {
-						} else {
-							ColourConsole.WriteLine($"\t//FG_Cyan {child.Format,-20} //FG_Green {child.Name,-32} //FG_Grey {child.BitSize,5} {child.ByteSize,-4}");
-						}
-					}
-				}
-			}
+		if (_config.DisplayAsts) {
+			_typeTableCreate.Display(typeTable);
 		}
 		return typeTable;
 	}

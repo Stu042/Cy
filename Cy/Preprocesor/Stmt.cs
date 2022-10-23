@@ -5,14 +5,14 @@ using Cy.Preprocesor.Interfaces;
 namespace Cy.Preprocesor;
 
 public abstract class Stmt {
-	public Token token;
+	public Token Token;
 	public abstract object Accept(IStmtVisitor visitor, object options = null);
 
 	/// <summary>A group of statements.</summary>
 	public class Block : Stmt {
 		public Stmt[] statements;
 		public Block(Stmt[] statements) {
-			token = statements[0].token;
+			Token = statements[0].Token;
 			this.statements = statements;
 		}
 		public override object Accept(IStmtVisitor visitor, object options = null) {
@@ -25,7 +25,7 @@ public abstract class Stmt {
 	public class Expression : Stmt {
 		public Expr expression;
 		public Expression(Expr expression) {
-			token = expression.token;
+			Token = expression.Token;
 			this.expression = expression;
 		}
 		public override object Accept(IStmtVisitor visitor, object options = null) {
@@ -39,7 +39,7 @@ public abstract class Stmt {
 		public StmtType type;
 		public InputVar(StmtType type, Token token) {
 			this.type = type;
-			this.token = token;
+			this.Token = token;
 		}
 		public override object Accept(IStmtVisitor visitor, object options = null) {
 			return visitor.VisitInputVarStmt(this, options);
@@ -53,7 +53,7 @@ public abstract class Stmt {
 		public Stmt[] body;
 		public Function(StmtType returnType, Token token, InputVar[] input, Stmt[] body) {
 			this.returnType = returnType;
-			this.token = token;
+			this.Token = token;
 			this.input = input;
 			this.body = body;
 		}
@@ -71,7 +71,7 @@ public abstract class Stmt {
 		public Stmt[] body;
 
 		public For(Token forKeyword, StmtType iteratorType, Token iterator, Expr condition, Stmt[] body) {
-			token = forKeyword;
+			Token = forKeyword;
 			this.iteratorType = iteratorType;
 			this.iterator = iterator;
 			this.condition = condition;
@@ -87,7 +87,7 @@ public abstract class Stmt {
 		public Stmt[] body;
 		public Stmt[] elseBody;
 		public If(Token ifKeyword, Expr value, Stmt[] body, Stmt[] elseBody) {
-			token = ifKeyword;
+			Token = ifKeyword;
 			this.value = value;
 			this.body = body;
 			this.elseBody = elseBody;
@@ -101,7 +101,7 @@ public abstract class Stmt {
 	public class Return : Stmt {
 		public Expr value;
 		public Return(Token token, Expr value) {
-			this.token = token;
+			this.Token = token;
 			this.value = value;
 		}
 		public override object Accept(IStmtVisitor visitor, object options = null) {
@@ -116,7 +116,7 @@ public abstract class Stmt {
 		public Expr initialiser;
 		public VarDefinition(Token typeToken, Token token, Expr initialiser) {
 			stmtType = new StmtType(new Token[] { typeToken });
-			this.token = token;
+			this.Token = token;
 			this.initialiser = initialiser;
 		}
 		public override object Accept(IStmtVisitor visitor, object options = null) {
@@ -130,7 +130,7 @@ public abstract class Stmt {
 		public Function[] methods;
 		public ClassDefinition[] classes;
 		public ClassDefinition(Token token, VarDefinition[] members, Function[] methods, ClassDefinition[] classes) {
-			this.token = token;
+			this.Token = token;
 			this.members = members;
 			this.methods = methods;
 			this.classes = classes;
@@ -144,12 +144,12 @@ public abstract class Stmt {
 	public class StmtType : Stmt {
 		public Token[] info;
 		public StmtType(Token[] tokens) {
-			token = tokens[0];
+			Token = tokens[0];
 			info = tokens;
 		}
 		public StmtType() {
-			token = new Token(TokenType.VOID);
-			info = new Token[] { token };
+			Token = new Token(TokenType.VOID);
+			info = new Token[] { Token };
 		}
 		public override object Accept(IStmtVisitor visitor, object options = null) {
 			return visitor.VisitTypeStmt(this, options);
@@ -161,7 +161,7 @@ public abstract class Stmt {
 		public Stmt[] body;
 
 		public While(Token whileKeyword, Expr condition, Stmt[] body) {
-			token = whileKeyword;
+			Token = whileKeyword;
 			this.condition = condition;
 			this.body = body;
 		}

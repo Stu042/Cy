@@ -3,57 +3,57 @@
 namespace Cy.Preprocesor;
 
 public class Token {
-	public TokenType tokenType; // type of token
-	public string lexeme;       // actual text of token from source
-	public object literal;      // value if a literal
-	public int line;            // line number
-	public int offset;          // index from start of line
-	public string filename;     // source filename
+	public TokenType TokenType; // type of token
+	public string Lexeme;       // actual text of token from source
+	public object Literal;      // value if a literal
+	public int Line;            // line number
+	public int Offset;          // index from start of line
+	public string Filename;     // source filename
 
 	public static readonly Token EOF = new Token(TokenType.EOF);
 
 	public Token() {
-		tokenType = TokenType.EOF;
-		lexeme = "";
-		literal = null;
-		line = 0;
-		offset = 0;
-		filename = "";
+		TokenType = TokenType.EOF;
+		Lexeme = "";
+		Literal = null;
+		Line = 0;
+		Offset = 0;
+		Filename = "";
 	}
 	public Token(TokenType type) {
-		tokenType = type;
-		lexeme = "";
-		literal = null;
-		line = 0;
-		offset = 0;
-		filename = "";
+		TokenType = type;
+		Lexeme = "";
+		Literal = null;
+		Line = 0;
+		Offset = 0;
+		Filename = "";
 	}
 	public Token(string lexeme, TokenType type) {
-		tokenType = type;
-		this.lexeme = lexeme;
-		literal = null;
-		line = 0;
-		offset = 0;
-		filename = "";
+		TokenType = type;
+		Lexeme = lexeme;
+		Literal = null;
+		Line = 0;
+		Offset = 0;
+		Filename = "";
 	}
 
 	public Token(TokenType type, string lexeme, object literal, int line, int offset, string filename) {
-		tokenType = type;
-		this.lexeme = lexeme;
-		this.literal = literal;
-		this.line = line;
-		this.offset = offset;
-		this.filename = filename;
+		TokenType = type;
+		Lexeme = lexeme;
+		Literal = literal;
+		Line = line;
+		Offset = offset;
+		Filename = filename;
 	}
 
 	public bool IsLiteral() {
-		return tokenType switch {
+		return TokenType switch {
 			TokenType.STR_LITERAL or TokenType.INT_LITERAL or TokenType.FLOAT_LITERAL => true,
 			_ => false,
 		};
 	}
 	public bool IsAnyType() {
-		return tokenType switch {
+		return TokenType switch {
 			TokenType.STR_LITERAL or TokenType.INT_LITERAL or TokenType.FLOAT_LITERAL or
 			TokenType.INT or TokenType.INT8 or TokenType.INT16 or TokenType.INT32 or
 			TokenType.INT64 or TokenType.INT128 or TokenType.FLOAT or TokenType.FLOAT16
@@ -63,7 +63,7 @@ public class Token {
 		};
 	}
 	public bool IsBasicType() {
-		return tokenType switch {
+		return TokenType switch {
 			TokenType.INT or TokenType.INT8 or TokenType.INT16 or TokenType.INT32 or TokenType.INT64
 			or TokenType.INT128 or TokenType.FLOAT or TokenType.FLOAT16 or TokenType.FLOAT32 or
 			TokenType.FLOAT64 or TokenType.FLOAT128 or TokenType.ASCII or TokenType.VOID or TokenType.UTF8 or TokenType.BOOL => true,
@@ -71,7 +71,7 @@ public class Token {
 		};
 	}
 	public bool IsNumericType() {
-		return tokenType switch {
+		return TokenType switch {
 			TokenType.INT or TokenType.INT8 or TokenType.INT16 or TokenType.INT32 or TokenType.INT64 or
 			TokenType.INT128 or TokenType.FLOAT or TokenType.FLOAT16 or TokenType.FLOAT32 or TokenType.FLOAT64
 			or TokenType.FLOAT128 or TokenType.BOOL => true,
@@ -80,34 +80,34 @@ public class Token {
 	}
 
 	public override string ToString() {
-		string lexemeStr = lexeme;
-		string literalStr = literal?.ToString();
-		if (tokenType == TokenType.NEWLINE) {
+		string lexemeStr = Lexeme;
+		string literalStr = Literal?.ToString();
+		if (TokenType == TokenType.NEWLINE) {
 			lexemeStr = "\\n";
 		}
-		if (tokenType == TokenType.EOF) {
+		if (TokenType == TokenType.EOF) {
 			lexemeStr = "\\0";
 		}
-		if (lexeme == "\r") {
+		if (Lexeme == "\r") {
 			lexemeStr = "\\r";
 		}
-		if (lexeme == "\t") {
+		if (Lexeme == "\t") {
 			lexemeStr = "\\t";
 		}
 		if (string.IsNullOrEmpty(literalStr)) {
-			return $"Lexeme: {lexemeStr}, Type: {tokenType}, Line:{line}, Offset:{offset}";
+			return $"Lexeme: {lexemeStr}, Type: {TokenType}, Line:{Line}, Offset:{Offset}";
 		}
-		return $"Lexeme: {lexemeStr}, Type: {tokenType}, Literal: {literalStr}, Line:{line}, Offset:{offset}";
+		return $"Lexeme: {lexemeStr}, Type: {TokenType}, Literal: {literalStr}, Line:{Line}, Offset:{Offset}";
 	}
 
 	public Token Clone() {
 		var tok = new Token {
-			tokenType = tokenType,
-			lexeme = lexeme,
-			literal = literal,
-			line = line,
-			offset = offset,
-			filename = filename
+			TokenType = TokenType,
+			Lexeme = Lexeme,
+			Literal = Literal,
+			Line = Line,
+			Offset = Offset,
+			Filename = Filename
 		};
 		return tok;
 	}

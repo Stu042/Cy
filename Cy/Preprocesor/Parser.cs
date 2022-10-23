@@ -25,7 +25,7 @@ public class Parser {
 					statements.Add(s);
 				}
 			} catch (ParserException e) {
-				_display.Error(e.token, e.Message);
+				_display.Error(e.Token, e.Message);
 				Synchronise();
 			}
 			while (_parserCursor.IsMatch(TokenType.NEWLINE)) { }
@@ -71,7 +71,7 @@ public class Parser {
 	bool CheckIsFuncArgs(int idxtostart = 1) {
 		int lparenCount = 0;
 		do {
-			TokenType toktype = _parserCursor.PeekAt(idxtostart).tokenType;
+			TokenType toktype = _parserCursor.PeekAt(idxtostart).TokenType;
 			if (_parserCursor.IsCheckAt(TokenType.LEFT_PAREN, idxtostart)) {
 				lparenCount++;
 			} else if (toktype == TokenType.RIGHT_PAREN) {
@@ -90,12 +90,12 @@ public class Parser {
 
 	Stmt.ClassDefinition DefineClass() {
 		Token name = _parserCursor.Advance();
-		_parserCursor.Consume(TokenType.LEFT_BRACE, $"Expect a {TokenType.LEFT_BRACE} after '" + name.lexeme + "' for an object definition.");
-		_parserCursor.Consume(TokenType.NEWLINE, "Expect a newline after '" + name.lexeme + "' for an object definition.");
+		_parserCursor.Consume(TokenType.LEFT_BRACE, $"Expect a {TokenType.LEFT_BRACE} after '" + name.Lexeme + "' for an object definition.");
+		_parserCursor.Consume(TokenType.NEWLINE, "Expect a newline after '" + name.Lexeme + "' for an object definition.");
 		var members = new List<Stmt.VarDefinition>();
 		var methods = new List<Stmt.Function>();
 		var classes = new List<Stmt.ClassDefinition>();
-		while (!_parserCursor.IsAtEnd() && (_parserCursor.Peek().tokenType != TokenType.RIGHT_BRACE || _parserCursor.Peek().tokenType == TokenType.NEWLINE)) {
+		while (!_parserCursor.IsAtEnd() && (_parserCursor.Peek().TokenType != TokenType.RIGHT_BRACE || _parserCursor.Peek().TokenType == TokenType.NEWLINE)) {
 			var astmt = Declaration();                      // todo problem here, just before classes.Add(c); is called...
 			if (astmt is Stmt.VarDefinition v) {
 				members.Add(v);
@@ -104,7 +104,7 @@ public class Parser {
 			} else if (astmt is Stmt.ClassDefinition c) {
 				classes.Add(c);
 			} else {
-				_display.Error(astmt.token, "Object definitions should contain only methods, properties or class definitions.");
+				_display.Error(astmt.Token, "Object definitions should contain only methods, properties or class definitions.");
 			}
 		}
 		_parserCursor.Consume(TokenType.RIGHT_BRACE, $"Expect a {TokenType.RIGHT_BRACE} at end of object definition.");
@@ -140,7 +140,7 @@ public class Parser {
 		Token name = _parserCursor.Advance();
 		string structorType;
 		Stmt.StmtType returnType;
-		if (name.lexeme[0] == '~') {
+		if (name.Lexeme[0] == '~') {
 			structorType = "Destructor";
 			returnType = new Stmt.StmtType(new Token[] { new Token("void", TokenType.VOID) });
 		} else {
@@ -169,7 +169,7 @@ public class Parser {
 	}
 
 	Stmt Statement() {
-		var tokenType = _parserCursor.Peek().tokenType;
+		var tokenType = _parserCursor.Peek().TokenType;
 		return tokenType switch {
 			TokenType.FOR => ForStatement(),
 			TokenType.IF => IfStatement(),
@@ -241,7 +241,7 @@ public class Parser {
 		_parserCursor.ConsumeSkipNewline(TokenType.LEFT_BRACE, $"Expect {TokenType.LEFT_BRACE} before code block.");
 		_parserCursor.Consume(TokenType.NEWLINE, $"Expect newline after {TokenType.LEFT_BRACE}.");
 		List<Stmt> statements = new();
-		while (!_parserCursor.IsAtEnd() && _parserCursor.Peek().tokenType != TokenType.RIGHT_BRACE) {
+		while (!_parserCursor.IsAtEnd() && _parserCursor.Peek().TokenType != TokenType.RIGHT_BRACE) {
 			Stmt stmt = Declaration();
 			if (stmt != null) {
 				statements.Add(stmt);
@@ -275,10 +275,10 @@ public class Parser {
 			Token equals = _parserCursor.Previous();
 			Expr value = Assignment();
 			if (expr is Expr.Variable vexpr) {
-				Token name = vexpr.token;
+				Token name = vexpr.Token;
 				return new Expr.Assign(name, value);
 			} else if (expr is Expr.Get gexpr) {
-				return new Expr.Set(gexpr.obj, gexpr.token, value);
+				return new Expr.Set(gexpr.obj, gexpr.Token, value);
 			}
 			_display.Error(equals, "Invalid assignment target."); // [no-throw]
 		}
@@ -422,7 +422,7 @@ public class Parser {
 		}
 		if (_parserCursor.Peek().IsLiteral()) {
 			Token tok = _parserCursor.Advance();
-			return new Expr.Literal(tok, tok.literal);
+			return new Expr.Literal(tok, tok.Literal);
 		}
 
 		// for grouping expressions, i.e. 2 * (5+2)
@@ -438,10 +438,10 @@ public class Parser {
 	void Synchronise() {
 		_parserCursor.Advance();
 		while (!_parserCursor.IsAtEnd()) {
-			if (_parserCursor.Previous().tokenType == TokenType.NEWLINE) {
+			if (_parserCursor.Previous().TokenType == TokenType.NEWLINE) {
 				return;
 			}
-			switch (_parserCursor.Peek().tokenType) {
+			switch (_parserCursor.Peek().TokenType) {
 				case TokenType.NEWLINE:
 					return;
 				default:

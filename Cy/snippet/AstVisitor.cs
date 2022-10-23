@@ -114,7 +114,7 @@ public class AstVisitor : IAstVisitor {
 	}
 
 	public object VisitTypeStmt(Stmt.StmtType stmt, object options) {
-		var names = stmt.info.Select(info => info.lexeme);
+		var names = stmt.info.Select(info => info.Lexeme);
 		return string.Join('.', names);
 	}
 

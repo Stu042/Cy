@@ -19,11 +19,11 @@ public class ErrorDisplay : IErrorDisplay {
 
 
 	public void Error(Token token, string linestr, string message) {
-		Error(token.filename, token.line, token.offset, linestr, message);
+		Error(token.Filename, token.Line, token.Offset, linestr, message);
 	}
 
 	public void Error(Token tok, string message) {
-		Error(tok.filename, tok.line, tok.offset, GetLine(tok.filename, tok.line), message);
+		Error(tok.Filename, tok.Line, tok.Offset, GetLine(tok.Filename, tok.Line), message);
 	}
 
 	public void Error(string filename, int line, int offset, string lineText, string message) {

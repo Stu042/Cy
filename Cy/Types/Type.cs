@@ -1,4 +1,5 @@
 ﻿using Cy.Enums;
+using Cy.Preprocesor;
 
 using System.Collections.Generic;
 using System.Linq;
@@ -18,13 +19,17 @@ public class BaseType {
 	public int BitSize;
 	/// <summary>Byte size of type, usually used for storage. </summary>
 	public int ByteSize;
+	/// <summary> Token of type definition. </summary>
+	public Token Token;
 
-	public BaseType(string name, AccessModifier modifier, TypeFormat format, int bitSize, int byteSize) {
+
+	public BaseType(string name, AccessModifier modifier, TypeFormat format, int bitSize, int byteSize, Token token) {
 		Name = name;
 		Modifier = modifier;
 		Format = format;
 		BitSize = bitSize;
 		ByteSize = byteSize;
+		Token = token;
 	}
 }
 
@@ -34,8 +39,8 @@ public class BaseType {
 public class MethodType : BaseType {
 	public string MethodName;
 
-	public MethodType(string methodName, string typeName, AccessModifier modifier, TypeFormat format, int bitSize, int byteSize)
-	: base(typeName, modifier, format, bitSize, byteSize) {
+	public MethodType(string methodName, string typeName, AccessModifier modifier, TypeFormat format, int bitSize, int byteSize, Token token)
+	: base(typeName, modifier, format, bitSize, byteSize, token) {
 		MethodName = methodName;
 	}
 }
@@ -48,8 +53,8 @@ public class ObjectType : BaseType {
 	public readonly List<BaseType> Children;
 
 
-	public ObjectType(string name, AccessModifier modifier, TypeFormat format, int bitSize, int byteSize, List<BaseType> children = null)
-	: base(name, modifier, format, bitSize, byteSize) {
+	public ObjectType(string name, AccessModifier modifier, TypeFormat format, int bitSize, int byteSize, Token token, List<BaseType> children = null)
+	: base(name, modifier, format, bitSize, byteSize, token) {
 		if (children != null) {
 			this.Children = children;
 		} else {
@@ -81,12 +86,12 @@ public class ObjectChildType : BaseType {
 	public string Identifier;
 
 
-	public ObjectChildType(string identifier, string name, AccessModifier modifier, TypeFormat format, int bitSize, int byteSize)
-	: base(name, modifier, format, bitSize, byteSize) {
+	public ObjectChildType(string identifier, string name, AccessModifier modifier, TypeFormat format, int bitSize, int byteSize, Token token)
+	: base(name, modifier, format, bitSize, byteSize, token) {
 		Identifier = identifier;
 	}
 	public ObjectChildType(string identifier, BaseType baseType)
-	: base(baseType?.Name, baseType?.Modifier ?? AccessModifier.Public, baseType?.Format ?? TypeFormat.Int, baseType?.BitSize ?? 0, baseType?.ByteSize ?? 0) {
+	: base(baseType?.Name, baseType?.Modifier ?? AccessModifier.Public, baseType?.Format ?? TypeFormat.Int, baseType?.BitSize ?? 0, baseType?.ByteSize ?? 0, baseType?.Token) {
 		Identifier = identifier;
 	}
 }

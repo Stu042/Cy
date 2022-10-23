@@ -1,26 +1,9 @@
 ﻿using Cy.Enums;
 
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Cy.Types;
-
-/* Types have differing formats:
-
-	Basic types:
-		i8, int, float, f64
-	Method Type:
-		int FunctionName(i32 param1, string[] param2)
-	Objects:
-		ObjectName {
-			i16 property1
-			f32 property2
-			string property3
-			ObjectName2 object
-		}
-*/
 
 
 /// <summary>Base of all frontend types, basic types will usually be this. </summary>
@@ -62,28 +45,21 @@ public class MethodType : BaseType {
 /// <summary>Base of all object types, mostly user defined types... </summary>
 public class ObjectType : BaseType {
 	/// <summary> List of child types in this object (struct) </summary>
-	readonly List<BaseType> children;
+	public readonly List<BaseType> Children;
+
 
 	public ObjectType(string name, AccessModifier modifier, TypeFormat format, int bitSize, int byteSize, List<BaseType> children = null)
 	: base(name, modifier, format, bitSize, byteSize) {
 		if (children != null) {
-			this.children = children;
+			this.Children = children;
 		} else {
-			this.children = new List<BaseType>();
+			this.Children = new List<BaseType>();
 		}
 	}
 
 
-	public int ChildCount() {
-		return children.Count;
-	}
-
-	public BaseType GetChildAtIndex(int idx) {
-		return children[idx];
-	}
-
 	public void AddChild(BaseType child) {
-		children.Add(child);
+		Children.Add(child);
 		if (child is ObjectType) {
 			return;
 		}
@@ -93,16 +69,12 @@ public class ObjectType : BaseType {
 
 	/// <summary> Return child property or default if it doesnt exist here. </summary>
 	public ObjectChildType GetChild(string name) {
-		var child = children.FirstOrDefault(child => child.Name == name);
+		var child = Children.FirstOrDefault(child => child.Name == name);
 		return child as ObjectChildType;
 	}
-
-	/// <summary> Return index of property or -1 if it doesnt exist here. </summary>
-	public int ChildIndex(string name) {
-		int index = children.FindIndex(child => child.Name == name);
-		return index;
-	}
 }
+
+
 
 /// <summary> ObjectTypes children, members and functions? </summary>
 public class ObjectChildType : BaseType {
@@ -114,7 +86,7 @@ public class ObjectChildType : BaseType {
 		Identifier = identifier;
 	}
 	public ObjectChildType(string identifier, BaseType baseType)
-	: base(baseType.Name, baseType.Modifier, baseType.Format, baseType.BitSize, baseType.ByteSize) {
+	: base(baseType?.Name, baseType?.Modifier ?? AccessModifier.Public, baseType?.Format ?? TypeFormat.Int, baseType?.BitSize ?? 0, baseType?.ByteSize ?? 0) {
 		Identifier = identifier;
 	}
 }

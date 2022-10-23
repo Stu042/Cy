@@ -60,21 +60,20 @@ public class CyCompiler {
 		return allFilesStmts;
 	}
 
-	Types.TypeTable CreateTypeTable(List<List<Stmt>> allFilesStmts) {
+	TypeTable CreateTypeTable(List<List<Stmt>> allFilesStmts) {
 		var typeTable = _typeTableCreate.Create(allFilesStmts);
 		if (_config.DisplayTokens) {
 			ColourConsole.WriteLine("\n//FG_Grey Types:");
-			foreach (var type in typeTable.types) {
+			foreach (var type in typeTable.Types) {
 				var typeDef = type.Value;
-				ColourConsole.WriteLine($"//FG_Blue {typeDef.Format, -20} //FG_Green {typeDef.Name, -40} //FG_Grey {typeDef.BitSize, 5} {typeDef.ByteSize, -4}");
+				ColourConsole.WriteLine($"//FG_Cyan {typeDef.Format, -20} //FG_Green {typeDef.Name, -40} //FG_Grey {typeDef.BitSize, 5} {typeDef.ByteSize, -4}");
 				if (typeDef is ObjectType objectDef) {
-					for (var index = 0; index < objectDef.ChildCount(); index++) {
-						var child = objectDef.GetChildAtIndex(index);
+					foreach (var child in objectDef.Children) {
 						if (child is ObjectChildType objectChildType) {
-							ColourConsole.WriteLine($"\t//FG_Blue {objectChildType.Name,-20} //FG_Green {objectChildType.Identifier,-32} //FG_Grey {objectChildType.BitSize,5} {objectChildType.ByteSize,-4}");
+							ColourConsole.WriteLine($"\t//FG_Cyan {objectChildType.Format, -20} //FG_Blue {objectChildType.Name,-20} //FG_Green {objectChildType.Identifier,-11} //FG_Grey {objectChildType.BitSize,5} {objectChildType.ByteSize,-4}");
 						} else if (child is ObjectType) {
 						} else {
-							ColourConsole.WriteLine($"\t//FG_Blue {child.Format,-20} //FG_Green {child.Name,-32} //FG_Grey {child.BitSize,5} {child.ByteSize,-4}");
+							ColourConsole.WriteLine($"\t//FG_Cyan {child.Format,-20} //FG_Green {child.Name,-32} //FG_Grey {child.BitSize,5} {child.ByteSize,-4}");
 						}
 					}
 				}

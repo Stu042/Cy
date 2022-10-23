@@ -6,6 +6,17 @@ using System.Linq;
 namespace Cy.Types;
 
 
+public class TypeTableCreateVisitorOptions {
+	public NamespaceHelper NamespaceHelper;
+	public TypeTableBuilderHelper TypeTableBuilderHelper;
+	public TypeTableCreateVisitorOptions(NamespaceHelper namespaceHelper, TypeTableBuilderHelper typeTableBuilderHelper) {
+		NamespaceHelper = namespaceHelper;
+		TypeTableBuilderHelper = typeTableBuilderHelper;
+	}
+}
+
+
+
 public class TypeTableCreateVisitor : IAstVisitor {
 	public object VisitAssignExpr(Expr.Assign expr, object options) {
 		expr.value.Accept(this, options);
@@ -34,10 +45,10 @@ public class TypeTableCreateVisitor : IAstVisitor {
 	}
 
 	public object VisitClassStmt(Stmt.ClassDefinition stmt, object options) {
-		var data = options as TypeTable;
+		var data = options as TypeTableCreateVisitorOptions;
 		data.NamespaceHelper.Enter(stmt.token.lexeme);
-		var obj = new ObjectType(data.NamespaceHelper.FullName(), Enums.AccessModifier.Public, Enums.TypeFormat.Object, 0, 0);
-		data.Add(obj);
+		var obj = new ObjectType(data.NamespaceHelper.Current, Enums.AccessModifier.Public, Enums.TypeFormat.Object, 0, 0);
+		data.TypeTableBuilderHelper.Add(obj);
 		foreach (var memb in stmt.classes) {
 			memb.Accept(this, options);
 		}
@@ -132,9 +143,12 @@ public class TypeTableCreateVisitor : IAstVisitor {
 	}
 
 	public object VisitTypeStmt(Stmt.StmtType stmt, object options) {
-		var data = options as TypeTable;
-		var typeName = data.NamespaceHelper.CreateName(stmt.info.Select(info => info.lexeme));
-		var existingType = data.LookUp(typeName);
+		var data = options as TypeTableCreateVisitorOptions;
+		var typeName = data.NamespaceHelper.BuildName(stmt.info.Select(info => info.lexeme));
+		var existingType = data.TypeTableBuilderHelper.LookUp(typeName);
+		if (existingType == null) {
+			existingType = new BaseType(typeName, Enums.AccessModifier.Public, Enums.TypeFormat.Int, 0,0);
+		}
 		return existingType;
 	}
 
@@ -148,9 +162,6 @@ public class TypeTableCreateVisitor : IAstVisitor {
 
 	public object VisitVarStmt(Stmt.VarDefinition stmt, object options) {
 		var type = stmt.stmtType.Accept(this, options) as BaseType;
-		if (type == null) {
-			throw new TypeParserException(stmt, "Unknown type.");	// probably a bad place for an exception, not easy to continue after this
-		}
 		var member = new ObjectChildType(stmt.token.lexeme, type);
 		return member;
 	}

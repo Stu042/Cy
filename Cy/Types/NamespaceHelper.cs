@@ -8,7 +8,7 @@ namespace Cy.Types;
 /// Used to track current fully qualified namespace - helpful for types and scope
 /// </summary>
 public class NamespaceHelper {
-	const char NAMESPACE_DELIMITER = '.';
+	public const char NAMESPACE_DELIMITER = '.';
 	readonly Stack<string> names = new();
 	public string Current { get => String.Join(NAMESPACE_DELIMITER, names.Reverse()); }
 
@@ -23,12 +23,6 @@ public class NamespaceHelper {
 		names.Pop();
 	}
 
-	/// <summary> Full name of namespace, dot delimited. </summary>
-	public string FullName() {
-		var fullNameSpace = String.Join(NAMESPACE_DELIMITER, Current);
-		return fullNameSpace;
-	}
-
 	/// <summary> Just the last part of the fullname. </summary>
 	public string SimpleName(string fullName) {
 		var fullNameSplit = fullName.Split(NAMESPACE_DELIMITER);
@@ -36,14 +30,14 @@ public class NamespaceHelper {
 	}
 
 	/// <summary> With string part, join them to create a name, i.e. AnObject.AnotherObject </summary>
-	public string CreateName(IEnumerable<string> parts) {
-		var fullName = String.Join(NAMESPACE_DELIMITER, parts);
-		return fullName;
+	public string BuildName(IEnumerable<string> parts) {
+		var name = String.Join(NAMESPACE_DELIMITER, parts);
+		return name;
 	}
 
 	public string FullNamePlus(string current) {
 		if (string.IsNullOrEmpty(current)) {
-			return FullName();
+			return Current;
 		}
 		var currentNames = new Stack<string>(names);
 		currentNames.Push(current);

@@ -36,7 +36,9 @@ static class Program {
 		services.AddScoped<ParserCursor, ParserCursor>();
 		services.AddScoped<TypeTableCreate, TypeTableCreate>();
 		services.AddScoped<TypeTableCreateVisitor, TypeTableCreateVisitor>();
-		services.AddScoped<Types.TypeTable, Types.TypeTable>();
+		services.AddScoped<Types.TypeTableBuilderHelper, Types.TypeTableBuilderHelper>();
 		services.AddScoped<NamespaceHelper, NamespaceHelper>();
+		services.AddSingleton<Types.TypeTable, Types.TypeTable>();
+		services.AddScoped<TypeTableCreateVisitorOptions, TypeTableCreateVisitorOptions>(); 
 	}
 }

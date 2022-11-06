@@ -1,7 +1,6 @@
 ﻿using Cy.Enums;
 using Cy.Preprocesor;
 using Cy.Preprocesor.Interfaces;
-using Cy.Util;
 
 using System.Collections.Generic;
 using System.Linq;
@@ -48,28 +47,6 @@ public class TypeTableCreate {
 		}
 		UpdateForwardDefinitions(_typeTableCreateVisitorOptions.TypeTableBuilderHelper.TypeTable);
 		return _typeTableCreateVisitorOptions.TypeTableBuilderHelper.TypeTable;
-	}
-
-	public void Display(TypeTable typeTable) {
-		ColourConsole.WriteLine("\n//FG_Grey Types:");
-		foreach (var type in typeTable.Types) {
-			var typeDef = type.Value;
-			ColourConsole.WriteLine($"//FG_Cyan {typeDef.Format,-20} //FG_Green {typeDef.Name,-40} //FG_Grey {typeDef.BitSize,5} {typeDef.ByteSize,-4}");
-			if (typeDef is ObjectType objectDef) {
-				foreach (var child in objectDef.Children) {
-					if (child is ObjectChildType objectChildType) {
-						if (objectChildType.Format == Enums.TypeFormat.Int && objectChildType.ByteSize == 0) {
-							ColourConsole.WriteLine($"\t//FG_Red {objectChildType.Format,-20} {objectChildType.Name,-20} {objectChildType.Identifier,-11} {objectChildType.BitSize,5} {objectChildType.ByteSize,-4}");
-						} else {
-							ColourConsole.WriteLine($"\t//FG_Cyan {objectChildType.Format,-20} //FG_Blue {objectChildType.Name,-20} //FG_Green {objectChildType.Identifier,-11} //FG_Grey {objectChildType.BitSize,5} {objectChildType.ByteSize,-4}");
-						}
-					} else if (child is ObjectType) {
-					} else {
-						ColourConsole.WriteLine($"\t//FG_Cyan {child.Format,-20} //FG_Green {child.Name,-32} //FG_Grey {child.BitSize,5} {child.ByteSize,-4}");
-					}
-				}
-			}
-		}
 	}
 
 	void UpdateForwardDefinitions(TypeTable typeTable) {

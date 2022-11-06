@@ -54,10 +54,7 @@ public class Parser {
 	}
 
 	bool IsFuncDeclaration() {
-		if (_parserCursor.IsCheckAnyType() && _parserCursor.IsCheckNext(TokenType.IDENTIFIER)) {
-			return CheckIsFuncArgs(2);
-		}
-		return false;
+		return (_parserCursor.IsCheckAnyType() && _parserCursor.IsCheckAt(TokenType.IDENTIFIER, 1) && _parserCursor.IsCheckAt(TokenType.LEFT_PAREN, 2));
 	}
 
 	bool IsContructorDeclaration() {
@@ -90,13 +87,13 @@ public class Parser {
 
 	Stmt.ClassDefinition DefineClass() {
 		Token name = _parserCursor.Advance();
-		_parserCursor.Consume(TokenType.LEFT_BRACE, $"Expect a {TokenType.LEFT_BRACE} after '" + name.Lexeme + "' for an object definition.");
-		_parserCursor.Consume(TokenType.NEWLINE, "Expect a newline after '" + name.Lexeme + "' for an object definition.");
+		_parserCursor.Consume(TokenType.LEFT_BRACE, $"Expect a {TokenType.LEFT_BRACE} after '{name.Lexeme}' for an object definition.");
+		_parserCursor.Consume(TokenType.NEWLINE, $"Expect a newline after '{name.Lexeme}' for an object definition.");
 		var members = new List<Stmt.VarDefinition>();
 		var methods = new List<Stmt.Function>();
 		var classes = new List<Stmt.ClassDefinition>();
 		while (!_parserCursor.IsAtEnd() && (_parserCursor.Peek().TokenType != TokenType.RIGHT_BRACE || _parserCursor.Peek().TokenType == TokenType.NEWLINE)) {
-			var astmt = Declaration();                      // todo problem here, just before classes.Add(c); is called...
+			var astmt = Declaration();
 			if (astmt is Stmt.VarDefinition v) {
 				members.Add(v);
 			} else if (astmt is Stmt.Function f) {

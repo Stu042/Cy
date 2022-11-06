@@ -1,8 +1,10 @@
 ﻿using Cy.Enums;
 using Cy.Preprocesor;
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace Cy.Types;
 
@@ -30,6 +32,30 @@ public class BaseType {
 		BitSize = bitSize;
 		ByteSize = byteSize;
 		Token = token;
+	}
+
+	public bool CanCast(BaseType other) {
+		if (Format == TypeFormat.Method) {
+			return false;
+		}
+		if (Format == TypeFormat.Object) {
+			return false;	// todo object will have some kind of casting permitted
+		}
+		if (Format == TypeFormat.Void) {
+			return false;
+		}
+		if (Format == TypeFormat.String) {
+			return false;	// todo will be castable to i8[]
+		}
+		if (Format == TypeFormat.Bool) {
+			return false;
+		}
+		// int and float left
+		return true;
+	}
+
+	public static BaseType Void() {
+		return new BaseType("void", AccessModifier.Public, TypeFormat.Void, 0, 0, null);
 	}
 }
 

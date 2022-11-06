@@ -1,20 +1,6 @@
-Token {
-	int tokenType			// type of token
-	int literal				// value if a literal
-	Position position		// line number and index from start of line
-	MyObject a
-	Position {				// so Position from global is Token.Position but within Token is just called Position
-		int line
-		int offset
-	}
-}
-
-
-MyObject {
-	int a
-	f64 b
-}
 
 int Main() {
-	return 2
+	float a = 13.5
+	int b = a
+	return b
 }

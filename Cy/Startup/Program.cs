@@ -1,13 +1,14 @@
 ﻿using Cocona;
 
+using Cy.Llvm.CodeGen;
 using Cy.Preprocesor;
 using Cy.Preprocesor.Interfaces;
 using Cy.Types;
 
 using Microsoft.Extensions.DependencyInjection;
 
-
 namespace Cy.Setup;
+
 
 static class Program {
 	public static int Main(string[] args) {
@@ -36,9 +37,14 @@ static class Program {
 		services.AddScoped<ParserCursor, ParserCursor>();
 		services.AddScoped<TypeTableCreate, TypeTableCreate>();
 		services.AddScoped<TypeTableCreateVisitor, TypeTableCreateVisitor>();
-		services.AddScoped<Types.TypeTableBuilderHelper, Types.TypeTableBuilderHelper>();
+		services.AddScoped<TypeTableBuilderHelper, TypeTableBuilderHelper>();
 		services.AddScoped<NamespaceHelper, NamespaceHelper>();
-		services.AddSingleton<Types.TypeTable, Types.TypeTable>();
-		services.AddScoped<TypeTableCreateVisitorOptions, TypeTableCreateVisitorOptions>(); 
+		services.AddSingleton<TypeTable, TypeTable>();
+		services.AddScoped<TypeTableCreateVisitorOptions, TypeTableCreateVisitorOptions>();
+		services.AddScoped<CodeWriter, CodeWriter>();
+		services.AddScoped<LlvmTypeHelper, LlvmTypeHelper>();
+		
+		services.AddScoped<Compiler, Compiler>();
+		services.AddScoped<CompileVisitor, CompileVisitor>();
 	}
 }

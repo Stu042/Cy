@@ -1,5 +1,7 @@
-﻿using Cy.Preprocesor;
+﻿using Cy.Llvm.CodeGen;
+using Cy.Preprocesor;
 using Cy.Types;
+using Cy.Util;
 
 using System;
 using System.Collections.Generic;
@@ -14,19 +16,22 @@ public class CyCompiler {
 	readonly Parser _parser;
 	readonly TokenDisplay _tokenDisplay;
 	readonly TypeTableCreate _typeTableCreate;
+	readonly Compiler _compiler;
 
-	public CyCompiler(Scanner scanner, Config config, Parser parser, TokenDisplay tokenDisplay, TypeTableCreate typeTableCreate) {
+	public CyCompiler(Scanner scanner, Config config, Parser parser, TokenDisplay tokenDisplay, TypeTableCreate typeTableCreate, Compiler compiler) {
 		_scanner = scanner;
 		_config = config;
 		_parser = parser;
 		_tokenDisplay = tokenDisplay;
 		_typeTableCreate = typeTableCreate;
+		_compiler = compiler;
 	}
 
 	public int Compile() {
 		var allFilesTokens = ScanFiles();
 		var allFilesStmts = ParseTokens(allFilesTokens);
 		var typeTable = CreateTypeTable(allFilesStmts);
+		Compile(allFilesStmts);
 		return 0;
 	}
 
@@ -62,8 +67,17 @@ public class CyCompiler {
 	TypeTable CreateTypeTable(List<List<Stmt>> allFilesStmts) {
 		var typeTable = _typeTableCreate.Create(allFilesStmts);
 		if (_config.DisplayAsts) {
-			_typeTableCreate.Display(typeTable);
+			TypeTable.Display(typeTable);
 		}
 		return typeTable;
+	}
+
+	void Compile(List<List<Stmt>> allFilesStmts) {
+		var allCode = _compiler.Compile(allFilesStmts);
+		ColourConsole.WriteLine("\n\n//FG_Blue Source Code\n");
+		foreach (var code in allCode) {
+			ColourConsole.WriteLine($"//FG_DarkBlue File Name: {code.FileName}");
+			ColourConsole.WriteLine(code.Code);
+		}
 	}
 }

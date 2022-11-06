@@ -1,50 +1,24 @@
-﻿using Cy.Util;
+﻿using Cy.Llvm.Helpers;
+using Cy.Util;
 
 using System;
 using System.Collections.Generic;
-using System.Reflection.Metadata;
-using System.Runtime.CompilerServices;
 using System.Text;
 
 
 namespace Cy.Llvm.CodeGen;
 
 
-public class InstanceHelper {
-	int instanceCount;
 
-	public InstanceHelper() {
-		instanceCount = 0;
-	}
-
-	public string NewName() {
-		var newName = $"%{instanceCount++}";
-		return newName;
-	}
-}
-
-
-public class LabelHelper {
-	int labelCount;
-
-	public LabelHelper() {
-		labelCount = 0;
-	}
-
-	public string NewLabel() {
-		var newName = $"{labelCount++}:";
-		return newName;
-	}
-}
-
-
-
+/// <summary> Result from the CodeWriter, returned by Compiler. </summary>
 public class CodeOutput {
-	public string FileName;
+	public FileNames FileName;
 	public string Code;
+
 }
 
 
+/// <summary> Creates the LlvmIr code representing the cy code.  </summary>
 public class CodeWriter {
 	readonly List<CodeFile> files;
 	CodeFile currentFile;
@@ -65,24 +39,26 @@ public class CodeWriter {
 	public void NewBlock() {
 		currentFile.NewBlock();
 	}
-	/// <summary> Add line of code to block init. </summary>
+
+	/// <summary> Add line of code to start of block, i.e. before AddCode(). </summary>
 	public void AddPreCode(string line) {
 		currentFile.AddPreCode(line);
 	}
 	/// <summary> Add a line of code to main part of block. </summary>
-
 	public void AddCode(string line) {
 		currentFile.AddCode(line);
 	}
-	/// <summary> Add a line of code to block tidy up. </summary>
+	/// <summary> Add a line of code to end of block, i.e. after AddCode(). </summary>
 	public void AddPostCode(string line) {
 		currentFile.AddPostCode(line);
 	}
 
+	/// <summary> Create a unique label name to be used for this code file. </summary>
 	public string Label() {
 		return currentFile.LabelHelper.NewLabel();
 	}
 
+	/// <summary> Create a unique instance name to be used for this code file. </summary>
 	public string Instance() {
 		return currentFile.InstanceHelper.NewName();
 	}
@@ -93,7 +69,7 @@ public class CodeWriter {
 		foreach (var file in files) {
 			var codeOutput = new CodeOutput {
 				FileName = file.FullFilename,
-				Code = file.Output()
+				Code = file.Output(),
 			};
 			allCodeOutput.Add(codeOutput);
 		}
@@ -102,10 +78,10 @@ public class CodeWriter {
 
 
 
-	public class CodeFile {
+	class CodeFile {
 		public readonly InstanceHelper InstanceHelper;
 		public readonly LabelHelper LabelHelper;
-		public string FullFilename;
+		public FileNames FullFilename;
 		List<CodeBlock> blocks;
 		CodeBlock currentBlock;
 
@@ -116,7 +92,7 @@ public class CodeWriter {
 			blocks = new List<CodeBlock>();
 			currentBlock = new CodeBlock();
 			blocks.Add(currentBlock);
-			FullFilename = fullFilename;
+			FullFilename = new FileNames(fullFilename),
 		}
 
 
@@ -145,7 +121,7 @@ public class CodeWriter {
 		}
 
 		string Header() {    // todo get target triple using a better method
-			return $"; ModuleID = '{FullFilename}'\nsource_filename = \"{FullFilename}\"\ntarget datalayout = \"e-m:w-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128\"\ntarget triple = \"x86_64-pc-windows-msvc19.33.31630\"\n\n";
+			return $"; ModuleID = '{FullFilename.Cy}'\nsource_filename = \"{FullFilename.Cy}\"\ntarget datalayout = \"e-m:w-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128\"\ntarget triple = \"x86_64-pc-windows-msvc19.33.31630\"\n\n";
 		}
 		string Footer() {    // todo get target triple using a better method
 			return "\n\nattributes #0 = { noinline nounwind optnone uwtable \"correctly-rounded-divide-sqrt-fp-math\"=\"false\" \"disable-tail-calls\"=\"false\" \"frame-pointer\"=\"none\" \"less-precise-fpmad\"=\"false\" \"min-legal-vector-width\"=\"0\" \"no-infs-fp-math\"=\"false\" \"no-jump-tables\"=\"false\" \"no-nans-fp-math\"=\"false\" \"no-signed-zeros-fp-math\"=\"false\" \"no-trapping-math\"=\"true\" \"stack-protector-buffer-size\"=\"8\" \"target-cpu\"=\"x86-64\" \"target-features\"=\"+cx8,+fxsr,+mmx,+sse,+sse2,+x87\" \"unsafe-fp-math\"=\"false\" \"use-soft-float\"=\"false\" }\n\n!llvm.module.flags = !{!0, !1}\n!llvm.ident = !{!2}\n\n!0 = !{i32 1, !\"wchar_size\", i32 2}\n!1 = !{i32 7, !\"PIC Level\", i32 2}\n!2 = !{!\"cy version 0.1.0\"}\n";
@@ -154,7 +130,7 @@ public class CodeWriter {
 
 
 
-	public class CodeBlock {
+	class CodeBlock {
 		readonly List<string> preCode;
 		readonly List<CodeLine> code;
 		readonly List<string> postCode;
@@ -202,7 +178,7 @@ public class CodeWriter {
 
 
 
-	public class CodeLine {
+	class CodeLine {
 		public CodeBlock Block;
 		public string Line;
 

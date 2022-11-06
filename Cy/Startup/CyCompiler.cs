@@ -76,7 +76,7 @@ public class CyCompiler {
 		var allCode = _compiler.Compile(allFilesStmts);
 		ColourConsole.WriteLine("\n\n//FG_Blue Source Code\n");
 		foreach (var code in allCode) {
-			ColourConsole.WriteLine($"//FG_DarkBlue File Name: {code.FileName}");
+			ColourConsole.WriteLine($"//FG_DarkBlue File Name: {code.FileName.Llvm}");
 			ColourConsole.WriteLine(code.Code);
 		}
 	}

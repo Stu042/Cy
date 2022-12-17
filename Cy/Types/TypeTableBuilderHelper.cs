@@ -13,12 +13,12 @@ public class TypeTableBuilderHelper {
 
 
 	/// <summary> Add a new type to the table. </summary>
-	public void Add(BaseType type) {
+	public void Add(FrontendType type) {
 		TypeTable.Types.Add(type.Name, type);
 	}
 
 	/// <summary> Lookup type, return null if not found else type definition. </summary>
-	public BaseType LookUp(string name) {
+	public FrontendType LookUp(string name) {
 		var result = TypeTable.LookUp(name);
 		return result;
 	}

@@ -28,7 +28,6 @@ public class Scanner {
 		{ CommandNames.False, TokenType.FALSE },
 		{ CommandNames.True, TokenType.TRUE },
 		{ CommandNames.Null, TokenType.NULL },
-		{ CommandNames.Super, TokenType.SUPER },
 	};
 
 

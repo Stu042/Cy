@@ -14,20 +14,20 @@ public class TypeTableCreate {
 	readonly TypeTableCreateVisitorOptions _typeTableCreateVisitorOptions;
 	readonly IErrorDisplay _errorDisplay;
 
-	readonly BaseType[] builtinTypes = new BaseType[] {
-		new BaseType(Constants.BasicTypeNames.Int, AccessModifier.Public, TypeFormat.Int, 32, 4, null),
-		new BaseType(Constants.BasicTypeNames.Int8, AccessModifier.Public, TypeFormat.Int, 8, 1, null),
-		new BaseType(Constants.BasicTypeNames.Int16, AccessModifier.Public, TypeFormat.Int, 16, 2, null),
-		new BaseType(Constants.BasicTypeNames.Int32, AccessModifier.Public, TypeFormat.Int, 32, 4, null),
-		new BaseType(Constants.BasicTypeNames.Int64, AccessModifier.Public, TypeFormat.Int, 64, 8, null),
-		new BaseType(Constants.BasicTypeNames.Int128, AccessModifier.Public, TypeFormat.Int, 128, 16, null),
-		new BaseType(Constants.BasicTypeNames.Float, AccessModifier.Public, TypeFormat.Float, 64, 8, null),
-		new BaseType(Constants.BasicTypeNames.Float16, AccessModifier.Public, TypeFormat.Float, 16, 2, null),
-		new BaseType(Constants.BasicTypeNames.Float32, AccessModifier.Public, TypeFormat.Float, 32, 4, null),
-		new BaseType(Constants.BasicTypeNames.Float64, AccessModifier.Public, TypeFormat.Float, 64, 8, null),
-		new BaseType(Constants.BasicTypeNames.Float128, AccessModifier.Public, TypeFormat.Float, 128, 16, null),
-		new BaseType(Constants.BasicTypeNames.Bool, AccessModifier.Public, TypeFormat.Bool, 1, 1, null),
-		new BaseType(Constants.BasicTypeNames.Void, AccessModifier.Public, TypeFormat.Void, 0, 0, null)
+	readonly FrontendType[] builtinTypes = new FrontendType[] {
+		new FrontendType(Constants.BasicTypeNames.Int, AccessModifier.Public, FrontendTypeFormat.Int, 32, 4, null),
+		new FrontendType(Constants.BasicTypeNames.Int8, AccessModifier.Public, FrontendTypeFormat.Int, 8, 1, null),
+		new FrontendType(Constants.BasicTypeNames.Int16, AccessModifier.Public, FrontendTypeFormat.Int, 16, 2, null),
+		new FrontendType(Constants.BasicTypeNames.Int32, AccessModifier.Public, FrontendTypeFormat.Int, 32, 4, null),
+		new FrontendType(Constants.BasicTypeNames.Int64, AccessModifier.Public, FrontendTypeFormat.Int, 64, 8, null),
+		new FrontendType(Constants.BasicTypeNames.Int128, AccessModifier.Public, FrontendTypeFormat.Int, 128, 16, null),
+		new FrontendType(Constants.BasicTypeNames.Float, AccessModifier.Public, FrontendTypeFormat.Float, 64, 8, null),
+		new FrontendType(Constants.BasicTypeNames.Float16, AccessModifier.Public, FrontendTypeFormat.Float, 16, 2, null),
+		new FrontendType(Constants.BasicTypeNames.Float32, AccessModifier.Public, FrontendTypeFormat.Float, 32, 4, null),
+		new FrontendType(Constants.BasicTypeNames.Float64, AccessModifier.Public, FrontendTypeFormat.Float, 64, 8, null),
+		new FrontendType(Constants.BasicTypeNames.Float128, AccessModifier.Public, FrontendTypeFormat.Float, 128, 16, null),
+		new FrontendType(Constants.BasicTypeNames.Bool, AccessModifier.Public, FrontendTypeFormat.Bool, 1, 1, null),
+		new FrontendType(Constants.BasicTypeNames.Void, AccessModifier.Public, FrontendTypeFormat.Void, 0, 0, null)
 	};
 
 	public TypeTableCreate(TypeTableCreateVisitor visitor, TypeTableCreateVisitorOptions typeTableCreateVisitorOptions, IErrorDisplay errorDisplay) {
@@ -63,14 +63,14 @@ public class TypeTableCreate {
 			if (child is ObjectType childObjectType) {
 				UpdateForwardDefinitionsRecursive(childObjectType, typeTable);      // we need to enter another namespace...
 			}
-			if (child.Format == TypeFormat.Int && child.ByteSize == 0) {                    // this requires updating as will its parents
+			if (child.Format == FrontendTypeFormat.Int && child.ByteSize == 0) {                    // this requires updating as will its parents
 				UpdateDefinitions(objectType, child as ObjectChildType, typeTable);
 			}
 		}
 		typeTable.NamespaceHelper.Leave();
 	}
 
-	void UpdateDefinitions(BaseType parent, ObjectChildType child, TypeTable typeTable) {   // we got a hot one, update this objects parent with the size and its parents as well
+	void UpdateDefinitions(FrontendType parent, ObjectChildType child, TypeTable typeTable) {   // we got a hot one, update this objects parent with the size and its parents as well
 		var existingType = typeTable.LookUp(child.Name);
 		if (existingType == null) {
 			_errorDisplay.Error(child.Token, $"Unable to find definition for {child.Name} in {parent.Name}.");

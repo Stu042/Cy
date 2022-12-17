@@ -2,18 +2,20 @@
 using Cy.Types;
 
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Cy.Llvm.CodeGen;
 
 
+[DebuggerDisplay("LlvmIr Compiler")]
 public class Compiler {
 	readonly CompileVisitor _compileVisitor;
 	readonly TypeTable _typeTable;
 	readonly CodeWriter _codeWriter;
-	readonly LlvmTypeHelper _llvmTypeHelper;
+	readonly BackendTypeHelper _llvmTypeHelper;
 
 
-	public Compiler(CompileVisitor compileVisitor, TypeTable typeTable, CodeWriter codeWriter, LlvmTypeHelper llvmTypeHelper) {
+	public Compiler(CompileVisitor compileVisitor, TypeTable typeTable, CodeWriter codeWriter, BackendTypeHelper llvmTypeHelper) {
 		_compileVisitor = compileVisitor;
 		_typeTable = typeTable;
 		_codeWriter = codeWriter;
@@ -25,7 +27,7 @@ public class Compiler {
 		var options = new CompileOptions {
 			CodeWriter = _codeWriter,
 			TypeTable = _typeTable,
-			LlvmTypeHelper = _llvmTypeHelper,
+			BackendTypeHelper = _llvmTypeHelper,
 		};
 		foreach (var stmts in allFilesStmts) {
 			_codeWriter.NewFile(stmts[0].Token.Filename);

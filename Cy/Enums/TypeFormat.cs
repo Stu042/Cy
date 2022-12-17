@@ -1,6 +1,6 @@
 ﻿namespace Cy.Enums;
 
-public enum TypeFormat {
+public enum FrontendTypeFormat {
 	Void,
 	Bool,
 	Int,

@@ -13,32 +13,56 @@ namespace Cy.Llvm.CodeGen;
 
 
 public class ExpressionInstance {
-	public BaseType Type;
-	public string Name;				// %0, %1 etc name in llvmir
+	/// <summary> Frontend BaseType </summary>
+	public FrontendType Type;
+	/// <summary> LlvmIr name of instance, ie %0, %1 </summary>
+	public string Name;
 	public int IndirectionLevels;	// effectively how many * we need to refer to this
 }
 
 
 
-public class LlvmTypeHelper {
-	public string BaseTypeToLlvm(BaseType type) {
+public class BackendTypeHelper {
+	public string BaseTypeToBackend(FrontendType type) {
 		switch(type.Format) {
-			case Enums.TypeFormat.Void:
+			case Enums.FrontendTypeFormat.Void:
 				return "void";
-			case Enums.TypeFormat.Bool:
+			case Enums.FrontendTypeFormat.Bool:
 				return "i8";
-			case Enums.TypeFormat.Int:
+			case Enums.FrontendTypeFormat.Int:
 				return $"i{type.BitSize}";
-			case Enums.TypeFormat.Float:
+			case Enums.FrontendTypeFormat.Float:
 				return $"f{type.BitSize}";
-			case Enums.TypeFormat.String:
+			case Enums.FrontendTypeFormat.String:
 				return $"i8*";
-			case Enums.TypeFormat.Method:
-			case Enums.TypeFormat.Object:
+			case Enums.FrontendTypeFormat.Method:
+			case Enums.FrontendTypeFormat.Object:
 			default:
 				throw new Exception("Unable to convert BaseType to Llvm type.");
 		}
 	}
+	public string BaseTypeToBackend(ExpressionInstance instance) {
+		switch (instance.Type.Format) {
+			case Enums.FrontendTypeFormat.Void:
+				return "void";
+			case Enums.FrontendTypeFormat.Bool:
+				return "i8" + new string('*', instance.IndirectionLevels);
+			case Enums.FrontendTypeFormat.Int:
+				return $"i{instance.Type.BitSize}" + new string('*', instance.IndirectionLevels);
+			case Enums.FrontendTypeFormat.Float:
+				return $"f{instance.Type.BitSize}" + new string('*', instance.IndirectionLevels);
+			case Enums.FrontendTypeFormat.String:
+				return $"i8*" + new string('*', instance.IndirectionLevels);
+			case Enums.FrontendTypeFormat.Method:
+			case Enums.FrontendTypeFormat.Object:
+			default:
+				throw new Exception("Unable to convert BaseType to Llvm type.");
+		}
+	}
+
+	//public string Allocate(ExpressionInstance instance) {
+		
+	//}
 }
 
 
@@ -46,7 +70,7 @@ public class LlvmTypeHelper {
 public class CompileOptions {
 	public TypeTable TypeTable;
 	public CodeWriter CodeWriter;
-	public LlvmTypeHelper LlvmTypeHelper;
+	public BackendTypeHelper BackendTypeHelper;
 }
 
 
@@ -54,6 +78,7 @@ public class CompileOptions {
 public class CompileVisitor : IExprVisitor, IStmtVisitor {
 	readonly IErrorDisplay _errorDisplay;
 	public bool FoundError;
+
 
 	public CompileVisitor(IErrorDisplay errorDisplay) {
 		_errorDisplay = errorDisplay;
@@ -123,7 +148,7 @@ public class CompileVisitor : IExprVisitor, IStmtVisitor {
 	public object VisitIfStmt(Stmt.If stmt, object options) {
 		var helper = options as CompileOptions;
 		var condition = stmt.value.Accept(this, options) as ExpressionInstance;
-		if (condition.Type.Format != Enums.TypeFormat.Bool) {
+		if (condition.Type.Format != Enums.FrontendTypeFormat.Bool) {
 			_errorDisplay.Error(stmt.value.Token, "Expected a bool value.");
 			FoundError = true;
 		}
@@ -140,9 +165,8 @@ public class CompileVisitor : IExprVisitor, IStmtVisitor {
 	public object VisitWhileStmt(Stmt.While stmt, object options) {
 		var helper = options as CompileOptions;
 		var condition = stmt.condition.Accept(this, options) as ExpressionInstance;
-		if (condition.Type.Format != Enums.TypeFormat.Bool) {
-			_errorDisplay.Error(stmt.condition.Token, "Expected a bool value.");
-			FoundError = true;
+		if (condition.Type.Format != Enums.FrontendTypeFormat.Bool) {
+			Error(stmt.condition.Token, "Expected a bool value.");
 		}
 		// write while condition with a label
 		foreach (var bodyStmt in stmt.body) {
@@ -155,18 +179,18 @@ public class CompileVisitor : IExprVisitor, IStmtVisitor {
 
 	public object VisitInputVarStmt(Stmt.InputVar invar, object options) {
 		var helper = options as CompileOptions;
-		var type = invar.type.Accept(this, options) as BaseType;
-		var text = $"{helper.LlvmTypeHelper.BaseTypeToLlvm(type)} {helper.CodeWriter.Instance()}";
+		var type = invar.type.Accept(this, options) as FrontendType;
+		var text = $"{helper.BackendTypeHelper.BaseTypeToBackend(type)} {helper.CodeWriter.Instance()}";
 		return text;
 	}
 
 	public object VisitFunctionStmt(Stmt.Function stmt, object options) {
 		var helper = options as CompileOptions;
-		BaseType returnType;
+		FrontendType returnType;
 		if (stmt.returnType != null) {
-			returnType = stmt.returnType.Accept(this, options) as BaseType;
+			returnType = stmt.returnType.Accept(this, options) as FrontendType;
 		} else {
-			returnType = BaseType.Void();
+			returnType = FrontendType.Void();
 		}
 		var inputs = new List<string>();
 		foreach (var param in stmt.input) {
@@ -176,13 +200,13 @@ public class CompileVisitor : IExprVisitor, IStmtVisitor {
 		var inputStr = string.Join(", ", inputs);
 		var funcName = stmt.Token.Lexeme;
 		if (funcName == "main") {
-			throw new Exception("Unable to use 'main' as a function name, did you mean 'Main'?");
+			Error(stmt.Token, "Unable to use 'main' as a function name, did you mean 'Main'?");
 		}
-		helper.CodeWriter.AddPreCode($"define dso_local {helper.LlvmTypeHelper.BaseTypeToLlvm(returnType)} @{funcName}({inputStr}) #0 {{");
+		helper.CodeWriter.AddPreCode($"define dso_local {helper.BackendTypeHelper.BaseTypeToBackend(returnType)} @{funcName}({inputStr}) #0 {{");
 		foreach (Stmt body in stmt.body) {
 			body.Accept(this, options);
 		}
-		helper.CodeWriter.AddPostCode("}");
+		helper.CodeWriter.AddCode("}");
 		return null;
 	}
 
@@ -220,11 +244,19 @@ public class CompileVisitor : IExprVisitor, IStmtVisitor {
 
 	public object VisitVarStmt(Stmt.VarDefinition stmt, object options) {
 		var helper = options as CompileOptions;
+		var baseType = stmt.stmtType.Accept(this, options) as FrontendType;
+		var expr = new ExpressionInstance {
+			IndirectionLevels = 0,
+			Name = stmt.Token.Lexeme,
+			Type = baseType,
+		};
+		var instanceName = helper.CodeWriter.Instance();
+		helper.CodeWriter.AddPreCode($"  {instanceName} = alloca {helper.BackendTypeHelper.BaseTypeToBackend(baseType)}, align 4");
 		return null;
 	}
 
 	public object VisitVariableExpr(Expr.Variable expr, object options) {
-		var data = options as CompileOptions;
+		var helper = options as CompileOptions;
 		// create new ExpressionInstance
 		return null;    // return ExpressionInstance
 	}
@@ -241,4 +273,9 @@ public class CompileVisitor : IExprVisitor, IStmtVisitor {
 		return exprGroup;
 	}
 
+
+	void Error(Token token, string message) {
+		_errorDisplay.Error(token, message);
+		FoundError = true;
+	}
 }

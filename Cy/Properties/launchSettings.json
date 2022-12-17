@@ -3,7 +3,7 @@
     "Cy": {
       "commandName": "Project",
       "commandLineArgs": "-StAvc -o temp.c -i test.cy",
-      "workingDirectory": "E:\\src\\cs\\Cy-vs2022\\Cy\\TestFiles"
+      "workingDirectory": "C:\\Users\\Stu\\Desktop\\stuffDrive\\src\\cs\\Cy-vs2022\\Cy\\TestFiles"
     }
   }
 }

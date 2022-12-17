@@ -3,6 +3,7 @@ using Cy.Util;
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 
 
@@ -19,10 +20,11 @@ public class CodeOutput {
 
 
 /// <summary> Creates the LlvmIr code representing the cy code.  </summary>
+[DebuggerDisplay($"{{{nameof(GetDebuggerDisplay)}(),nq}}")]
 public class CodeWriter {
 	readonly List<CodeFile> files;
 	CodeFile currentFile;
-
+	public List<CodeOutput> Code { get => Output(); }
 
 	public CodeWriter() {
 		files = new List<CodeFile>();
@@ -35,22 +37,22 @@ public class CodeWriter {
 		currentFile = new CodeFile(fullFilename);
 		files.Add(currentFile);
 	}
+	/// <summary> A new function of code for this file. </summary>
+	public void NewFunction() {
+		currentFile.NewFunction();
+	}
 	/// <summary> A new block of code for this file. </summary>
 	public void NewBlock() {
 		currentFile.NewBlock();
 	}
 
-	/// <summary> Add line of code to start of block, i.e. before AddCode(). </summary>
+	/// <summary> Add line of code to start of a function, i.e. before AddCode(). </summary>
 	public void AddPreCode(string line) {
 		currentFile.AddPreCode(line);
 	}
 	/// <summary> Add a line of code to main part of block. </summary>
 	public void AddCode(string line) {
 		currentFile.AddCode(line);
-	}
-	/// <summary> Add a line of code to end of block, i.e. after AddCode(). </summary>
-	public void AddPostCode(string line) {
-		currentFile.AddPostCode(line);
 	}
 
 	/// <summary> Create a unique label name to be used for this code file. </summary>
@@ -60,7 +62,7 @@ public class CodeWriter {
 
 	/// <summary> Create a unique instance name to be used for this code file. </summary>
 	public string Instance() {
-		return currentFile.InstanceHelper.NewName();
+		return currentFile.NewName();
 	}
 
 	/// <summary> Return all files of code in llvmir format. </summary>
@@ -76,45 +78,52 @@ public class CodeWriter {
 		return allCodeOutput;
 	}
 
+	private string GetDebuggerDisplay() {
+		return "LlvmIr CodeWriter";
+	}
 
 
+	// a file
+	[DebuggerDisplay("LlvmIr CodeFile")]
 	class CodeFile {
-		public readonly InstanceHelper InstanceHelper;
 		public readonly LabelHelper LabelHelper;
 		public FileNames FullFilename;
-		List<CodeBlock> blocks;
-		CodeBlock currentBlock;
+		List<CodeFunction> functions;
+		CodeFunction currentFunction;
 
 
 		public CodeFile(string fullFilename) {
-			InstanceHelper = new InstanceHelper();
 			LabelHelper = new LabelHelper();
-			blocks = new List<CodeBlock>();
-			currentBlock = new CodeBlock();
-			blocks.Add(currentBlock);
-			FullFilename = new FileNames(fullFilename),
+			currentFunction = new CodeFunction();
+			functions = new List<CodeFunction>();
+			functions.Add(currentFunction);
+			FullFilename = new FileNames(fullFilename);
 		}
 
 
+		public void NewFunction() {
+			currentFunction = new CodeFunction();
+			functions.Add(currentFunction);
+		}
 		public void NewBlock() {
-			currentBlock = new CodeBlock();
-			blocks.Add(currentBlock);
+			currentFunction.NewBlock();
 		}
 		public void AddPreCode(string code) {
-			currentBlock.AddPreCode(code);
+			currentFunction.AddPreCode(code);
 		}
 		public void AddCode(string line) {
-			currentBlock.AddCode(line);
+			currentFunction.AddCode(line);
 		}
-		public void AddPostCode(string code) {
-			currentBlock.AddPostCode(code);
+
+		public string NewName() {
+			return currentFunction.InstanceHelper.NewName();
 		}
 
 		public string Output() {
 			var bob = new StringBuilder();
 			bob.AppendLine(Header());
-			foreach (var block in blocks) {
-				bob.AppendLine(block.Output());
+			foreach (var function in functions) {
+				bob.AppendLine(function.Output());
 			}
 			bob.AppendLine(Footer());
 			return bob.ToString();
@@ -130,27 +139,61 @@ public class CodeWriter {
 
 
 
-	class CodeBlock {
+	// a function
+	[DebuggerDisplay("LlvmIr CodeFunction")]
+	class CodeFunction {
+		public readonly InstanceHelper InstanceHelper;
 		readonly List<string> preCode;
-		readonly List<CodeLine> code;
-		readonly List<string> postCode;
+		readonly List<CodeBlock> blocks;
+		CodeBlock currentBlock;
 
-
-		public CodeBlock() {
+		public CodeFunction() {
+			InstanceHelper = new InstanceHelper();
 			preCode = new List<string>();
-			code = new List<CodeLine>();
-			postCode = new List<string>();
+			currentBlock = new CodeBlock();
+			blocks = new List<CodeBlock>();
+			blocks.Add(currentBlock);
 		}
 
 
+		public void NewBlock() {
+			currentBlock = new CodeBlock();
+			blocks.Add(currentBlock);
+		}
 		public void AddPreCode(string code) {
 			preCode.Add(code);
 		}
 		public void AddCode(string line) {
-			code.Add(new CodeLine { Line = line });
+			currentBlock.AddCode(line);
 		}
-		public void AddPostCode(string code) {
-			postCode.Add(code);
+
+		public string Output() {
+			var bob = new StringBuilder();
+			var pre = String.Join('\n', preCode);
+			bob.AppendLine(pre);
+			foreach (var block in blocks) {
+				var blockText = block.Output();
+				bob.AppendLine(blockText);
+			}
+			return bob.ToString();
+		}
+	}
+
+
+
+	// a block of block
+	[DebuggerDisplay("LlvmIr CodeBlock")]
+	class CodeBlock {
+		readonly List<CodeLine> code;
+
+
+		public CodeBlock() {
+			code = new List<CodeLine>();
+		}
+
+
+		public void AddCode(string line) {
+			code.Add(new CodeLine { Line = line });
 		}
 
 		public string Output() {
@@ -160,8 +203,6 @@ public class CodeWriter {
 
 		string BuildOutput(CodeBlock block) {
 			var bob = new StringBuilder();
-			var pre = String.Join('\n', preCode);
-			bob.AppendLine(pre);
 			foreach (var c in block.code) {
 				if (c.Block != null) {
 					var blockStr = BuildOutput(c.Block);
@@ -170,14 +211,14 @@ public class CodeWriter {
 					bob.AppendLine(c.Line);
 				}
 			}
-			var post = String.Join('\n', postCode);
-			bob.AppendLine(post);
 			return bob.ToString();
 		}
 	}
 
 
 
+	// either a line or a block of code
+	[DebuggerDisplay("LlvmIr CodeLine")]
 	class CodeLine {
 		public CodeBlock Block;
 		public string Line;

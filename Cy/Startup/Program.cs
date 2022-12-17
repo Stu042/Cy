@@ -42,7 +42,7 @@ static class Program {
 		services.AddSingleton<TypeTable, TypeTable>();
 		services.AddScoped<TypeTableCreateVisitorOptions, TypeTableCreateVisitorOptions>();
 		services.AddScoped<CodeWriter, CodeWriter>();
-		services.AddScoped<LlvmTypeHelper, LlvmTypeHelper>();
+		services.AddScoped<BackendTypeHelper, BackendTypeHelper>();
 		
 		services.AddScoped<Compiler, Compiler>();
 		services.AddScoped<CompileVisitor, CompileVisitor>();

@@ -47,7 +47,7 @@ public class TypeTableCreateVisitor : IAstVisitor {
 	public object VisitClassStmt(Stmt.ClassDefinition stmt, object options) {
 		var data = options as TypeTableCreateVisitorOptions;
 		data.NamespaceHelper.Enter(stmt.Token.Lexeme);
-		var obj = new ObjectType(data.NamespaceHelper.Current, Enums.AccessModifier.Public, Enums.TypeFormat.Object, 0, 0, stmt.Token);
+		var obj = new ObjectType(data.NamespaceHelper.Current, Enums.AccessModifier.Public, Enums.FrontendTypeFormat.Object, 0, 0, stmt.Token);
 		data.TypeTableBuilderHelper.Add(obj);
 		foreach (var memb in stmt.classes) {
 			memb.Accept(this, options);
@@ -81,14 +81,14 @@ public class TypeTableCreateVisitor : IAstVisitor {
 	// returns method definitions
 	public object VisitFunctionStmt(Stmt.Function stmt, object options) {
 		string returnTypeName;
-		Enums.TypeFormat returnTypeFormat;
+		Enums.FrontendTypeFormat returnTypeFormat;
 		if (stmt.returnType != null) {
-			var returnStmt = (BaseType)stmt.returnType.Accept(this, options);
+			var returnStmt = (FrontendType)stmt.returnType.Accept(this, options);
 			returnTypeName = returnStmt.Name;
 			returnTypeFormat = returnStmt.Format;
 		} else {
 			returnTypeName = Constants.BasicTypeNames.Void;
-			returnTypeFormat = Enums.TypeFormat.Void;
+			returnTypeFormat = Enums.FrontendTypeFormat.Void;
 		}
 		var functionType = new MethodType(stmt.Token.Lexeme, returnTypeName, Enums.AccessModifier.Public, returnTypeFormat, 0, 0, stmt.Token);
 		foreach (var param in stmt.input) {
@@ -147,7 +147,7 @@ public class TypeTableCreateVisitor : IAstVisitor {
 		var typeName = data.NamespaceHelper.BuildName(stmt.info.Select(info => info.Lexeme));
 		var existingType = data.TypeTableBuilderHelper.LookUp(typeName);
 		if (existingType == null) {
-			existingType = new BaseType(typeName, Enums.AccessModifier.Public, Enums.TypeFormat.Int, 0,0, stmt.Token);
+			existingType = new FrontendType(typeName, Enums.AccessModifier.Public, Enums.FrontendTypeFormat.Int, 0,0, stmt.Token);
 		}
 		return existingType;
 	}
@@ -161,7 +161,7 @@ public class TypeTableCreateVisitor : IAstVisitor {
 	}
 
 	public object VisitVarStmt(Stmt.VarDefinition stmt, object options) {
-		var type = stmt.stmtType.Accept(this, options) as BaseType;
+		var type = stmt.stmtType.Accept(this, options) as FrontendType;
 		var member = new ObjectChildType(stmt.Token.Lexeme, type);
 		return member;
 	}

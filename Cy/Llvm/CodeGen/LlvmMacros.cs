@@ -15,11 +15,11 @@ public class LlvmMacros {
 	public string ModuleFlags;
 	public string Ident;
 	List<string> macros;
-	const string filename = "uniqueNameMin";
+	const string filename = "uniqueNameMin";	// todo actual unique name, maybe do in temp as well
 
 	public async Task<bool> Init() {
 		string[] lines = {
-			"int main() {", "        return 0;", "}"
+			"int main() {", "  return 0;", "}"
 		};
 		await File.WriteAllLinesAsync(filename + ".c", lines);
 		CompileMinC();

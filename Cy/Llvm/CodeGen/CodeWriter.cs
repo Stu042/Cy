@@ -20,13 +20,18 @@ public class CodeOutput {
 
 
 /// <summary> Creates the LlvmIr code representing the cy code.  </summary>
-[DebuggerDisplay($"{{{nameof(GetDebuggerDisplay)}(),nq}}")]
+[DebuggerDisplay("LlvmIr CodeWriter")]
 public class CodeWriter {
+	readonly LlvmMacros _llvmMacros;
 	readonly List<CodeFile> files;
 	CodeFile currentFile;
-	public List<CodeOutput> Code { get => Output(); }
 
-	public CodeWriter() {
+	public List<CodeOutput> Code { get => Output(); }	// mostly for easier debug - shows code so far
+
+
+	public CodeWriter(LlvmMacros llvmMacros) {
+		_llvmMacros = llvmMacros;
+		_ = _llvmMacros.Init().Result;
 		files = new List<CodeFile>();
 		currentFile = null;
 	}
@@ -34,7 +39,7 @@ public class CodeWriter {
 
 	/// <summary> A new file of code. </summary>
 	public void NewFile(string fullFilename) {
-		currentFile = new CodeFile(fullFilename);
+		currentFile = new CodeFile(fullFilename, _llvmMacros);
 		files.Add(currentFile);
 	}
 	/// <summary> A new function of code for this file. </summary>
@@ -66,7 +71,7 @@ public class CodeWriter {
 	}
 
 	/// <summary> Return all files of code in llvmir format. </summary>
-	public List<CodeOutput> Output() {
+	List<CodeOutput> Output() {
 		var allCodeOutput = new List<CodeOutput>();
 		foreach (var file in files) {
 			var codeOutput = new CodeOutput {
@@ -78,9 +83,6 @@ public class CodeWriter {
 		return allCodeOutput;
 	}
 
-	private string GetDebuggerDisplay() {
-		return "LlvmIr CodeWriter";
-	}
 
 
 	// a file
@@ -90,11 +92,12 @@ public class CodeWriter {
 		public FileNames FullFilename;
 		List<CodeFunction> functions;
 		CodeFunction currentFunction;
+		LlvmMacros _llvmMacros;
 
-
-		public CodeFile(string fullFilename) {
+		public CodeFile(string fullFilename, LlvmMacros llvmMacros) {
 			LabelHelper = new LabelHelper();
 			currentFunction = new CodeFunction();
+			_llvmMacros = llvmMacros;
 			functions = new List<CodeFunction>();
 			functions.Add(currentFunction);
 			FullFilename = new FileNames(fullFilename);
@@ -130,10 +133,10 @@ public class CodeWriter {
 		}
 
 		string Header() {    // todo get target triple using a better method
-			return $"; ModuleID = '{FullFilename.Cy}'\nsource_filename = \"{FullFilename.Cy}\"\ntarget datalayout = \"e-m:w-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128\"\ntarget triple = \"x86_64-pc-windows-msvc19.33.31630\"\n\n";
+			return $"; ModuleID = '{FullFilename.Cy}'\r\nsource_filename = {FullFilename.Cy}\n\n{_llvmMacros.Header()}";
 		}
 		string Footer() {    // todo get target triple using a better method
-			return "\n\nattributes #0 = { noinline nounwind optnone uwtable \"correctly-rounded-divide-sqrt-fp-math\"=\"false\" \"disable-tail-calls\"=\"false\" \"frame-pointer\"=\"none\" \"less-precise-fpmad\"=\"false\" \"min-legal-vector-width\"=\"0\" \"no-infs-fp-math\"=\"false\" \"no-jump-tables\"=\"false\" \"no-nans-fp-math\"=\"false\" \"no-signed-zeros-fp-math\"=\"false\" \"no-trapping-math\"=\"true\" \"stack-protector-buffer-size\"=\"8\" \"target-cpu\"=\"x86-64\" \"target-features\"=\"+cx8,+fxsr,+mmx,+sse,+sse2,+x87\" \"unsafe-fp-math\"=\"false\" \"use-soft-float\"=\"false\" }\n\n!llvm.module.flags = !{!0, !1}\n!llvm.ident = !{!2}\n\n!0 = !{i32 1, !\"wchar_size\", i32 2}\n!1 = !{i32 7, !\"PIC Level\", i32 2}\n!2 = !{!\"cy version 0.1.0\"}\n";
+			return _llvmMacros.Footer();
 		}
 	}
 

@@ -39,12 +39,12 @@ static class Program {
 		services.AddScoped<TypeTableCreateVisitor, TypeTableCreateVisitor>();
 		services.AddScoped<TypeTableBuilderHelper, TypeTableBuilderHelper>();
 		services.AddScoped<NamespaceHelper, NamespaceHelper>();
-		services.AddSingleton<TypeTable, TypeTable>();
 		services.AddScoped<TypeTableCreateVisitorOptions, TypeTableCreateVisitorOptions>();
 		services.AddScoped<CodeWriter, CodeWriter>();
 		services.AddScoped<BackendTypeHelper, BackendTypeHelper>();
-		
 		services.AddScoped<Compiler, Compiler>();
 		services.AddScoped<CompileVisitor, CompileVisitor>();
+		services.AddSingleton<TypeTable, TypeTable>();
+		services.AddSingleton<LlvmMacros, LlvmMacros>();
 	}
 }

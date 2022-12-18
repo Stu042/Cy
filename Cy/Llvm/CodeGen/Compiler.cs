@@ -35,7 +35,6 @@ public class Compiler {
 				stmt.Accept(_compileVisitor, options);
 			}
 		}
-		var code = _codeWriter.Output();
-		return code;
+		return _codeWriter.Code;
 	}
 }

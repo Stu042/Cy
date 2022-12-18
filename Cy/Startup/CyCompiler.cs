@@ -17,6 +17,7 @@ public class CyCompiler {
 	readonly TokenDisplay _tokenDisplay;
 	readonly TypeTableCreate _typeTableCreate;
 	readonly Compiler _compiler;
+	
 
 	public CyCompiler(Scanner scanner, Config config, Parser parser, TokenDisplay tokenDisplay, TypeTableCreate typeTableCreate, Compiler compiler) {
 		_scanner = scanner;

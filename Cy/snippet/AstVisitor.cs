@@ -18,7 +18,7 @@ public class AstVisitor : IAstVisitor {
 	}
 
 	public object VisitBlockStmt(Stmt.Block stmt, object options) {
-		foreach (var statement in stmt.statements) {
+		foreach (var statement in stmt.Statements) {
 			statement.Accept(this, options);
 		}
 		return null;
@@ -33,10 +33,10 @@ public class AstVisitor : IAstVisitor {
 	}
 
 	public object VisitClassStmt(Stmt.ClassDefinition stmt, object options) {
-		foreach (var memb in stmt.members) {
+		foreach (var memb in stmt.Members) {
 			memb.Accept(this, options);
 		}
-		foreach (var memb in stmt.methods) {
+		foreach (var memb in stmt.Methods) {
 			memb.Accept(this, options);
 		}
 		return null;

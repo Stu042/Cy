@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using System.IO;
 
 
-namespace Cy.Setup;
+namespace Cy.Startup;
 
 public class CyCompiler {
 	readonly Config _config;
@@ -17,7 +17,7 @@ public class CyCompiler {
 	readonly TokenDisplay _tokenDisplay;
 	readonly TypeTableCreate _typeTableCreate;
 	readonly Compiler _compiler;
-	
+
 
 	public CyCompiler(Scanner scanner, Config config, Parser parser, TokenDisplay tokenDisplay, TypeTableCreate typeTableCreate, Compiler compiler) {
 		_scanner = scanner;

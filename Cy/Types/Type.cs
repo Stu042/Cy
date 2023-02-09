@@ -53,10 +53,6 @@ public class FrontendType {
 		// int and float left
 		return true;
 	}
-
-	public static FrontendType Void() {
-		return new FrontendType("void", AccessModifier.Public, FrontendTypeFormat.Void, 0, 0, null);
-	}
 }
 
 

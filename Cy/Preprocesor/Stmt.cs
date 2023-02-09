@@ -10,10 +10,10 @@ public abstract class Stmt {
 
 	/// <summary>A group of statements.</summary>
 	public class Block : Stmt {
-		public Stmt[] statements;
+		public Stmt[] Statements;
 		public Block(Stmt[] statements) {
 			Token = statements[0].Token;
-			this.statements = statements;
+			this.Statements = statements;
 		}
 		public override object Accept(IStmtVisitor visitor, object options = null) {
 			return visitor.VisitBlockStmt(this, options);
@@ -47,7 +47,7 @@ public abstract class Stmt {
 	}
 
 	/// <summary>Function definition.</summary>
-	public class Function : Stmt {
+	public class Function : Stmt {	// todo add function name with input args in name, i.e. Main_int_str[]
 		public StmtType returnType;
 		public InputVar[] input;
 		public Stmt[] body;
@@ -113,11 +113,11 @@ public abstract class Stmt {
 	/// <summary>Variable declaration, with possible assignment.</summary>
 	public class VarDefinition : Stmt {
 		public StmtType stmtType;
-		public Expr initialiser;
+		public Expr Initialiser;
 		public VarDefinition(Token typeToken, Token token, Expr initialiser) {
 			stmtType = new StmtType(new Token[] { typeToken });
 			this.Token = token;
-			this.initialiser = initialiser;
+			this.Initialiser = initialiser;
 		}
 		public override object Accept(IStmtVisitor visitor, object options = null) {
 			return visitor.VisitVarStmt(this, options);
@@ -126,14 +126,14 @@ public abstract class Stmt {
 
 
 	public class ClassDefinition : Stmt {
-		public VarDefinition[] members;
-		public Function[] methods;
-		public ClassDefinition[] classes;
+		public VarDefinition[] Members;
+		public Function[] Methods;
+		public ClassDefinition[] Classes;
 		public ClassDefinition(Token token, VarDefinition[] members, Function[] methods, ClassDefinition[] classes) {
 			this.Token = token;
-			this.members = members;
-			this.methods = methods;
-			this.classes = classes;
+			this.Members = members;
+			this.Methods = methods;
+			this.Classes = classes;
 		}
 		public override object Accept(IStmtVisitor visitor, object options = null) {
 			return visitor.VisitClassStmt(this, options);

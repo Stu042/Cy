@@ -13,4 +13,7 @@ public class InstanceHelper {
 		var newName = $"%{instanceCount++}";
 		return newName;
 	}
+	public void InstanceNameInc() {
+		instanceCount++;
+	}
 }

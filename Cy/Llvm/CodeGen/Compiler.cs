@@ -1,4 +1,5 @@
-﻿using Cy.Preprocesor;
+﻿using Cy.Llvm.Helpers;
+using Cy.Preprocesor;
 using Cy.Types;
 
 using System.Collections.Generic;
@@ -7,25 +8,32 @@ using System.Diagnostics;
 namespace Cy.Llvm.CodeGen;
 
 
+public class CompileOptions {
+	public TypeTable TypeTable;
+	public CodeHelper Code;
+	public BackendTypeHelper BackendTypeHelper;
+}
+
+
+
 [DebuggerDisplay("LlvmIr Compiler")]
 public class Compiler {
-	readonly CompileVisitor _compileVisitor;
+	readonly CompileVisitor.CompileVisitor _compileVisitor;
 	readonly TypeTable _typeTable;
-	readonly CodeWriter _codeWriter;
+	readonly CodeHelper _codeWriter;
 	readonly BackendTypeHelper _llvmTypeHelper;
 
 
-	public Compiler(CompileVisitor compileVisitor, TypeTable typeTable, CodeWriter codeWriter, BackendTypeHelper llvmTypeHelper) {
+	public Compiler(CompileVisitor.CompileVisitor compileVisitor, TypeTable typeTable, CodeHelper codeWriter, BackendTypeHelper llvmTypeHelper) {
 		_compileVisitor = compileVisitor;
 		_typeTable = typeTable;
 		_codeWriter = codeWriter;
 		_llvmTypeHelper = llvmTypeHelper;
 	}
 
-
 	public List<CodeOutput> Compile(List<List<Stmt>> allFilesStmts) {
 		var options = new CompileOptions {
-			CodeWriter = _codeWriter,
+			Code = _codeWriter,
 			TypeTable = _typeTable,
 			BackendTypeHelper = _llvmTypeHelper,
 		};

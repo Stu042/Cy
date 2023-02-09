@@ -1,4 +1,4 @@
-﻿namespace Cy.Setup;
+﻿namespace Cy.Startup;
 
 
 public class Config {

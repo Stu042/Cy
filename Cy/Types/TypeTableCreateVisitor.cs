@@ -30,7 +30,7 @@ public class TypeTableCreateVisitor : IAstVisitor {
 	}
 
 	public object VisitBlockStmt(Stmt.Block stmt, object options) {
-		foreach (var statement in stmt.statements) {
+		foreach (var statement in stmt.Statements) {
 			statement.Accept(this, options);
 		}
 		return null;
@@ -49,14 +49,14 @@ public class TypeTableCreateVisitor : IAstVisitor {
 		data.NamespaceHelper.Enter(stmt.Token.Lexeme);
 		var obj = new ObjectType(data.NamespaceHelper.Current, Enums.AccessModifier.Public, Enums.FrontendTypeFormat.Object, 0, 0, stmt.Token);
 		data.TypeTableBuilderHelper.Add(obj);
-		foreach (var memb in stmt.classes) {
+		foreach (var memb in stmt.Classes) {
 			memb.Accept(this, options);
 		}
-		foreach (var memb in stmt.members) {
+		foreach (var memb in stmt.Members) {
 			var member = memb.Accept(this, options) as ObjectChildType;		// VisitVarStmt returns member (Type or ObjectType) definitions
 			obj.AddChild(member);
 		}
-		foreach (var memb in stmt.methods) {										// VisitFunctionStmt returns method definitions
+		foreach (var memb in stmt.Methods) {										// VisitFunctionStmt returns method definitions
 			var method = memb.Accept(this, options) as MethodType;
 			obj.AddChild(method);
 		}

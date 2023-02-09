@@ -35,14 +35,17 @@ public class NamespaceHelper {
 		return name;
 	}
 
-	public string FullNamePlus(string current) {
-		if (string.IsNullOrEmpty(current)) {
+	/// <summary> Return Current (dot delimited) namespace with inputed current added. </summary>
+	public string FullNamePlus(string current = null) {
+		if (String.IsNullOrEmpty(current)) {
 			return Current;
 		}
-		var currentNames = new Stack<string>(names);
-		currentNames.Push(current);
-		var fullNameSpace = String.Join(NAMESPACE_DELIMITER, currentNames.Reverse());
+		var fullNameSpace = Current + $".{current}";
 		return fullNameSpace;
 	}
-}
 
+	/// <summary> Set namespace helper back to start. </summary>
+	public void Reset() {
+		names.Clear();
+	}
+}

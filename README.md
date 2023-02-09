@@ -17,7 +17,7 @@ int Main() {
 
 ```cy
 // Gotta have a hello world program, also shows the format of Mains input arguments
-int Main(ascii[] args){
+int Main(str[] args){
     print("Hello world\n")
     return 0
 }
@@ -47,9 +47,9 @@ int Main(){
 }
 
 User{
-    ascii name
+    str name
 	
-    User(ascii name){
+    User(str name){
         this.name = name
     }
 
@@ -80,7 +80,7 @@ Main() can be defined in several ways:
 - `void Main()`
 - `int Main()`
 - `int32 Main()`
-- `int Main(ascii[] args)`
+- `int Main(str[] args)`
 
 ### Types
 
@@ -98,7 +98,7 @@ Most basic types have the type (starting with a lowercase letter) followed by a 
 - `f64`
 - `f128`
 - `bool`
-- `ascii`
+- `str`
 - `utf8`
 - `void`
 
@@ -112,7 +112,7 @@ Arrays can be defined as:
 
 `i8[] someChars`
 
-Note i8[] and ascii are synonymous.
+Note i8[] and str are synonymous.
 
 ##### Built-in Members for Arrays
 
@@ -172,7 +172,7 @@ The #set command must be placed in the global namespace and recommended to be fi
 ```cy
 #set default                                                                // allow runtime to calculate the best amount of threads to use
 
-i64 Main(ascii[] args){
+i64 Main(str[] args){
     int[] values = int[args.length - 1]                                     // create an uninitiliased array of ints
     for (int idx = 1; idx < args.length; idx++) {                           // loop over all input - except app name
         values[idx - 1] = arg.ToInt()                                       // convert arg to an integer and add to array

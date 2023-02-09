@@ -11,7 +11,7 @@
 		public const string Float32 = "f32";
 		public const string Float64 = "f64";
 		public const string Float128 = "f128";
-		public const string Ascii = "ascii";
+		public const string Ascii = "str";
 		public const string Utf8 = "utf8";
 		public const string Bool = "bool";
 		public const string Void = "void";

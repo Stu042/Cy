@@ -1,8 +1,7 @@
-﻿
-using System;
+﻿using System;
 
 
-namespace Cy.Setup;
+namespace Cy.Startup;
 
 
 // only used as input to Config

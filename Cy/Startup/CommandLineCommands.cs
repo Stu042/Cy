@@ -1,7 +1,7 @@
 ﻿using Cocona;
 
 
-namespace Cy.Setup;
+namespace Cy.Startup;
 
 public class CommandLineCommands {
 	// -STAv -o temp.c -i test.cy

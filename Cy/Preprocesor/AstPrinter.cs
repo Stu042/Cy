@@ -47,7 +47,7 @@ public static class Asts {
 		public object VisitBlockStmt(Stmt.Block stmt, object options) {
 			StringBuilder builder = new();
 			builder.Append("(block ");
-			foreach (Stmt statement in stmt.statements) {
+			foreach (Stmt statement in stmt.Statements) {
 				builder.Append(statement.Accept(this, null));
 			}
 			builder.Append(')');
@@ -90,21 +90,21 @@ public static class Asts {
 			StringBuilder builder = new();
 			builder.Append($"({obj.Token.Lexeme}: ");
 			List<string> definitionStr = new();
-			foreach (Stmt.ClassDefinition clss in obj.classes) {
+			foreach (Stmt.ClassDefinition clss in obj.Classes) {
 				definitionStr.Add((string)clss.Accept(this, null));
 			}
 			if (definitionStr.Count > 0) {
 				builder.Append(Parenthesize2("definitions:", definitionStr.ToArray()));
 			}
 			List<string> memberStr = new();
-			foreach (Stmt.VarDefinition memb in obj.members) {
+			foreach (Stmt.VarDefinition memb in obj.Members) {
 				memberStr.Add((string)memb.Accept(this, null));
 			}
 			if (memberStr.Count > 0) {
 				builder.Append(Parenthesize2("members:", memberStr.ToArray()));
 			}
 			List<string> methodStr = new();
-			foreach (Stmt.Function memb in obj.methods) {
+			foreach (Stmt.Function memb in obj.Methods) {
 				methodStr.Add((string)memb.Accept(this, null));
 			}
 			if (methodStr.Count > 0) {
@@ -147,10 +147,10 @@ public static class Asts {
 
 		public object VisitVarStmt(Stmt.VarDefinition stmt, object options) {
 			string typestr = (string)stmt.stmtType.Accept(this, null);
-			if (stmt.initialiser == null) {
+			if (stmt.Initialiser == null) {
 				return Parenthesize2(typestr, stmt.Token);
 			}
-			return Parenthesize2(typestr, stmt.Token, "=", stmt.initialiser);
+			return Parenthesize2(typestr, stmt.Token, "=", stmt.Initialiser);
 		}
 
 		public object VisitGetExpr(Expr.Get expr, object options) {

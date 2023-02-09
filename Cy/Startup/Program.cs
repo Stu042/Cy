@@ -1,13 +1,15 @@
 ﻿using Cocona;
 
 using Cy.Llvm.CodeGen;
+using Cy.Llvm.CodeGen.CompileVisitor;
+using Cy.Llvm.Helpers;
 using Cy.Preprocesor;
 using Cy.Preprocesor.Interfaces;
 using Cy.Types;
 
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Cy.Setup;
+namespace Cy.Startup;
 
 
 static class Program {
@@ -38,12 +40,14 @@ static class Program {
 		services.AddScoped<TypeTableCreate, TypeTableCreate>();
 		services.AddScoped<TypeTableCreateVisitor, TypeTableCreateVisitor>();
 		services.AddScoped<TypeTableBuilderHelper, TypeTableBuilderHelper>();
-		services.AddScoped<NamespaceHelper, NamespaceHelper>();
 		services.AddScoped<TypeTableCreateVisitorOptions, TypeTableCreateVisitorOptions>();
-		services.AddScoped<CodeWriter, CodeWriter>();
+		services.AddScoped<CodeHelper, CodeHelper>();
 		services.AddScoped<BackendTypeHelper, BackendTypeHelper>();
 		services.AddScoped<Compiler, Compiler>();
 		services.AddScoped<CompileVisitor, CompileVisitor>();
+		services.AddScoped<SymbolTable, SymbolTable>();
+		services.AddScoped<ScopeHelper, ScopeHelper>();
+		services.AddSingleton<NamespaceHelper, NamespaceHelper>();
 		services.AddSingleton<TypeTable, TypeTable>();
 		services.AddSingleton<LlvmMacros, LlvmMacros>();
 	}

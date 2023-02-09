@@ -4,6 +4,7 @@ using Cy.Util;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Text;
 
 
@@ -19,23 +20,61 @@ public class CodeOutput {
 }
 
 
+
+
 /// <summary> Creates the LlvmIr code representing the cy code.  </summary>
 [DebuggerDisplay("LlvmIr CodeWriter")]
-public class CodeWriter {
+public class CodeHelper {
 	readonly LlvmMacros _llvmMacros;
+	readonly SymbolTable _symbolTable;
+	readonly ScopeHelper _scopeHelper;
 	readonly List<CodeFile> files;
 	CodeFile currentFile;
+	int indentation;
 
-	public List<CodeOutput> Code { get => Output(); }	// mostly for easier debug - shows code so far
+	public string BackendScope { get => _scopeHelper.BackendScope; }
+	public string FrontendScope { get => _scopeHelper.FrontendScope; }
+	public List<CodeOutput> Code { get => Output(); }   // mostly for easier debug - shows code so far
 
 
-	public CodeWriter(LlvmMacros llvmMacros) {
+	public CodeHelper(LlvmMacros llvmMacros, SymbolTable symbolTable, ScopeHelper scopeHelper) {
 		_llvmMacros = llvmMacros;
-		_ = _llvmMacros.Init().Result;
+		_ = _llvmMacros.Setup().Result;
 		files = new List<CodeFile>();
 		currentFile = null;
+		indentation = 0;
+		_symbolTable = symbolTable;
+		_scopeHelper = scopeHelper;
+		_scopeHelper.Reset();
 	}
 
+	public void EnterScope(string frontendScopeName) {
+		_scopeHelper.Enter(frontendScopeName);
+	}
+	public void ExitScope() {
+		_symbolTable.ExitScope(_scopeHelper.FrontendScope);
+		_scopeHelper.Exit();
+	}
+
+	/// <summary> Add a new instance to the symbol table </summary>
+	public void AddInstance(Instance instance) {
+		instance.BackendScope = _scopeHelper.BackendScope;
+		instance.FrontendScope = _scopeHelper.FrontendScope;
+		_symbolTable.AddInstance(instance);
+	}
+	/// <summary> Return last instance </summary>
+	public Instance LastInstance() {
+		Instance instance = _symbolTable.Instances.Last();
+		return instance;
+	}
+
+
+	public void Indent() {
+		indentation++;
+	}
+	public void Dedent() {
+		--indentation;
+	}
 
 	/// <summary> A new file of code. </summary>
 	public void NewFile(string fullFilename) {
@@ -53,11 +92,11 @@ public class CodeWriter {
 
 	/// <summary> Add line of code to start of a function, i.e. before AddCode(). </summary>
 	public void AddPreCode(string line) {
-		currentFile.AddPreCode(line);
+		currentFile.AddPreCode(Indentation() + line);
 	}
 	/// <summary> Add a line of code to main part of block. </summary>
 	public void AddCode(string line) {
-		currentFile.AddCode(line);
+		currentFile.AddCode(Indentation() + line);
 	}
 
 	/// <summary> Create a unique label name to be used for this code file. </summary>
@@ -66,8 +105,17 @@ public class CodeWriter {
 	}
 
 	/// <summary> Create a unique instance name to be used for this code file. </summary>
-	public string Instance() {
+	public string InstanceName() {
 		return currentFile.NewName();
+	}
+	public void InstanceNameInc() {
+		currentFile.InstanceNameInc();
+	}
+
+
+
+	string Indentation() {
+		return new string(' ', indentation * 2);
 	}
 
 	/// <summary> Return all files of code in llvmir format. </summary>
@@ -98,8 +146,9 @@ public class CodeWriter {
 			LabelHelper = new LabelHelper();
 			currentFunction = new CodeFunction();
 			_llvmMacros = llvmMacros;
-			functions = new List<CodeFunction>();
-			functions.Add(currentFunction);
+			functions = new List<CodeFunction> {
+				currentFunction
+			};
 			FullFilename = new FileNames(fullFilename);
 		}
 
@@ -121,6 +170,9 @@ public class CodeWriter {
 		public string NewName() {
 			return currentFunction.InstanceHelper.NewName();
 		}
+		public void InstanceNameInc() {
+			currentFunction.InstanceHelper.InstanceNameInc();
+		}
 
 		public string Output() {
 			var bob = new StringBuilder();
@@ -133,7 +185,7 @@ public class CodeWriter {
 		}
 
 		string Header() {    // todo get target triple using a better method
-			return $"; ModuleID = '{FullFilename.Cy}'\r\nsource_filename = {FullFilename.Cy}\n\n{_llvmMacros.Header()}";
+			return $"; ModuleID = '{FullFilename.Cy}'\r\nsource_filename = \"{FullFilename.Cy}\"\n\n{_llvmMacros.Header()}";
 		}
 		string Footer() {    // todo get target triple using a better method
 			return _llvmMacros.Footer();
@@ -154,8 +206,9 @@ public class CodeWriter {
 			InstanceHelper = new InstanceHelper();
 			preCode = new List<string>();
 			currentBlock = new CodeBlock();
-			blocks = new List<CodeBlock>();
-			blocks.Add(currentBlock);
+			blocks = new List<CodeBlock> {
+				currentBlock
+			};
 		}
 
 

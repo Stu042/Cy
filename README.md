@@ -17,7 +17,7 @@ int Main() {
 
 ```cy
 // Gotta have a hello world program, also shows the format of Mains input arguments
-int Main(str[] args){
+int Main(str[] args) {
     print("Hello world\n")
     return 0
 }
@@ -25,12 +25,12 @@ int Main(str[] args){
 
 ```cy
 // Recursion will be possible and sized types are shown here
-i32 Main(){
+i32 Main() {
     return Factorial(42)
 }
 
-i32 Factorial(i32 num){
-    if (num > 1){
+i32 Factorial(i32 num) {
+    if (num > 1) {
         return num * Factorial(num - 1)
     }
     return num
@@ -39,7 +39,7 @@ i32 Factorial(i32 num){
 
 ```cy
 // A simple class example
-int Main(){
+int Main() {
     User user = User("Stu")
     user.Hello()
     print("User has {user.NameLength()} characters.\n")
@@ -49,15 +49,15 @@ int Main(){
 User{
     str name
 	
-    User(str name){
+    User(str name) {
         this.name = name
     }
 
-    void Hello(){
+    void Hello() {
         print("{name} says hi.\n")
     }
 	
-    int NameLength(){
+    int NameLength() {
         return name.length	// ascii is an array of i8, arrays have a member named, length
     }
 }
@@ -93,7 +93,7 @@ Most basic types have the type (starting with a lowercase letter) followed by a 
 - `i32`
 - `i64`
 - `i128`
-- `float16`
+- `f16`
 - `f32`
 - `f64`
 - `f128`
@@ -124,7 +124,7 @@ The main function is defined as above and other functions can be defined in a si
 
 Example function definition:
 
-`int Factorial(int n) #1 {`
+`int Factorial(int n) #1 {}`
 
 The factorial function will (by default) run on thread #1, will return an integer of default size and takes an integer of default size as input.  Main always runs on thread #0.
 
@@ -145,8 +145,8 @@ Called like this FactorialCallback() will be called, on the default thread (#0),
 ### Example Function
 
 ```cy
-int Factorial(int n){
-    if (n <= 1){
+int Factorial(int n) {
+    if (n <= 1) {
         return 1
     }
     return n * Factorial(n-1)
@@ -172,36 +172,36 @@ The #set command must be placed in the global namespace and recommended to be fi
 ```cy
 #set default                                                                // allow runtime to calculate the best amount of threads to use
 
-i64 Main(str[] args){
+i64 Main(str[] args) {
     int[] values = int[args.length - 1]                                     // create an uninitiliased array of ints
     for (int idx = 1; idx < args.length; idx++) {                           // loop over all input - except app name
-        values[idx - 1] = arg.ToInt()                                       // convert arg to an integer and add to array
+        values[idx - 1] = args[idx - 1].ToInt()                             // convert arg to an integer and add to array
     }
-    i64 total = CalculateTotal(int[] values)                                // total an int array
+    i64 total = CalculateTotal(values)                                      // total an int array
     return total                                                            // and the final result
 }
 
 
-i64 CalculateTotal(int[] values){
+i64 CalculateTotal(int[] values) {
     int blockSize = values.length / #count                                  // calculate the amount of values each thread will use
     int blockStart = 0
     i64[] totals = int[#count]                                              // a place to store intermediate results
-    for (int thread = 1; thread < #count; thread++){                        // for each thread
+    for (int thread = 1; thread < #count; thread++) {                       // for each thread
         int blockEnd = blockStart + blockSize                               // calculate end block index
         totals[thread] = TotalValues(values[blockStart..blockEnd]) #thread  // total these values by calling TotalValues() on thread numbered thread
         blockStart = blockEnd                                               // setup ready for next block
     }
     totals[0] = TotalValues(values[blockStart..])                           // run final block on this thread - we would be waiting for results anyway
     i64 total = 0                                                           // declare final total
-    i64 aTotal = each totals{                                               // let aTotal equal each intermediate total value
+    i64 aTotal = each totals {                                              // let aTotal equal each intermediate total value
         total += aTotal                                                     // add the intermediate totals
     }
     return total		
 }
 
-i64 TotalValues(int[] values){
+i64 TotalValues(int[] values) {
     i64 total = 0
-    int value = each values{
+    int value = each values {
         total += value
     }
     return value
@@ -219,16 +219,16 @@ Indentation must be by tab, spaces are not counted.
 ### Objects
 
 ```cy
-AnObject{
+AnObject {
     int a
     f32 b
 
-    AnObject(int a, float32 bb){
+    AnObject(int a, f32 bb) {
         this.a = a
         b = bb
     }
 
-    int Add(){
+    int Add() {
         return a + b
     }
 }

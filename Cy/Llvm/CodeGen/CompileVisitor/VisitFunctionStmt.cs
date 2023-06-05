@@ -60,9 +60,12 @@ public partial class CompileVisitor : IExprVisitor, IStmtVisitor {
 		return inputs;
 	}
 	string FunctionName(Token stmtToken, IEnumerable<Stmt.InputVar> inputVars, CompileOptions helper) {
+		var nameSpace = String.IsNullOrEmpty(helper.TypeTable.NamespaceHelper.Current) ? String.Empty : helper.TypeTable.NamespaceHelper.Current + "_";
+		if (String.IsNullOrEmpty(nameSpace) && stmtToken.Lexeme == "Main") {
+			return "Main";
+		}
 		var inputTypes = inputVars.Select(si => si.type.Token.Lexeme);
 		var inputStr = String.Join('_', inputTypes);
-		var nameSpace = String.IsNullOrEmpty(helper.TypeTable.NamespaceHelper.Current) ? String.Empty : helper.TypeTable.NamespaceHelper.Current + "_";
 		var funcNameNoInput = nameSpace + stmtToken.Lexeme;
 		if (funcNameNoInput == "main") {
 			Error(stmtToken, "Unable to use 'main' as a function name, did you mean 'Main'?");

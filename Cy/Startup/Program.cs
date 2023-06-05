@@ -21,11 +21,21 @@ static class Program {
 		app.AddCommands<CommandLineCommands>();
 		app.Run();
 		var services = new ServiceCollection();
+		if (services == null) {
+			return -1;
+		}
 		ConfigureServices(services);
 		var serviceProvider = services
 			.AddSingleton<CyCompiler, CyCompiler>()
 			.BuildServiceProvider();
-		var result = serviceProvider.GetService<CyCompiler>().Compile();
+		if (serviceProvider == null) {
+			return -2;
+		}
+		var cyCompilerService = serviceProvider.GetService<CyCompiler>();
+		if (cyCompilerService == null) {
+			return -3;
+		}
+		var result = cyCompilerService.Compile();
 		return result;
 	}
 
